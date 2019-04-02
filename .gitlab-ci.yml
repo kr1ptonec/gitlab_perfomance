@@ -1,0 +1,62 @@
+image: node:lts-alpine
+
+stages:
+  - test
+  - notification
+
+.base-load-test: &base-load-test
+  stage: test
+  before_script:
+    - export HOST_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_HOST_URL")
+    - export LARGE_ISSUE_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_ISSUE_URL")
+    - export LARGE_MR_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_MR_URL")
+  script:
+    - yarn global add artillery@1.6.0-27
+    - artillery run load/artillery/artillery.yml -o out.json
+    - artillery report out.json -o report.html && rm out.json
+  artifacts:
+    paths:
+      - report.html
+    expire_in: 1 week
+  only:
+    - schedule
+
+####################
+## Load Test jobs ##
+####################
+staging-load-test:
+  <<: *base-load-test
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT == "STAGING"
+
+testbed-load-test:
+  <<: *base-load-test
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT == "TESTBED"
+
+#######################
+## Notification jobs ##
+#######################
+.notify: &notify
+  image: alpine
+  stage: notification
+  dependencies: []
+  cache: {}
+  before_script:
+    - apk update && apk add git curl bash
+  only:
+    - schedules
+
+notify-slack-success:
+  <<: *notify
+  script:
+    - bin/slack qa-performance "🎉 Load tests against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+  when: on_success
+
+notify-slack-fail:
+  <<: *notify
+  script:
+    - bin/slack qa-performance "☠️ Load tests against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+  when: on_failure
