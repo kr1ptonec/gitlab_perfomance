@@ -1,0 +1,25 @@
+config:
+  target: "{{ $processEnvironment.HOST_URL }}"
+  http:
+    pool: 10 # All HTTP requests from all virtual users will be sent over the same <pool> connections.
+    # This also means that there is a limit on the number of requests sent per second.
+  defaults:
+    headers:
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+      Content-Type: "application/json"
+  phases:
+    - duration: 60
+      arrivalRate: 1
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 1
+      rampTo: 10
+      name: "Gradual ramp up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Sustained load"
+scenarios:
+  - name: "Visit {{ $processEnvironment.API_ENDPOINT }}"
+    flow:
+      - get:
+          url: "{{ $processEnvironment.API_ENDPOINT }}"

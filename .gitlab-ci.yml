@@ -4,39 +4,245 @@ stages:
   - test
   - notification
 
-.base-load-test: &base-load-test
+.base-artillery: &base-artillery
   stage: test
-  before_script:
-    - export HOST_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_HOST_URL")
-    - export LARGE_ISSUE_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_ISSUE_URL")
-    - export LARGE_MR_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_MR_URL")
   script:
+    - export HOST_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_HOST_URL")
+    - export ACCESS_TOKEN=$(eval "echo \$${TARGET_ENVIRONMENT}_ACCESS_TOKEN")
     - yarn global add artillery@1.6.0-27
-    - artillery run load/artillery/artillery.yml -o out.json
+    - artillery run load/artillery/$ARTILLERY_FILE -o out.json
     - artillery report out.json -o report.html && rm out.json
   artifacts:
     paths:
       - report.html
     expire_in: 1 week
-  only:
-    - schedule
 
-####################
-## Load Test jobs ##
-####################
-staging-load-test:
-  <<: *base-load-test
+.api-single-scenario-artillery: &api-single-scenario-artillery
+  before_script:
+    - export "ARTILLERY_FILE=artillery-single-endpoint.yml"
+    - 'echo API_ENDPOINT: $API_ENDPOINT'
+  <<: *base-artillery
+
+.staging: &staging
   only:
     variables:
       - $TARGET_ENVIRONMENT == "STAGING"
 
-testbed-load-test:
-  <<: *base-load-test
+.testbed: &testbed
   only:
     variables:
       - $TARGET_ENVIRONMENT == "TESTBED"
 
-## SiteSpeed Performance Test
+.preprod: &preprod
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT == "PREPROD"
+
+.scheduled: &scheduled
+  only:
+    - schedules
+  except:
+    - web
+
+.web: &web
+  only:
+    - web
+  except:
+    - schedules
+
+############################
+## Staging Artillery Jobs ##
+############################
+
+stg-artillery:repo-commit-sha:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/commits/$STAGING_COMMIT_SHA'
+
+stg-artillery:project:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID'
+
+stg-artillery:repo-commit-sha-diff:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/commits/$STAGING_COMMIT_SHA/diff'
+
+stg-artillery:repo-branch:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/branches/$STAGING_BRANCH_NAME'
+
+stg-artillery:repo-commits:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/commits'
+
+stg-artillery:group-projects:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/groups/$STAGING_GROUP_ID/projects'
+
+#stg-artillery:repo-commit-sha-refs:
+#  <<: *api-single-scenario-artillery
+#  <<: *staging
+#  <<: *scheduled
+#  variables:
+#    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/commits/$STAGING_COMMIT_SHA/refs'
+
+stg-artillery:repo-file:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/files/$STAGING_FILE_PATH?ref=master'
+
+stg-artillery:repo-file-raw:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/files/$STAGING_FILE_PATH/raw?ref=master'
+
+stg-artillery:projects:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects'
+
+stg-artillery:merge-request-notes:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/merge_requests/$STAGING_MR_IID/notes'
+
+stg-artillery:repo-tree:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/tree'
+
+stg-artillery:repo-branchs:
+  <<: *api-single-scenario-artillery
+  <<: *staging
+  <<: *scheduled
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$STAGING_PROJECT_ID/repository/branches'
+
+#############################
+## Pre-prod Artillery Jobs ##
+#############################
+
+pre-artillery:repo-commit-sha:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA'
+
+pre-artillery:project:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID'
+
+pre-artillery:repo-commit-sha-diff:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA/diff'
+
+pre-artillery:repo-branch:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/branches/$PREPROD_BRANCH_NAME'
+
+pre-artillery:repo-commits:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits'
+
+pre-artillery:group-projects:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/groups/$PREPROD_GROUP_ID/projects'
+
+pre-artillery:repo-commit-sha-refs:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA/refs'
+
+pre-artillery:repo-file:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/files/$PREPROD_FILE_PATH?ref=master'
+
+pre-artillery:repo-file-raw:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/files/$PREPROD_FILE_PATH/raw?ref=master'
+
+pre-artillery:projects:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects'
+
+pre-artillery:merge-request-notes:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/merge_requests/$PREPROD_MR_IID/notes'
+
+pre-artillery:repo-tree:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/tree'
+
+pre-artillery:repo-branchs:
+  <<: *api-single-scenario-artillery
+  <<: *preprod
+  <<: *web
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/branches'
+
+################################
+## SiteSpeed Performance Test ##
+################################
 
 sitespeed-performance:
   stage: test
@@ -56,6 +262,7 @@ sitespeed-performance:
       - sitespeed-results/
     reports:
       performance: performance.json
+
 
 #######################
 ## Notification jobs ##
