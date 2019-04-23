@@ -131,11 +131,11 @@ sitespeed-performance:
 notify-slack-success:
   <<: *notify
   script:
-    - bin/slack qa-performance "🎉 Load tests against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
   when: on_success
 
 notify-slack-fail:
   <<: *notify
   script:
-    - bin/slack qa-performance "☠️ Load tests against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
   when: on_failure
