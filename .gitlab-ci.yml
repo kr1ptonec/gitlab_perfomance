@@ -7,8 +7,6 @@ stages:
 .base-artillery: &base-artillery
   stage: test
   script:
-    - export HOST_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_HOST_URL")
-    - export ACCESS_TOKEN=$(eval "echo \$${TARGET_ENVIRONMENT}_ACCESS_TOKEN")
     - yarn global add artillery@1.6.0-27
     - artillery run load/artillery/$ARTILLERY_FILE -o out.json
     - artillery report out.json -o report.html && rm out.json
