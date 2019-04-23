@@ -11,7 +11,8 @@ stages:
     - artillery run load/artillery/$ARTILLERY_FILE -o out.json
     - artillery report out.json -o report.html && rm out.json
   only:
-    - schedules
+    refs:
+      - schedules
     variables:
       - $TEST_TYPE == "Load Tests"
   artifacts:
