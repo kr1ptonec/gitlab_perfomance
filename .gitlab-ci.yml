@@ -4,39 +4,100 @@ stages:
   - test
   - notification
 
-.base-load-test: &base-load-test
+.base-artillery: &base-artillery
   stage: test
-  before_script:
-    - export HOST_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_HOST_URL")
-    - export LARGE_ISSUE_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_ISSUE_URL")
-    - export LARGE_MR_URL=$(eval "echo \$${TARGET_ENVIRONMENT}_LARGE_MR_URL")
   script:
     - yarn global add artillery@1.6.0-27
-    - artillery run load/artillery/artillery.yml -o out.json
+    - artillery run load/artillery/$ARTILLERY_FILE -o out.json
     - artillery report out.json -o report.html && rm out.json
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "Load Tests"
   artifacts:
     paths:
       - report.html
     expire_in: 1 week
-  only:
-    - schedule
 
-####################
-## Load Test jobs ##
-####################
-staging-load-test:
-  <<: *base-load-test
-  only:
-    variables:
-      - $TARGET_ENVIRONMENT == "STAGING"
+.api-single-scenario-artillery: &api-single-scenario-artillery
+  before_script:
+    - export "ARTILLERY_FILE=artillery-single-endpoint.yml"
+    - 'echo API_ENDPOINT: $API_ENDPOINT'
+  <<: *base-artillery
 
-testbed-load-test:
-  <<: *base-load-test
-  only:
-    variables:
-      - $TARGET_ENVIRONMENT == "TESTBED"
+############################
+## Artillery Jobs ##
+############################
 
-## SiteSpeed Performance Test
+artillery:repo-commit-sha:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA'
+
+artillery:project:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID'
+
+artillery:repo-commit-sha-diff:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff'
+
+artillery:repo-branch:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME'
+
+artillery:repo-commits:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits'
+
+artillery:group-projects:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/groups/$GROUP_ID/projects'
+
+#artillery:repo-commit-sha-refs:
+#  <<: *api-single-scenario-artillery
+#  variables:
+#    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/refs'
+
+artillery:repo-file:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH?ref=master'
+
+artillery:repo-file-raw:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH/raw?ref=master'
+
+artillery:projects:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects'
+
+artillery:merge-request-notes:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/merge_requests/$MR_IID/notes'
+
+artillery:repo-tree:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/tree'
+
+artillery:repo-branchs:
+  <<: *api-single-scenario-artillery
+  variables:
+    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/branches'
+
+################################
+## SiteSpeed Performance Test ##
+################################
 
 sitespeed-performance:
   stage: test
@@ -51,6 +112,11 @@ sitespeed-performance:
     - mkdir sitespeed-results
     - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:6.3.1 --plugins.add ./gitlab-exporter --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL
     - mv sitespeed-results/data/performance.json performance.json
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "SiteSpeed Tests"
   artifacts:
     paths:
       - sitespeed-results/
@@ -73,11 +139,11 @@ sitespeed-performance:
 notify-slack-success:
   <<: *notify
   script:
-    - bin/slack qa-performance "🎉 Load tests against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
   when: on_success
 
 notify-slack-fail:
   <<: *notify
   script:
-    - bin/slack qa-performance "☠️ Load tests against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
   when: on_failure
