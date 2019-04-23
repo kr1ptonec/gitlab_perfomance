@@ -12,6 +12,8 @@ stages:
     - artillery report out.json -o report.html && rm out.json
   only:
     - schedules
+    variables:
+      - $TEST_TYPE == "Load Tests"
   artifacts:
     paths:
       - report.html
