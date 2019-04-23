@@ -41,14 +41,7 @@ stages:
 .scheduled: &scheduled
   only:
     - schedules
-  except:
-    - web
 
-.web: &web
-  only:
-    - web
-  except:
-    - schedules
 
 ############################
 ## Staging Artillery Jobs ##
@@ -152,91 +145,91 @@ stg-artillery:repo-branchs:
 pre-artillery:repo-commit-sha:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA'
 
 pre-artillery:project:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID'
 
 pre-artillery:repo-commit-sha-diff:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA/diff'
 
 pre-artillery:repo-branch:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/branches/$PREPROD_BRANCH_NAME'
 
 pre-artillery:repo-commits:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits'
 
 pre-artillery:group-projects:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/groups/$PREPROD_GROUP_ID/projects'
 
 pre-artillery:repo-commit-sha-refs:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/commits/$PREPROD_COMMIT_SHA/refs'
 
 pre-artillery:repo-file:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/files/$PREPROD_FILE_PATH?ref=master'
 
 pre-artillery:repo-file-raw:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/files/$PREPROD_FILE_PATH/raw?ref=master'
 
 pre-artillery:projects:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects'
 
 pre-artillery:merge-request-notes:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/merge_requests/$PREPROD_MR_IID/notes'
 
 pre-artillery:repo-tree:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/tree'
 
 pre-artillery:repo-branchs:
   <<: *api-single-scenario-artillery
   <<: *preprod
-  <<: *web
+  <<: *scheduled
   variables:
     API_ENDPOINT: '/api/v4/projects/$PREPROD_PROJECT_ID/repository/branches'
 
