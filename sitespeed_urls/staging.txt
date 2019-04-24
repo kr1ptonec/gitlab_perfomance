@@ -1,0 +1,11 @@
+https://staging.gitlab.com/gitlab-com/infrastructure/issues/57
+https://staging.gitlab.com/gitlab-com/operations/issues/42
+https://staging.gitlab.com/gitlab-org/gitlab-ce/issues/22484
+https://staging.gitlab.com/gitlab-org/gitlab-ce/issues/28717
+https://staging.gitlab.com/gitlab-org/gitlab-ce/issues
+https://staging.gitlab.com/gitlab-com/infrastructure/
+https://staging.gitlab.com/gitlab-org/gitlab-ce
+https://staging.gitlab.com/gitlab-org/gitlab-ee
+https://staging.gitlab.com/gitlab-com/infrastructure/merge_requests
+https://staging.gitlab.com/gitlab-org/gitlab-ce/merge_requests
+https://staging.gitlab.com/gitlab-org/gitlab-ee/merge_requests

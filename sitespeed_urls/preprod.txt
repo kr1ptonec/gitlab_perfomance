@@ -1,0 +1,6 @@
+https://pre.gitlab.com
+https://pre.gitlab.com/qa-perf-testing/gitlabhq
+https://pre.gitlab.com/qa-perf-testing/gitlabhq/issues
+https://pre.gitlab.com/qa-perf-testing/gitlabhq/merge_requests
+https://pre.gitlab.com/qa-perf-testing/gitlabhq/issues/1
+https://pre.gitlab.com/qa-perf-testing/gitlabhq/merge_requests/1
