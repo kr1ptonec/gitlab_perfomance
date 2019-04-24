@@ -102,16 +102,11 @@ artillery:repo-branchs:
 sitespeed-performance:
   stage: test
   image: docker:git
-  variables:
-    URL: https://pre.gitlab.com
   services:
     - docker:stable-dind
   script:
-    - mkdir gitlab-exporter
-    - wget -O ./gitlab-exporter/index.js https://gitlab.com/gitlab-org/gl-performance/raw/master/index.js
     - mkdir sitespeed-results
-    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:6.3.1 --plugins.add ./gitlab-exporter --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL
-    - mv sitespeed-results/data/performance.json performance.json
+    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:6.3.1 --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
   only:
     refs:
       - schedules
@@ -120,8 +115,6 @@ sitespeed-performance:
   artifacts:
     paths:
       - sitespeed-results/
-    reports:
-      performance: performance.json
 
 #######################
 ## Notification jobs ##
