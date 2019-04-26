@@ -9,14 +9,14 @@ config:
       Content-Type: "application/json"
   phases:
     - duration: 60
-      arrivalRate: 1
+      arrivalRate: "{{ $processEnvironment.WARMUP_ARRIVAL_RATE }}"
       name: "Warm up"
     - duration: 120
       arrivalRate: 1
-      rampTo: 10
+      rampTo: "{{ $processEnvironment.RAMPUP_ARRIVAL_RATE }}"
       name: "Gradual ramp up"
     - duration: 120
-      arrivalRate: 10
+      arrivalRate: "{{ $processEnvironment.FULL_LOAD_ARRIVAL_RATE }}"
       name: "Sustained load"
 scenarios:
   - name: "Visit {{ $processEnvironment.API_ENDPOINT }}"
