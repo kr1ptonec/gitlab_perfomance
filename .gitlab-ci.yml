@@ -1,4 +1,4 @@
-image: node:lts-alpine
+image: "starefossen/ruby-node:2-10-slim"
 
 stages:
   - test
@@ -8,92 +8,21 @@ stages:
   stage: test
   script:
     - yarn global add artillery@1.6.0-27
-    - artillery run load/artillery/$ARTILLERY_FILE -o out.json
-    - artillery report out.json -o report.html && rm out.json
+    - scripts/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
       - schedules
     variables:
       - $TEST_TYPE == "Load Tests"
-  artifacts:
-    paths:
-      - report.html
-    expire_in: 1 week
 
-.api-single-scenario-artillery: &api-single-scenario-artillery
+##########################
+## Artillery Load Tests ##
+##########################
+
+artillery-api-single-scenario:
   before_script:
-    - export "ARTILLERY_FILE=artillery-single-endpoint.yml"
-    - 'echo API_ENDPOINT: $API_ENDPOINT'
+    - export "ARTILLERY_SCRIPT_FILE=artillery-api-single-scenario"
   <<: *base-artillery
-
-############################
-## Artillery Jobs ##
-############################
-
-artillery:repo-commit-sha:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA'
-
-artillery:project:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID'
-
-artillery:repo-commit-sha-diff:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff'
-
-artillery:repo-branch:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME'
-
-artillery:repo-commits:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits'
-
-artillery:group-projects:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/groups/$GROUP_ID/projects'
-
-#artillery:repo-commit-sha-refs:
-#  <<: *api-single-scenario-artillery
-#  variables:
-#    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/refs'
-
-artillery:repo-file:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH?ref=master'
-
-artillery:repo-file-raw:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH/raw?ref=master'
-
-artillery:projects:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects'
-
-artillery:merge-request-notes:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/merge_requests/$MR_IID/notes'
-
-artillery:repo-tree:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/tree'
-
-artillery:repo-branchs:
-  <<: *api-single-scenario-artillery
-  variables:
-    API_ENDPOINT: '/api/v4/projects/$PROJECT_ID/repository/branches'
 
 ################################
 ## SiteSpeed Performance Test ##
@@ -116,9 +45,9 @@ sitespeed-performance:
     paths:
       - sitespeed-results/
 
-#######################
-## Notification jobs ##
-#######################
+######################
+# Notification jobs ##
+######################
 .notify: &notify
   image: alpine
   stage: notification
