@@ -1,0 +1,84 @@
+.nplus1-base: &nplus1-base
+  image: registry.gitlab.com/gitlab-org/gitlab-build-images:gitlab-qa-alpine
+  services:
+    - docker:1.13-dind
+  stage: test
+  tags:
+    - docker
+  artifacts:
+    when: always
+    expire_in: 10d
+    paths:
+      - ./gitlab-qa-run-*
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "Gitaly N+1 Tests"
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375
+    QA_ARTIFACTS_DIR: $CI_PROJECT_DIR
+    QA_DEBUG: 1
+    # The password contains $ so we need to wrap around it
+    # to workaround https://gitlab.com/gitlab-org/gitlab-ce/issues/27436
+    GITLAB_FORKER_PASSWORD: $GITLAB_FORKER_PASSWORD_INPUT
+    QA_CAN_TEST_GIT_PROTOCOL_V2: 'false'
+
+.nplus1-testbed: &nplus1-testbed
+  <<: *nplus1-base
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT == "PREPROD"
+  variables:
+    SIGNUP_DISABLED: 'true'
+  before_script:
+    # Right now we can't only use the admin user to toggle a feature flag
+    # and still run the tests as a non-admin user.
+    # So for now we run the tests as an admin user
+    - export GITLAB_USERNAME="gitlab-qa-admin"
+    - export GITLAB_PASSWORD=$GITLAB_QA_ADMIN_PASSWORD
+    - gem install gitlab-qa --no-document
+
+.nplus1-nightly: &nplus1-nightly
+  <<: *nplus1-base
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT == "DOCKER_NIGHTLY"
+  before_script:
+    - unset GITLAB_QA_ACCESS_TOKEN
+    - gem install gitlab-qa --no-document
+
+######################
+# Testbed/preprod jobs
+######################
+
+# These jobs can't run in parallel because each enables a feature flag before
+# running the tests and and then disables the feature flag.
+
+nplus1-testbed:
+  <<: *nplus1-testbed
+  script:
+    - gitlab-qa Test::Instance::Preprod --enable-feature gitaly_enforce_requests_limits
+
+nplus1-testbed-quarantine:
+  <<: *nplus1-testbed
+  allow_failure: true
+  stage: test-quarantine
+  script:
+    - gitlab-qa Test::Instance::Preprod --enable-feature gitaly_enforce_requests_limits -- --tag quarantine
+
+##############
+# Nightly jobs
+##############
+
+nplus1-nightly-ce:
+  <<: *nplus1-nightly
+  script:
+    - gitlab-qa Test::Instance::Image CE --enable-feature gitaly_enforce_requests_limits
+
+nplus1-nightly-ce-quarantine:
+  <<: *nplus1-nightly
+  allow_failure: true
+  script:
+    - gitlab-qa Test::Instance::Image CE --enable-feature gitaly_enforce_requests_limits -- --tag quarantine
