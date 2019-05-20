@@ -10,11 +10,6 @@
     expire_in: 10d
     paths:
       - ./gitlab-qa-run-*
-  only:
-    refs:
-      - schedules
-    variables:
-      - $TEST_TYPE == "Gitaly N+1 Tests"
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
@@ -28,7 +23,10 @@
 .nplus1-testbed: &nplus1-testbed
   <<: *nplus1-base
   only:
+    refs:
+      - schedules
     variables:
+      - $TEST_TYPE == "Gitaly N+1 Tests"
       - $TARGET_ENVIRONMENT == "PREPROD"
   variables:
     SIGNUP_DISABLED: 'true'
@@ -43,7 +41,10 @@
 .nplus1-nightly: &nplus1-nightly
   <<: *nplus1-base
   only:
+    refs:
+      - schedules
     variables:
+      - $TEST_TYPE == "Gitaly N+1 Tests"
       - $TARGET_ENVIRONMENT == "DOCKER_NIGHTLY"
   before_script:
     - unset GITLAB_QA_ACCESS_TOKEN
