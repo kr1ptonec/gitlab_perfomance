@@ -27,7 +27,6 @@
       - schedules
     variables:
       - $TEST_TYPE == "Gitaly N+1 Tests"
-      - $TARGET_ENVIRONMENT == "PREPROD"
   variables:
     SIGNUP_DISABLED: 'true'
   before_script:
@@ -45,7 +44,6 @@
       - schedules
     variables:
       - $TEST_TYPE == "Gitaly N+1 Tests"
-      - $TARGET_ENVIRONMENT == "DOCKER_NIGHTLY"
   before_script:
     - unset GITLAB_QA_ACCESS_TOKEN
     - gem install gitlab-qa --no-document
