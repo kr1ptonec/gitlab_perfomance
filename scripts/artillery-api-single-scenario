@@ -24,6 +24,7 @@ end
 endpoints = %w(
 /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA
 /api/v4/projects/$PROJECT_ID
+/api/v4/projects/$PROJECT_ID/deploy_keys
 /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff
 /api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME
 /api/v4/projects/$PROJECT_ID/repository/commits
