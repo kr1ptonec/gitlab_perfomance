@@ -1,0 +1,12 @@
+{
+  "name": "performance-testing",
+  "version": "1.0.0",
+  "description": "Quality scheduled performance test pipelines",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/gitlab-org/quality/performance"
+  },
+  "dependencies": {
+    "artillery": "^1.6.0-27"
+  }
+}

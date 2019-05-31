@@ -44,7 +44,7 @@ endpoints.each do |endpoint|
 
   cmd = <<~EOF
   export API_ENDPOINT=#{endpoint}
-  artillery run load/artillery/artillery-single-endpoint.yml -o out.json
+  node_modules/.bin/artillery run load/artillery/artillery-single-endpoint.yml -o out.json
   EOF
 
   stdout_str, error_str, status = Open3.capture3(cmd)
