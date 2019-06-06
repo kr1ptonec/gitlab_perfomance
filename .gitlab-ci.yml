@@ -12,7 +12,8 @@ stages:
   stage: test
   script:
     - npm install
-    - scripts/$ARTILLERY_SCRIPT_FILE
+    - bundle install --path vendor/bundle/
+    - bundle exec scripts/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
       - schedules

@@ -1,66 +1,56 @@
 #!/usr/bin/env ruby
 
-require 'open3'
 require 'json'
-
-def pretty_print(results)
-  max_api_length = results.map{|result| result["api"]}.max_by(&:length).length
-  max_p95_length = results.map{|result| result["p95"]}.max_by(&:length).length
-  max_rps_count_length = [results.map{|result| result["rps_count"]}.max_by(&:length).length, 5].max
-  max_rps_mean_length = [results.map{|result| result["rps_mean"]}.max_by(&:length).length, 3].max
-
-  puts "| API#{' ' * (max_api_length - 3)} | p95#{' ' * [(max_p95_length - 3), 0].max} | COUNT#{' ' * [(max_rps_count_length - 5), 0].max} | RPS#{' ' * [(max_rps_mean_length - 3), 0].max} |"
-  puts "| #{'-' * max_api_length} | #{'-' * max_p95_length} | #{'-' * max_rps_count_length} | #{'-' * max_rps_mean_length} |"
-  results.each do |result|
-    api_spaces = max_api_length - result["api"].length
-    p95_spaces = max_p95_length - result["p95"].length
-    rps_count_spaces = max_rps_count_length - result["rps_count"].length
-    rps_mean_spaces = max_rps_mean_length - result["rps_mean"].length
-    puts "| #{result["api"]}#{' ' * api_spaces} | #{result["p95"]}#{' ' * p95_spaces} | #{result["rps_count"]}#{' ' * rps_count_spaces} | #{result["rps_mean"]}#{' ' * rps_mean_spaces} |"
-  end
-  puts "\n"
-end
+require 'tempfile'
+require 'table_print'
 
 endpoints = %w(
-/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA
-/api/v4/projects/$PROJECT_ID
-/api/v4/projects/$PROJECT_ID/deploy_keys
-/api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff
-/api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME
-/api/v4/projects/$PROJECT_ID/repository/commits
-/api/v4/groups/$GROUP_ID/projects
-/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH?ref=master
-/api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH/raw?ref=master
-/api/v4/projects
-/api/v4/projects/$PROJECT_ID/merge_requests/$MR_IID/notes
-/api/v4/projects/$PROJECT_ID/repository/tree
-/api/v4/projects/$PROJECT_ID/repository/branches
+  /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA
+  /api/v4/projects/$PROJECT_ID
+  /api/v4/projects/$PROJECT_ID/deploy_keys
+  /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff
+  /api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME
+  /api/v4/projects/$PROJECT_ID/repository/commits
+  /api/v4/groups/$GROUP_ID/projects
+  /api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH?ref=master
+  /api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH/raw?ref=master
+  /api/v4/projects
+  /api/v4/projects/$PROJECT_ID/merge_requests/$MR_IID/notes
+  /api/v4/projects/$PROJECT_ID/repository/tree
+  /api/v4/projects/$PROJECT_ID/repository/branches
 )
 
 results = []
 
 endpoints.each do |endpoint|
-  puts "Running tests against API_ENDPOINT: #{endpoint} \n"
+  puts "Running tests against API_ENDPOINT: #{endpoint}\n"
 
+  tmpfile = Tempfile.new("artillery-out-json")
   cmd = <<~EOF
-  export API_ENDPOINT=#{endpoint}
-  node_modules/.bin/artillery run load/artillery/artillery-single-endpoint.yml -o out.json
+    export API_ENDPOINT=#{endpoint}
+    node_modules/.bin/artillery run load/artillery/artillery-single-endpoint.yml -o #{tmpfile.path}
   EOF
 
-  stdout_str, error_str, status = Open3.capture3(cmd)
+  unless system(cmd)
+    puts "Command failed."
+    next
+  end
 
-  puts stdout_str
+  data_hash = JSON.parse(tmpfile.read)
+
+  result = {
+    API: endpoint,
+    P95: data_hash["aggregate"]["latency"]["p95"],
+    RPS_Count: data_hash["aggregate"]["rps"]["count"],
+    RPS_Mean: data_hash["aggregate"]["rps"]["mean"]
+  }
+  results << result
 
   puts "\n===========================================\n\n"
-
-  file = File.read('out.json')
-  data_hash = JSON.parse(file)
-  result = {}
-  result["api"] = endpoint
-  result["p95"] = data_hash["aggregate"]["latency"]["p95"].to_s
-  result["rps_count"] = data_hash["aggregate"]["rps"]["count"].to_s
-  result["rps_mean"] = data_hash["aggregate"]["rps"]["mean"].to_s
-  results << result
+ensure
+  tmpfile&.close
+  tmpfile&.unlink
 end
 
-pretty_print(results)
+tp.set(:max_width, 100)
+tp(results)
