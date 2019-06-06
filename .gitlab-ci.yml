@@ -11,7 +11,7 @@ stages:
 .base-artillery: &base-artillery
   stage: test
   script:
-    - yarn global add artillery@1.6.0-27
+    - npm install
     - scripts/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
