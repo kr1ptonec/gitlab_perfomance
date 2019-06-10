@@ -13,6 +13,7 @@ stages:
   script:
     - npm install
     - gem install bundler -v 2.0.1
+    - export BUNDLER_VERSION=2.0.1
     - echo $BUNDLER_VERSION
     - bundle _2.0.1_ install --path vendor/bundle/
     - bundle _2.0.1_ exec scripts/$ARTILLERY_SCRIPT_FILE
