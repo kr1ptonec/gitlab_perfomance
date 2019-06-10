@@ -55,24 +55,24 @@ sitespeed-performance:
 ######################
 # Notification jobs ##
 ######################
-#.notify: &notify
-#  image: alpine
-#  stage: notification
-#  dependencies: []
-#  cache: {}
-#  before_script:
-#    - apk update && apk add git curl bash
-#  only:
-#    - schedules
+.notify: &notify
+  image: alpine
+  stage: notification
+  dependencies: []
+  cache: {}
+  before_script:
+    - apk update && apk add git curl bash
+  only:
+    - schedules
 
-#notify-slack-success:
-#  <<: *notify
-#  script:
-#    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
-#  when: on_success
+notify-slack-success:
+  <<: *notify
+  script:
+    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+  when: on_success
 
-#notify-slack-fail:
-#  <<: *notify
-#  script:
-#    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
-#  when: on_failure
+notify-slack-fail:
+  <<: *notify
+  script:
+    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+  when: on_failure
