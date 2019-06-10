@@ -12,7 +12,9 @@ stages:
   stage: test
   script:
     - npm install
+    - gem list bundler
     - gem install bundler -v 2.0.1
+    - gem list bundler
     - bundle install --path vendor/bundle/
     - bundle exec scripts/$ARTILLERY_SCRIPT_FILE
   only:
