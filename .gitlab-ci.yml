@@ -1,4 +1,4 @@
-image: "starefossen/ruby-node:2-10-slim"
+image: "starefossen/ruby-node:2-6-slim"
 
 include:
   - local: '/includes/gitaly-n-plus-one-tests.yml'
