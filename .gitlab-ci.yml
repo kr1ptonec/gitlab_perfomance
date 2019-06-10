@@ -14,6 +14,7 @@ stages:
     - npm install
     - gem list bundler
     - gem update bundler
+    - gem update --system
     - gem list bundler
     - gem --version
     - ruby --version
@@ -75,8 +76,8 @@ notify-slack-success:
     - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
   when: on_success
 
-notify-slack-fail:
-  <<: *notify
-  script:
-    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
-  when: on_failure
+#notify-slack-fail:
+#  <<: *notify
+#  script:
+#    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+#  when: on_failure
