@@ -13,8 +13,11 @@ stages:
   script:
     - npm install
     - gem list bundler
-    - gem install bundler -v 2.0.1
+    - gem update bundler
     - gem list bundler
+    - gem --version
+    - ruby --version
+    - bundler --version
     - bundle install --path vendor/bundle/
     - bundle exec scripts/$ARTILLERY_SCRIPT_FILE
   only:
