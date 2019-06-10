@@ -1,4 +1,4 @@
-image: "starefossen/ruby-node:2-6-slim"
+image: "starefossen/ruby-node:2-10-slim"
 
 include:
   - local: '/includes/gitaly-n-plus-one-tests.yml'
@@ -12,15 +12,9 @@ stages:
   stage: test
   script:
     - npm install
-    - gem list bundler
-    - gem update bundler
-    - gem update --system
-    - gem list bundler
-    - gem --version
-    - ruby --version
-    - bundler --version
-    - bundle install --path vendor/bundle/
-    - bundle exec scripts/$ARTILLERY_SCRIPT_FILE
+    - gem install bundler -v 2.0.1
+    - bundle _2.0.1_ install --path vendor/bundle/
+    - bundle _2.0.1_ exec scripts/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
       - schedules
@@ -60,21 +54,21 @@ sitespeed-performance:
 ######################
 # Notification jobs ##
 ######################
-.notify: &notify
-  image: alpine
-  stage: notification
-  dependencies: []
-  cache: {}
-  before_script:
-    - apk update && apk add git curl bash
-  only:
-    - schedules
+#.notify: &notify
+#  image: alpine
+#  stage: notification
+#  dependencies: []
+#  cache: {}
+#  before_script:
+#    - apk update && apk add git curl bash
+#  only:
+#    - schedules
 
-notify-slack-success:
-  <<: *notify
-  script:
-    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
-  when: on_success
+#notify-slack-success:
+#  <<: *notify
+#  script:
+#    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+#  when: on_success
 
 #notify-slack-fail:
 #  <<: *notify
