@@ -2,3 +2,5 @@ sitespeed-result/*
 node_modules/
 .bundle/
 vendor/bundle/
+/.ruby-gemset
+/.ruby-version
