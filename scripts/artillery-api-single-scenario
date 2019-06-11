@@ -4,53 +4,85 @@ require 'json'
 require 'tempfile'
 require 'table_print'
 
-endpoints = %w(
-  /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA
-  /api/v4/projects/$PROJECT_ID
-  /api/v4/projects/$PROJECT_ID/deploy_keys
-  /api/v4/projects/$PROJECT_ID/repository/commits/$COMMIT_SHA/diff
-  /api/v4/projects/$PROJECT_ID/repository/branches/$BRANCH_NAME
-  /api/v4/projects/$PROJECT_ID/repository/commits
-  /api/v4/groups/$GROUP_ID/projects
-  /api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH?ref=master
-  /api/v4/projects/$PROJECT_ID/repository/files/$FILE_PATH/raw?ref=master
-  /api/v4/projects
-  /api/v4/projects/$PROJECT_ID/merge_requests/$MR_IID/notes
-  /api/v4/projects/$PROJECT_ID/repository/tree
-  /api/v4/projects/$PROJECT_ID/repository/branches
+required_environment_variables = %w(
+  BRANCH_NAME
+  COMMIT_SHA
+  FILE_PATH
+  FULL_LOAD_ARRIVAL_RATE
+  FULL_LOAD_DURATION
+  GROUP_ID
+  HOST_URL
+  MR_IID
+  PROJECT_ID
+  RAMPUP_ARRIVAL_RATE
+  RAMPUP_DURATION
+  WARMUP_ARRIVAL_RATE
+  WARMUP_DURATION
 )
 
-results = []
+missing_environment_variables = required_environment_variables - ENV.keys
+if missing_environment_variables.any?
+  puts "Missing the #{missing_environment_variables.join(", ")} environment variable(s)."
+  exit 1
+end
 
-endpoints.each do |endpoint|
-  puts "Running tests against API_ENDPOINT: #{endpoint}\n"
+endpoints = %w(
+  /api/v4/projects/%{PROJECT_ID}/repository/commits/%{COMMIT_SHA}
+  /api/v4/projects/%{PROJECT_ID}
+  /api/v4/projects/%{PROJECT_ID}/deploy_keys
+  /api/v4/projects/%{PROJECT_ID}/repository/commits/%{COMMIT_SHA}/diff
+  /api/v4/projects/%{PROJECT_ID}/repository/branches/%{BRANCH_NAME}
+  /api/v4/projects/%{PROJECT_ID}/repository/commits
+  /api/v4/groups/%{GROUP_ID}/projects
+  /api/v4/projects/%{PROJECT_ID}/repository/files/%{FILE_PATH}?ref=master
+  /api/v4/projects/%{PROJECT_ID}/repository/files/%{FILE_PATH}/raw?ref=master
+  /api/v4/projects
+  /api/v4/projects/%{PROJECT_ID}/merge_requests/%{MR_IID}/notes
+  /api/v4/projects/%{PROJECT_ID}/repository/tree
+  /api/v4/projects/%{PROJECT_ID}/repository/branches
+)
+
+def run_endpoint(endpoint)
+  puts ">> Running tests against API_ENDPOINT: #{endpoint} \n"
 
   tmpfile = Tempfile.new("artillery-out-json")
-  cmd = <<~EOF
-    export API_ENDPOINT=#{endpoint}
-    node_modules/.bin/artillery run load/artillery/artillery-single-endpoint.yml -o #{tmpfile.path}
-  EOF
 
-  unless system(cmd)
+  environment = {
+    'API_ENDPOINT' => endpoint
+  }
+
+  cmd = [
+    'node_modules/.bin/artillery',
+    'run',
+    'load/artillery/artillery-single-endpoint.yml',
+    '-o',
+    tmpfile.path
+  ]
+
+  unless system(environment, *cmd)
     puts "Command failed."
-    next
+    return
   end
 
   data_hash = JSON.parse(tmpfile.read)
 
-  result = {
+  {
     API: endpoint,
     P95: data_hash["aggregate"]["latency"]["p95"],
     RPS_Count: data_hash["aggregate"]["rps"]["count"],
     RPS_Mean: data_hash["aggregate"]["rps"]["mean"]
   }
-  results << result
-
-  puts "\n===========================================\n\n"
 ensure
   tmpfile&.close
   tmpfile&.unlink
+
+  puts "\n===========================================\n\n"
 end
+
+results = endpoints.map do |endpoint|
+  expanded = endpoint % ENV.to_h.transform_keys(&:to_sym)
+  run_endpoint(expanded)
+end.compact
 
 tp.set(:max_width, 100)
 tp(results)

@@ -8,26 +8,50 @@ We have completed the epic for [setting up the testbed](https://gitlab.com/group
 
 **TestBed**: https://onprem.testbed.gitlab.net/
 
-## Performance Jobs
+## Usage
+
+### 1. Installation
+
+This repository requires that you have `Ruby Bundler` installed
+and `NodeJS npm` installed.
+
+```bash
+bundle install --path vendor/bundle
+npm install
+```
+
+### 2. Running artillery locally
+
+Load the suitable configuration from `configs/`
+and run desired testing scenario from `scripts/`.
+
+Example for testing `pre.gitlab.com`:
+
+```bash
+source configs/pre-prod.env
+bundle exec scripts/artillery-api-single-scenario
+```
+
+## Testing scenarios
 
 The following are the performance jobs that can be seen in this repository:
 
-### Gitlay N+1 Detector Tests
+### 1. Gitlay N+1 Detector Tests
 
 TBD
 
-### Load Testing
+### 2. Load Testing
 
 TBD
 
-### Functional Performance Tests
+### 3. Functional Performance Tests
 
 TBD
 
-### Integration with Prometheus
+### 4. Integration with Prometheus
 
 TBD
 
-### Integration with Sitespeed
+### 5. Integration with Sitespeed
 
 TBD
