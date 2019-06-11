@@ -40,6 +40,12 @@ endpoints = %w(
   /api/v4/projects/%{PROJECT_ID}/merge_requests/%{MR_IID}/notes
   /api/v4/projects/%{PROJECT_ID}/repository/tree
   /api/v4/projects/%{PROJECT_ID}/repository/branches
+  /%{TEST_GROUP}/gitlabhq.git/info/refs?service=git-upload-pack
+  /api/v4/projects/%{PROJECT_ID}/merge_requests/%{MR_IID}
+  /%{TEST_GROUP}/gitlabhq/refs/master/logs_tree
+  /%{TEST_GROUP}/gitlabhq/blob/master/app/models/project.rb
+  /api/v4/projects/%{PROJECT_ID}/repository/commits/%{SIGNED_COMMIT_SHA}/signature
+  /api/v4/projects/%{PROJECT_ID}/pipelines
 )
 
 def run_endpoint(endpoint)
