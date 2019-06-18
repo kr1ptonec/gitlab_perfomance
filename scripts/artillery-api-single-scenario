@@ -46,6 +46,8 @@ endpoints = %w(
   /%{TEST_GROUP}/gitlabhq/blob/master/app/models/project.rb
   /api/v4/projects/%{PROJECT_ID}/repository/commits/%{SIGNED_COMMIT_SHA}/signature
   /api/v4/projects/%{PROJECT_ID}/pipelines
+  /%{TEST_GROUP}/gitlabhq/merge_requests/%{MR_IID_MANY_COMMITS}
+  /%{TEST_GROUP}/gitlabhq/merge_requests/%{MR_IID_MANY_COMMITS}/diffs.json
 )
 
 def run_endpoint(endpoint)
