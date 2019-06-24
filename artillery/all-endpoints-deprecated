@@ -62,7 +62,7 @@ def run_endpoint(endpoint)
   cmd = [
     'node_modules/.bin/artillery',
     'run',
-    'load/artillery/artillery-single-endpoint.yml',
+    'artillery/scenarios/deprecated/artillery-single-endpoint.yml',
     '-o',
     tmpfile.path
   ]

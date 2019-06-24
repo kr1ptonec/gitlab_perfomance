@@ -1,0 +1,23 @@
+config:
+  http:
+    pool: 10
+
+  defaults:
+    headers:
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+      Content-Type: "application/json"
+
+  phases:
+    - duration: 2
+      arrivalRate: 2
+      rampTo: 20
+      name: "Warm up"
+
+    - duration: 10
+      arrivalRate: 20
+      name: "Load"
+
+scenarios:
+  - flow:
+      - get:
+          url: /api/v4/user
