@@ -1,4 +1,4 @@
-image: "starefossen/ruby-node:2-10-slim"
+image: "ruby:2.6.3"
 
 include:
   - local: '/includes/gitaly-n-plus-one-tests.yml'
@@ -11,6 +11,8 @@ stages:
 .base-artillery: &base-artillery
   stage: test
   script:
+    - curl -sL https://deb.nodesource.com/setup_12.x | bash -
+    - apt-get install -y nodejs
     - npm install
     - gem install bundler -v 2.0.1
     - export BUNDLER_VERSION=2.0.1
