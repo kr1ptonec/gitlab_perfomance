@@ -7,6 +7,9 @@ config:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
       Content-Type: "application/json"
 
+  plugins:
+    expect: {}
+
   phases:
     - duration: 2
       arrivalRate: 2
@@ -21,3 +24,5 @@ scenarios:
   - flow:
       - get:
           url: /api/v4/user
+          expect:
+            - statusCode: 200

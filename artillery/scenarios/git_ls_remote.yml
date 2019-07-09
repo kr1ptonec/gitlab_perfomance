@@ -23,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects
+          url: /{{GITLABHQ_GROUP}}/{{GITLABHQ_PROJECT}}.git/info/refs?service=git-upload-pack
           expect:
             - statusCode: 200
