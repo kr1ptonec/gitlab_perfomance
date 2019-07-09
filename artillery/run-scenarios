@@ -29,7 +29,7 @@ def output_path
   ENV["OUTPUT_PATH"] || File.join("out", $current_time)
 end
 
-def file_output_path(files, suffix )
+def file_output_path(files, suffix)
   base_names = files.map do |file|
     File.basename(file, File.extname(file))
   end
