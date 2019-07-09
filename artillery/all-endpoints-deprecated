@@ -4,7 +4,7 @@ require 'json'
 require 'tempfile'
 require 'table_print'
 
-required_environment_variables = %w(
+required_environment_variables = %w[
   BRANCH_NAME
   COMMIT_SHA
   FILE_PATH
@@ -18,15 +18,15 @@ required_environment_variables = %w(
   RAMPUP_DURATION
   WARMUP_ARRIVAL_RATE
   WARMUP_DURATION
-)
+]
 
 missing_environment_variables = required_environment_variables - ENV.keys
 if missing_environment_variables.any?
-  puts "Missing the #{missing_environment_variables.join(", ")} environment variable(s)."
+  puts "Missing the #{missing_environment_variables.join(', ')} environment variable(s)."
   exit 1
 end
 
-endpoints = %w(
+endpoints = %w[
   /api/v4/projects/%{PROJECT_ID}/repository/commits/%{COMMIT_SHA}
   /api/v4/projects/%{PROJECT_ID}
   /api/v4/projects/%{PROJECT_ID}/deploy_keys
@@ -48,7 +48,7 @@ endpoints = %w(
   /api/v4/projects/%{PROJECT_ID}/pipelines
   /%{TEST_GROUP}/gitlabhq/merge_requests/%{MR_IID_MANY_COMMITS}
   /%{TEST_GROUP}/gitlabhq/merge_requests/%{MR_IID_MANY_COMMITS}/diffs.json
-)
+]
 
 def run_endpoint(endpoint)
   puts ">> Running tests against API_ENDPOINT: #{endpoint} \n"

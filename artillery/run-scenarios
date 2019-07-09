@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# rubocop:disable Style/GlobalVars
 
 require 'json'
 require 'yaml'
@@ -15,12 +16,12 @@ class ::Hash
       Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2
     end
 
-    self.merge(second, &merger)
+    merge(second, &merger)
   end
 end
 
 def usage!
-  $stderr.puts "usage #{$0} [artillery/environments/host.yml] -- [artillery/scenarios/scenarios(s)...]"
+  warn("usage #{$PROGRAM_NAME} [artillery/environments/host.yml] -- [artillery/scenarios/scenarios(s)...]")
   exit 1
 end
 
@@ -49,18 +50,18 @@ def run(run_name, final_config)
 
   File.write(final_config_path, final_config.to_yaml)
 
-  $stderr.puts ">> Running the #{final_config_path}..."
-  $stderr.puts final_config.to_yaml
-  $stderr.puts
+  warn(">> Running #{final_config_path}...")
+  warn(final_config.to_yaml)
+  warn
 
-  $stderr.puts ">> Running Artillery..."
+  warn(">> Running Artillery...")
   run_artillery_command('run', final_config_path, '-o', result_json_file)
   run_artillery_command('report', result_json_file, '-o', result_html_file)
-  $stderr.puts
+  warn
 
-  $stderr.puts ">> Parsing results #{result_json_file}..."
+  warn(">> Parsing results #{result_json_file}...")
   run_result = JSON.parse(File.read(result_json_file))
-  $stderr.puts
+  warn
 
   {
     P95: run_result.dig("aggregate", "latency", "p95"),
@@ -81,8 +82,9 @@ while file = ARGV.shift
 end
 
 usage! unless ARGV.any?
+raise "Artillery has not been installed. Run 'npm install' on the project root to install." unless File.exist?('node_modules/.bin/artillery')
 
-$stderr.puts ">> Saving all results to #{output_path}."
+warn(">> Saving all results to #{output_path}.")
 FileUtils.mkdir_p(output_path)
 
 aggregated_results = []
@@ -95,14 +97,14 @@ ARGV.each do |file|
 
   result = run(file_run_name, config.deep_merge(base_config))
   aggregated_results << { Name: file_name }.merge(result)
-rescue Interrupt => e
-  $stderr.puts
-  $stderr.puts("Caught the interrupt. Stopping.")
-  $stderr.puts
+rescue Interrupt
+  warn
+  warn("Caught the interrupt. Stopping.")
+  warn
   break
 end
 
-$stderr.puts ">> Aggregated results: #{aggregated_results_path}"
+warn(">> Aggregated results: #{aggregated_results_path}")
 File.write(output_path(run_name, "_aggregated_results.json"), aggregated_results.to_json)
 
 tp.set(:max_width, 100)

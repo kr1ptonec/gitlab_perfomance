@@ -4,9 +4,41 @@ include:
   - local: '.gitlab/ci/includes/gitaly-n-plus-one-tests.yml'
 
 stages:
+  - check
   - test
   - test-quarantine
   - notification
+
+before_script:
+  - gem install bundler -v 2.0.2
+  - export BUNDLER_VERSION=2.0.2
+  - bundle install --path vendor/bundle/
+
+#########################
+##     Lint Checks     ##
+#########################
+
+check:rubocop:
+  stage: check
+  script:
+    - bundle exec rubocop --parallel
+  except:
+    - schedules
+
+check:yamllint:
+  stage: check
+  # Use an up to date image of yamllint that can handle unicode emojis
+  before_script: []
+  dependencies: []
+  image: pipelinecomponents/yamllint
+  script:
+    - yamllint .gitlab-ci.yml artillery
+  except:
+    - schedules
+
+##########################
+## Artillery Load Tests ##
+##########################
 
 .base-artillery: &base-artillery
   stage: test
@@ -14,19 +46,12 @@ stages:
     - curl -sL https://deb.nodesource.com/setup_12.x | bash -
     - apt-get install -y nodejs
     - npm install
-    - gem install bundler -v 2.0.1
-    - export BUNDLER_VERSION=2.0.1
-    - bundle install --path vendor/bundle/
     - bundle exec artillery/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
       - schedules
     variables:
       - $TEST_TYPE == "Load Tests"
-
-##########################
-## Artillery Load Tests ##
-##########################
 
 artillery-api-single-scenario-deprecated:
   before_script:
@@ -55,7 +80,7 @@ sitespeed-performance:
       - sitespeed-results/
 
 ######################
-# Notification jobs ##
+## Notification jobs ##
 ######################
 .notify: &notify
   image: alpine

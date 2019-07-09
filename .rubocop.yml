@@ -1,0 +1,36 @@
+require:
+  # Due to a probably bug in rubocop (https://github.com/bbatsov/rubocop/issues/5251)
+  # we need to require rubocop-rspec a second time so that RSpec/FilePath does
+  # not fallback to Rails/FilePath.
+  - rubocop-rspec
+
+inherit_gem:
+  gitlab-styles:
+    - rubocop-default.yml
+
+AllCops:
+  TargetRubyVersion: 2.5
+  Exclude:
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 20
+
+Rails:
+  Enabled: false
+
+Style/ModuleFunction:
+  Enabled: false
+
+Style/SignalException:
+  Enabled: false
+
+Layout/SpaceBeforeFirstArg:
+  Enabled: false
+
+Lint/MissingCopEnableDirective:
+  Enabled: false
