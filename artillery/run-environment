@@ -1,22 +1,22 @@
 #!/usr/bin/env ruby
 
-$script_path = File.dirname(__FILE__)
-
 unless ARGV.any?
-  $stderr.puts "usage #{$0} <environment-names>"
+  warn("usage #{$PROGRAM_NAME} <environment-names>")
   exit 1
 end
 
 def run_environment(name)
+  script_path = File.dirname(__FILE__)
+
   cmd = [
-    File.join($script_path, "run-scenarios"),
-    File.join($script_path, "environments", name + ".yml"),
+    File.join(script_path, "run-scenarios"),
+    File.join(script_path, "environments", name + ".yml"),
     "--",
-    Dir[File.join($script_path, "scenarios", "*.yml")],
-    Dir[File.join($script_path, "scenarios", name, "*.yml")]
+    Dir[File.join(script_path, "scenarios", "*.yml")],
+    Dir[File.join(script_path, "scenarios", name, "*.yml")]
   ].flatten
 
-  $stderr.puts("$ #{cmd.join(" ")}")
+  warn("$ #{cmd.join(' ')}")
   system(*cmd)
 end
 

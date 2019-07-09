@@ -79,7 +79,7 @@ bundle exec artillery/all-endpoints-deprecated
 
 The following are the performance jobs that can be seen in this repository:
 
-### 1. Gitlay N+1 Detector Tests
+### 1. Gitaly N+1 Detector Tests
 
 TBD
 
