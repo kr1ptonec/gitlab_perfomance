@@ -1,0 +1,109 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'yaml'
+require 'tempfile'
+require 'open-uri'
+require 'shellwords'
+require 'table_print'
+
+$current_time = Time.now.strftime("%Y%m%d_%H%M%S")
+
+class ::Hash
+  def deep_merge(second)
+    merger = proc do |key, v1, v2|
+      Hash === v1 && Hash === v2 ? v1.merge(v2, &merger) : v2
+    end
+
+    self.merge(second, &merger)
+  end
+end
+
+def usage!
+  $stderr.puts "usage #{$0} [artillery/environments/host.yml] -- [artillery/scenarios/scenarios(s)...]"
+  exit 1
+end
+
+def output_path(files = [], suffix = '')
+  base_names = files.map do |file|
+    File.basename(file, File.extname(file))
+  end
+  base_name = base_names.join("_")
+
+  File.join("out", $current_time, base_name + suffix)
+end
+
+def run_artillery_command(cmd_name, *args)
+  cmd = [
+    'node_modules/.bin/artillery',
+    cmd_name
+  ] + args
+
+  system(*cmd)
+end
+
+def run(run_name, final_config)
+  final_config_path = output_path(run_name, "_config.yaml")
+  result_json_file = output_path(run_name, "_result.json")
+  result_html_file = output_path(run_name, "_result.html")
+
+  File.write(final_config_path, final_config.to_yaml)
+
+  $stderr.puts ">> Running the #{final_config_path}..."
+  $stderr.puts final_config.to_yaml
+  $stderr.puts
+
+  $stderr.puts ">> Running Artillery..."
+  run_artillery_command('run', final_config_path, '-o', result_json_file)
+  run_artillery_command('report', result_json_file, '-o', result_html_file)
+  $stderr.puts
+
+  $stderr.puts ">> Parsing results #{result_json_file}..."
+  run_result = JSON.parse(File.read(result_json_file))
+  $stderr.puts
+
+  {
+    P95: run_result.dig("aggregate", "latency", "p95"),
+    RPS_Count: run_result.dig("aggregate", "rps", "count"),
+    RPS_Mean: run_result.dig("aggregate", "rps", "mean")
+  }
+end
+
+base_config = {}
+run_name = []
+
+while file = ARGV.shift
+  break if file == '--'
+
+  config = YAML.load_file(file)
+  base_config = base_config.deep_merge(config)
+  run_name << file
+end
+
+usage! unless ARGV.any?
+
+$stderr.puts ">> Saving all results to #{output_path}."
+FileUtils.mkdir_p(output_path)
+
+aggregated_results = []
+aggregated_results_path = output_path(run_name, "_aggregated_results.json")
+
+ARGV.each do |file|
+  config = YAML.load_file(file)
+  file_name = File.basename(file)
+  file_run_name = run_name + [file]
+
+  result = run(file_run_name, config.deep_merge(base_config))
+  aggregated_results << { Name: file_name }.merge(result)
+rescue Interrupt => e
+  $stderr.puts
+  $stderr.puts("Caught the interrupt. Stopping.")
+  $stderr.puts
+  break
+end
+
+$stderr.puts ">> Aggregated results: #{aggregated_results_path}"
+File.write(output_path(run_name, "_aggregated_results.json"), aggregated_results.to_json)
+
+tp.set(:max_width, 100)
+tp(aggregated_results)

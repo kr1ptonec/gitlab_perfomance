@@ -1,7 +1,7 @@
 image: "ruby:2.6.3"
 
 include:
-  - local: '/includes/gitaly-n-plus-one-tests.yml'
+  - local: '.gitlab/ci/includes/gitaly-n-plus-one-tests.yml'
 
 stages:
   - test
@@ -17,7 +17,7 @@ stages:
     - gem install bundler -v 2.0.1
     - export BUNDLER_VERSION=2.0.1
     - bundle install --path vendor/bundle/
-    - bundle exec scripts/$ARTILLERY_SCRIPT_FILE
+    - bundle exec artillery/$ARTILLERY_SCRIPT_FILE
   only:
     refs:
       - schedules
@@ -28,9 +28,9 @@ stages:
 ## Artillery Load Tests ##
 ##########################
 
-artillery-api-single-scenario:
+artillery-api-single-scenario-deprecated:
   before_script:
-    - export "ARTILLERY_SCRIPT_FILE=artillery-api-single-scenario"
+    - export "ARTILLERY_SCRIPT_FILE=all-endpoints-deprecated"
   <<: *base-artillery
 
 ################################

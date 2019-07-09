@@ -66,14 +66,13 @@ export WARMUP_DURATION=10
 
 ### 3. Running artillery locally
 
-Load the suitable configuration from `configs/`
-and run desired testing scenario from `scripts/`.
+Load the suitable configuration from `configs/`.
 
 Example for testing `pre.gitlab.com`:
 
 ```bash
 source configs/pre-prod.env
-bundle exec scripts/artillery-api-single-scenario
+bundle exec artillery/all-endpoints-deprecated
 ```
 
 ## Testing scenarios

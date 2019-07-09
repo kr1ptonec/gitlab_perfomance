@@ -1,0 +1,15 @@
+config:
+  target: https://pre-puma.gitlab.com
+
+  defaults:
+    headers:
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+
+  variables:
+    GROUP_ID: 36
+    BRANCH_NAME: 10-0-stable
+    COMMIT_SHA: 0a99e022
+    FILE_PATH: qa%2Fqa%2Erb
+    MR_IID: 31
+    PROJECT_ID: 3
+    MR_IID_MANY_COMMITS: 10531
