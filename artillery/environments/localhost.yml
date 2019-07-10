@@ -4,3 +4,8 @@ config:
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+
+  variables:
+    GITLABHQ_GROUP: gitlabhq
+    GITLABHQ_PROJECT: gitlabhq
+    GITLABHQ_COMMIT_SHA: 0a99e022

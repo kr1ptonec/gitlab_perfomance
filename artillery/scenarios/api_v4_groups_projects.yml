@@ -4,7 +4,11 @@ config:
 
   defaults:
     headers:
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
       Content-Type: "application/json"
+
+  plugins:
+    expect: {}
 
   phases:
     - duration: 2
@@ -19,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{ PROJECT_ID }}/merge_requests
+          url: /api/v4/groups/{{GITLABHQ_GROUP}}/projects
           expect:
             - statusCode: 200
