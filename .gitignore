@@ -7,3 +7,5 @@ vendor/bundle/
 /out/
 tmp/
 /.vscode/*
+.idea
+package-lock.json
