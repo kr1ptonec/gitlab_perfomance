@@ -25,13 +25,17 @@ def usage!
   exit 1
 end
 
-def output_path(files = [], suffix = '')
+def output_path
+  ENV["OUTPUT_PATH"] || File.join("out", $current_time)
+end
+
+def file_output_path(files, suffix)
   base_names = files.map do |file|
     File.basename(file, File.extname(file))
   end
   base_name = base_names.join("_")
 
-  File.join("out", $current_time, base_name + suffix)
+  File.join(output_path, base_name + suffix)
 end
 
 def run_artillery_command(cmd_name, *args)
@@ -44,9 +48,9 @@ def run_artillery_command(cmd_name, *args)
 end
 
 def run(run_name, final_config)
-  final_config_path = output_path(run_name, "_config.yaml")
-  result_json_file = output_path(run_name, "_result.json")
-  result_html_file = output_path(run_name, "_result.html")
+  final_config_path = file_output_path(run_name, "_config.yaml")
+  result_json_file = file_output_path(run_name, "_result.json")
+  result_html_file = file_output_path(run_name, "_result.html")
 
   File.write(final_config_path, final_config.to_yaml)
 
@@ -88,7 +92,7 @@ warn(">> Saving all results to #{output_path}.")
 FileUtils.mkdir_p(output_path)
 
 aggregated_results = []
-aggregated_results_path = output_path(run_name, "_aggregated_results.json")
+aggregated_results_path = file_output_path(run_name, "_aggregated_results.json")
 
 ARGV.each do |file|
   config = YAML.load_file(file)
@@ -104,8 +108,8 @@ rescue Interrupt
   break
 end
 
-warn(">> Aggregated results: #{aggregated_results_path}")
-File.write(output_path(run_name, "_aggregated_results.json"), aggregated_results.to_json)
+warn ">> Aggregated results: #{aggregated_results_path}"
+File.write(file_output_path(run_name, "_aggregated_results.json"), aggregated_results.to_json)
 
 tp.set(:max_width, 100)
 tp(aggregated_results)
