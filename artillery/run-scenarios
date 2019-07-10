@@ -59,7 +59,7 @@ def run(run_name, final_config)
   warn
 
   warn(">> Running Artillery...")
-  run_artillery_command('run', final_config_path, '-o', result_json_file)
+  run_success = run_artillery_command('run', final_config_path, '-o', result_json_file)
   run_artillery_command('report', result_json_file, '-o', result_html_file)
   warn
 
@@ -67,11 +67,14 @@ def run(run_name, final_config)
   run_result = JSON.parse(File.read(result_json_file))
   warn
 
-  {
+  final_result = {
+    Result: run_success ? "Yes" : "No",
     P95: run_result.dig("aggregate", "latency", "p95"),
     RPS_Count: run_result.dig("aggregate", "rps", "count"),
     RPS_Mean: run_result.dig("aggregate", "rps", "mean")
   }
+
+  [run_success, final_result]
 end
 
 base_config = {}
@@ -94,22 +97,35 @@ FileUtils.mkdir_p(output_path)
 aggregated_results = []
 aggregated_results_path = file_output_path(run_name, "_aggregated_results.json")
 
+aggregated_success = true
+
 ARGV.each do |file|
   config = YAML.load_file(file)
   file_name = File.basename(file)
   file_run_name = run_name + [file]
 
-  result = run(file_run_name, config.deep_merge(base_config))
+  success, result = run(file_run_name, config.deep_merge(base_config))
+
   aggregated_results << { Name: file_name }.merge(result)
+  aggregated_success &&= success
 rescue Interrupt
   warn
   warn("Caught the interrupt. Stopping.")
   warn
+  aggregated_success = false
   break
+rescue StandardError => e
+  warn("Test failed: #{e.message}.")
+  aggregated_success = false
 end
 
-warn ">> Aggregated results: #{aggregated_results_path}"
+warn(">> Aggregated results: #{aggregated_results_path}")
 File.write(file_output_path(run_name, "_aggregated_results.json"), aggregated_results.to_json)
 
 tp.set(:max_width, 100)
 tp(aggregated_results)
+
+unless aggregated_success
+  warn(">> Some scenarios failed.")
+  exit(1)
+end
