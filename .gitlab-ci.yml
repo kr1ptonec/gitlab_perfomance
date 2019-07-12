@@ -12,6 +12,7 @@ stages:
   before_script:
     - gem install bundler -v 2.0.2
     - export BUNDLER_VERSION=2.0.2
+    - export BUNDLE_PATH__SYSTEM=false
     - bundle install --path vendor/bundle/
 
 #########################
