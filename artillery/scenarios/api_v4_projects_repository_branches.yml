@@ -23,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{GITLABHQ_GROUP}}%2F{{GITLABHQ_PROJECT}}/repository/tree
+          url: /api/v4/projects/{{GITLABHQ_GROUP}}%2F{{GITLABHQ_PROJECT}}/repository/branches
           expect:
             - statusCode: 200

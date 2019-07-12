@@ -1,5 +1,5 @@
 config:
-  target: https://pre-puma.gitlab.com
+  target: http://gitlab-10k.blessing.io
 
   defaults:
     headers:
