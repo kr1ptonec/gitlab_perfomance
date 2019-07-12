@@ -12,6 +12,7 @@ stages:
   before_script:
     - gem install bundler -v 2.0.2
     - export BUNDLER_VERSION=2.0.2
+    - export BUNDLE_PATH__SYSTEM=false
     - bundle install --path vendor/bundle/
 
 #########################
@@ -46,7 +47,7 @@ check:yamllint:
     - curl -sL https://deb.nodesource.com/setup_12.x | bash -
     - apt-get install -y nodejs
     - npm install
-    - bundle exec artillery/$ARTILLERY_SCRIPT_FILE
+    - bundle exec artillery/run-environment $TARGET_ENVIRONMENT
   only:
     refs:
       - schedules
