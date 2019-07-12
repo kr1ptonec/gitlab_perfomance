@@ -2,11 +2,6 @@ config:
   http:
     pool: 10
 
-  defaults:
-    headers:
-      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
-
   plugins:
     expect: {}
 
@@ -23,6 +18,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{GITLABHQ_GROUP}}%2F{{GITLABHQ_PROJECT}}/repository/tree
+          url: /{{GITLABHQ_GROUP}}/{{GITLABHQ_PROJECT}}/blob/master/app/models/project.rb
           expect:
             - statusCode: 200

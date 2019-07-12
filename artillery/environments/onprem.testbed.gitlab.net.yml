@@ -1,5 +1,5 @@
 config:
-  target: https://pre-puma.gitlab.com
+  target: https://onprem.testbed.gitlab.net
 
   defaults:
     headers:
