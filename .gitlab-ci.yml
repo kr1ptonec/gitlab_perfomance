@@ -40,7 +40,7 @@ check:yamllint:
 ## Artillery Load Tests ##
 ##########################
 
-.base-artillery: &base-artillery
+artillery-environment-all-scenarios:
   stage: test
   <<: *ruby-base
   script:
@@ -53,11 +53,6 @@ check:yamllint:
       - schedules
     variables:
       - $TEST_TYPE == "Load Tests"
-
-artillery-api-single-scenario-deprecated:
-  before_script:
-    - export "ARTILLERY_SCRIPT_FILE=all-endpoints-deprecated"
-  <<: *base-artillery
 
 ################################
 ## SiteSpeed Performance Test ##
