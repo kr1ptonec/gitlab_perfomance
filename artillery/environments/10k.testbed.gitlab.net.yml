@@ -1,5 +1,5 @@
 config:
-  target: http://gitlab-10k.blessing.io
+  target: http://10k.testbed.gitlab.net
 
   defaults:
     headers:
