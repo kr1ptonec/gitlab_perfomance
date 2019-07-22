@@ -1,0 +1,20 @@
+config:
+  http:
+    pool: 2
+
+  defaults:
+    headers:
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+      Content-Type: "application/json"
+
+  phases:
+    - duration: 1
+      arrivalRate: 1
+      name: "Check"
+
+scenarios:
+  - flow:
+      - get:
+          url: /api/v4/projects
+          expect:
+            - statusCode: 200

@@ -40,6 +40,17 @@ check:yamllint:
 ## Artillery Load Tests ##
 ##########################
 
+check:artillery:
+  stage: check
+  <<: *ruby-base
+  script:
+    - curl -sL https://deb.nodesource.com/setup_12.x | bash -
+    - apt-get install -y nodejs
+    - npm install
+    - bundle exec artillery/run-scenarios artillery/environments/staging.gitlab.com.yml -- artillery/scenarios/commit_check.yml
+  except:
+    - schedules
+
 artillery-environment-all-scenarios:
   stage: test
   <<: *ruby-base
@@ -55,17 +66,28 @@ artillery-environment-all-scenarios:
       - $TEST_TYPE == "Load Tests"
 
 ################################
-## SiteSpeed Performance Test ##
+## SiteSpeed Performance Tests ##
 ################################
 
-sitespeed-performance:
-  stage: test
+.base-sitespeed: &base-sitespeed
   image: docker:git
   services:
     - docker:stable-dind
+
+check:sitespeed:
+  stage: check
+  <<: *base-sitespeed
+  script:
+    - docker run --shm-size=1g --rm sitespeedio/sitespeed.io:9.5.0 https://staging.gitlab.com -n 1
+  except:
+    - schedules
+
+sitespeed-performance:
+  stage: test
+  <<: *base-sitespeed
   script:
     - mkdir sitespeed-results
-    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:6.3.1 --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
+    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:9.5.0 --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
   only:
     refs:
       - schedules
