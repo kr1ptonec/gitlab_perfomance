@@ -5,10 +5,12 @@ require 'json'
 require 'yaml'
 require 'tempfile'
 require 'open-uri'
+require 'open3'
 require 'shellwords'
 require 'table_print'
 
 $current_time = Time.now.strftime("%Y%m%d_%H%M%S")
+$env_name = nil
 
 class ::Hash
   def deep_merge(second)
@@ -21,12 +23,25 @@ class ::Hash
 end
 
 def usage!
-  warn("usage #{$PROGRAM_NAME} [artillery/environments/host.yml] -- [artillery/scenarios/scenarios(s)...]")
+  warn(
+    <<-DOC
+    Usage: #{$PROGRAM_NAME} [environment-script] -- [scenario-script(s)]
+
+    Runs the specified scenario(s) against the given environment. Requires the specified scenario(s) and environment files to exist.
+
+    Optional Environment Variables:
+      ARTILLERY_VERBOSE - Shows all output from Artillery. Warning: This output is very verbose. Default: false.
+      QUARANTINED - Will include any tests inside the artillery/scenarios/quarantined folder when true. Default: false.
+
+    Example(s):
+      #{$PROGRAM_NAME} artillery/environments/onprem.testbed.gitlab.net.yaml -- artillery/scenarios/api_v4_projects_merge_requests.yml
+    DOC
+  )
   exit 1
 end
 
 def output_path
-  ENV["OUTPUT_PATH"] || File.join("out", $current_time)
+  ENV["OUTPUT_PATH"] || File.join("out", "#{$env_name}_#{$current_time}")
 end
 
 def file_output_path(files, suffix)
@@ -44,7 +59,12 @@ def run_artillery_command(cmd_name, *args)
     cmd_name
   ] + args
 
-  system(*cmd)
+  stdout_stderr_str, status = Open3.capture2e(*cmd)
+  # Filter and print output to reduce significant noise with Artillery Expect plugin
+  stdout_stderr_str.gsub!(%r{\*\s[A-Z]+\s[a-zA-Z0-9\-%\/_.]+\s\R[a-zA-Z\s]+200\s\R}, '') unless ENV['ARTILLERY_VERBOSE']
+  puts stdout_stderr_str
+
+  status.success?
 end
 
 def run(run_name, final_config)
@@ -86,6 +106,7 @@ while file = ARGV.shift
   config = YAML.load_file(file)
   base_config = base_config.deep_merge(config)
   run_name << file
+  $env_name = File.basename(file, '.yml') if File.dirname(file).include?('artillery/environments')
 end
 
 usage! unless ARGV.any?
@@ -124,6 +145,11 @@ File.write(file_output_path(run_name, "_aggregated_results.json"), aggregated_re
 
 tp.set(:max_width, 100)
 tp(aggregated_results)
+File.open(file_output_path(run_name, "_aggregated_results.txt"), 'w') do |file|
+  tp.set :io, file
+  tp(aggregated_results)
+  tp.clear :io
+end
 
 unless aggregated_success
   warn(">> Some scenarios failed.")
