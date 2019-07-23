@@ -6,6 +6,6 @@ vendor/bundle/
 /.ruby-version
 /out/
 tmp/
-/.vscode/*
+/.vscode
 .idea
 package-lock.json

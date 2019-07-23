@@ -1,0 +1,5 @@
+http://10k.testbed.gitlab.net
+http://10k.testbed.gitlab.net/qa-perf-testing/gitlabhq
+http://10k.testbed.gitlab.net/qa-perf-testing/gitlabhq/issues
+http://10k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests
+http://10k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/6

@@ -16,7 +16,7 @@ stages:
     - bundle install --path vendor/bundle/
 
 #########################
-##     Lint Checks     ##
+##     MR Checks     ##
 #########################
 
 check:rubocop:
@@ -36,10 +36,6 @@ check:yamllint:
   except:
     - schedules
 
-##########################
-## Artillery Load Tests ##
-##########################
-
 check:artillery:
   stage: check
   <<: *ruby-base
@@ -47,11 +43,26 @@ check:artillery:
     - curl -sL https://deb.nodesource.com/setup_12.x | bash -
     - apt-get install -y nodejs
     - npm install
-    - bundle exec artillery/run-scenarios artillery/environments/staging.gitlab.com.yml -- artillery/scenarios/commit_check.yml
+    - bundle exec artillery/run-scenarios artillery/environments/staging.gitlab.com.yml -- artillery/scenarios/checks/commit_check.yml
   except:
     - schedules
 
-artillery-environment-all-scenarios:
+check:sitespeed:
+  stage: check
+  image: docker:git
+  services:
+    - docker:stable-dind
+  script:
+    - docker pull sitespeedio/sitespeed.io
+    - docker run --shm-size=1g --rm sitespeedio/sitespeed.io https://staging.gitlab.com -n 1
+  except:
+    - schedules
+
+##########################
+## Artillery Load Tests ##
+##########################
+
+.base-artillery-environment: &base-artillery-environment
   stage: test
   <<: *ruby-base
   script:
@@ -62,37 +73,43 @@ artillery-environment-all-scenarios:
   only:
     refs:
       - schedules
+  artifacts:
+    paths:
+      - out/
+
+artillery-environment-all-scenarios:
+  stage: test
+  <<: *base-artillery-environment
+  only:
     variables:
-      - $TEST_TYPE == "Load Tests"
+      - $TEST_TYPE == "Artillery"
+
+artillery-environment-all-scenarios-10x:
+  stage: test
+  <<: *base-artillery-environment
+  parallel: 10
+  only:
+    variables:
+      - $TEST_TYPE == "Artillery 10x"
 
 ################################
 ## SiteSpeed Performance Tests ##
 ################################
 
-.base-sitespeed: &base-sitespeed
+sitespeed-performance:
+  stage: test
   image: docker:git
   services:
     - docker:stable-dind
-
-check:sitespeed:
-  stage: check
-  <<: *base-sitespeed
-  script:
-    - docker run --shm-size=1g --rm sitespeedio/sitespeed.io:9.5.0 https://staging.gitlab.com -n 1
-  except:
-    - schedules
-
-sitespeed-performance:
-  stage: test
-  <<: *base-sitespeed
   script:
     - mkdir sitespeed-results
-    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io:9.5.0 --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
+    - docker pull sitespeedio/sitespeed.io
+    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
   only:
     refs:
       - schedules
     variables:
-      - $TEST_TYPE == "SiteSpeed Tests"
+      - $TEST_TYPE == "SiteSpeed"
   artifacts:
     paths:
       - sitespeed-results/

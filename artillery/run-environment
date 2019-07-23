@@ -1,7 +1,20 @@
 #!/usr/bin/env ruby
 
 unless ARGV.any?
-  warn("usage #{$PROGRAM_NAME} <environment-names>")
+  warn(
+    <<-DOC
+    Usage: #{$PROGRAM_NAME} [environment-name]
+
+    Runs all available scenarios against the specified environment. Requires the specified environment config script to exist inside the  artillery/environments folder.
+
+    Optional Environment Variables:
+      ARTILLERY_VERBOSE - Shows all output from Artillery. Warning: This output is very verbose. Default: false.
+      QUARANTINED - Will include any tests inside the artillery/scenarios/quarantined folder when true. Default: false.
+
+    Example(s):
+      #{$PROGRAM_NAME} onprem.testbed.gitlab.net
+    DOC
+  )
   exit 1
 end
 
@@ -13,8 +26,9 @@ def run_environment(name)
     File.join(script_path, "environments", name + ".yml"),
     "--",
     Dir[File.join(script_path, "scenarios", "*.yml")],
-    Dir[File.join(script_path, "scenarios", name, "*.yml")]
-  ].flatten
+    Dir[File.join(script_path, "scenarios", name, "*.yml")],
+    ENV['QUARANTINED'] ? Dir[File.join(script_path, "scenarios", "quarantined", "*.yml")] : nil
+  ].flatten.compact
 
   warn("$ #{cmd.join(' ')}")
   system(*cmd)
