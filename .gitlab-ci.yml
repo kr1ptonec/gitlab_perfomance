@@ -101,10 +101,12 @@ sitespeed-performance:
   image: docker:git
   services:
     - docker:stable-dind
+  tags:
+    - docker
   script:
     - mkdir sitespeed-results
     - docker pull sitespeedio/sitespeed.io
-    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io --outputFolder sitespeed-results --slack.hookUrl $SLACK_HOOK_URL --slack.type summary $URL_FILE
+    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io --outputFolder sitespeed-results --slack.hookUrl $CI_SLACK_WEBHOOK_URL --slack.type summary $URL_FILE
   only:
     refs:
       - schedules
@@ -120,21 +122,34 @@ sitespeed-performance:
 .notify: &notify
   image: alpine
   stage: notification
-  dependencies: []
   cache: {}
   before_script:
     - apk update && apk add git curl bash
   only:
     - schedules
 
-notify-slack-success:
+notify-slack-success-artillery:
   <<: *notify
   script:
-    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT passed! 🎉 See $CI_PIPELINE_URL." ci_passing
+    - artillery_summary_file=$(find out -name *_aggregated_results.txt -print -quit)
+    - artillery_summary=$([ -r $artillery_summary_file ] && echo "\`\`\`$(cat $artillery_summary_file)\`\`\`")
+    - bin/slack qa-performance "🎉 Test $TEST_TYPE against $TARGET_ENVIRONMENT has finished! 🎉 $artillery_summary See $CI_PIPELINE_URL for more info." ci_passing
   when: on_success
+  only:
+    variables:
+      - $TEST_TYPE =~ /^Artillery.*/
+
+notify-slack-success-sitespeed:
+  <<: *notify
+  script:
+    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT has finished! 🎉 See message in this channel from SiteSpeed.io bot or $CI_PIPELINE_URL for more info." ci_passing
+  when: on_success
+  only:
+    variables:
+      - $TEST_TYPE =~ /^SiteSpeed.*/
 
 notify-slack-fail:
   <<: *notify
   script:
-    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT failed! ☠️ See $CI_PIPELINE_URL." ci_failing
+    - bin/slack qa-performance "☠️ $TEST_TYPE against $TARGET_ENVIRONMENT has failed to finish! ☠️ See $CI_PIPELINE_URL." ci_failing
   when: on_failure
