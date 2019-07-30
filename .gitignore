@@ -1,4 +1,4 @@
-sitespeed-result/*
+sitespeed-results/*
 node_modules/
 .bundle/
 vendor/bundle/

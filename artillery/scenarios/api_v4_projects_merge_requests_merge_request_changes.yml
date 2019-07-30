@@ -1,7 +1,6 @@
 config:
   defaults:
     headers:
-      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
       Accept: "application/json"
 
   ensure:
@@ -23,6 +22,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{PROJECT_GROUP}}%2F{{PROJECT_NAME}}/repository/branches
+          url: /api/v4/projects/{{PROJECT_GROUP}}%2F{{PROJECT_NAME}}/merge_requests/{{PROJECT_MR_COMMITS_IID}}/changes?per_page=50000
           expect:
             - statusCode: 200

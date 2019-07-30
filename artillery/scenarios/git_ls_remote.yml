@@ -1,11 +1,11 @@
 config:
-  http:
-    pool: 10
-
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
+      Accept: "application/json"
+
+  ensure:
+    maxErrorRate: 1
 
   plugins:
     expect: {}
@@ -23,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /{{GITLABHQ_GROUP}}/{{GITLABHQ_PROJECT}}.git/info/refs?service=git-upload-pack
+          url: /{{PROJECT_GROUP}}/{{PROJECT_NAME}}.git/info/refs?service=git-upload-pack
           expect:
             - statusCode: 200

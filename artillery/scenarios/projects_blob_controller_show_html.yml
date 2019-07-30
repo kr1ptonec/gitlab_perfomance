@@ -1,6 +1,6 @@
 config:
-  http:
-    pool: 10
+  ensure:
+    maxErrorRate: 1
 
   plugins:
     expect: {}
@@ -18,6 +18,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /{{GITLABHQ_GROUP}}/{{GITLABHQ_PROJECT}}/blob/master/app/models/project.rb
+          url: /{{PROJECT_GROUP}}/{{PROJECT_NAME}}/blob/master/app/models/project.rb
           expect:
             - statusCode: 200

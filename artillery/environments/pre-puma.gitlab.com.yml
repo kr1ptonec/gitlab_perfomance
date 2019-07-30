@@ -1,15 +1,12 @@
 config:
   target: https://pre-puma.gitlab.com
 
-  defaults:
-    headers:
-      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-
   variables:
-    GITLABHQ_GROUP: qa-perf-testing
-    GITLABHQ_PROJECT: gitlabhq
-    GITLABHQ_COMMIT_SHA: 0a99e022
-    GITLABHQ_BRANCH_NAME: 10-0-stable
-    GITLABHQ_FILE_PATH: qa%2Fqa%2Erb
-    GITLABHQ_MR_IID: 10495
-    GITLABHQ_SIGNED_COMMIT_SHA: 6526e91f
+    PROJECT_GROUP: qa-perf-testing
+    PROJECT_NAME: gitlabhq
+    PROJECT_COMMIT_SHA: 0a99e022
+    PROJECT_BRANCH: 10-0-stable
+    PROJECT_FILE_PATH: qa%2Fqa%2Erb
+    PROJECT_MR_COMMITS_IID: 10495
+    PROJECT_MR_NOTES_IID: 6946
+    PROJECT_SIGNED_COMMIT_SHA: 6526e91f
