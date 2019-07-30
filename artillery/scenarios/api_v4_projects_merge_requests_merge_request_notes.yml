@@ -1,10 +1,11 @@
 config:
-  http:
-    pool: 10
-
   defaults:
     headers:
-      Content-Type: "application/json"
+      PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
+      Accept: "application/json"
+
+  ensure:
+    maxErrorRate: 1
 
   plugins:
     expect: {}
@@ -22,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{GITLABHQ_GROUP}}%2F{{GITLABHQ_PROJECT}}/merge_requests/{{GITLABHQ_MR_IID}}/notes
+          url: /api/v4/projects/{{PROJECT_GROUP}}%2F{{PROJECT_NAME}}/merge_requests/{{PROJECT_MR_NOTES_IID}}/notes
           expect:
             - statusCode: 200

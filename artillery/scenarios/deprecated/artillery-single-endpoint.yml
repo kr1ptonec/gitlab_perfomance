@@ -1,12 +1,9 @@
 config:
   target: "{{ $processEnvironment.HOST_URL }}"
-  http:
-    pool: 10 # All HTTP requests from all virtual users will be sent over the same <pool> connections.
-    # This also means that there is a limit on the number of requests sent per second.
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
+      Accept: "application/json"
   phases:
     - duration: "{{ $processEnvironment.WARMUP_DURATION }}"
       arrivalRate: "{{ $processEnvironment.WARMUP_ARRIVAL_RATE }}"

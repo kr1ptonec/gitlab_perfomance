@@ -106,7 +106,7 @@ sitespeed-performance:
   script:
     - mkdir sitespeed-results
     - docker pull sitespeedio/sitespeed.io
-    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io --outputFolder sitespeed-results --slack.hookUrl $CI_SLACK_WEBHOOK_URL --slack.type summary $URL_FILE
+    - docker run --shm-size=1g --rm -v "$(pwd)":/sitespeed.io sitespeedio/sitespeed.io --browsertime.iterations 1 --browsertime.pageCompleteCheck 'return (function() {try { return (Date.now() - window.performance.timing.loadEventEnd) > 20000;} catch(e) {} return true;})()' --browsertime.viewPort "1366x1080" --outputFolder sitespeed-results --summary-detail --slack.hookUrl $CI_SLACK_WEBHOOK_URL --slack.limitMetric "speedIndex" --slack.limitWarning 1800 --slack.limitError 2000 $URL_FILE
   only:
     refs:
       - schedules
@@ -142,7 +142,7 @@ notify-slack-success-artillery:
 notify-slack-success-sitespeed:
   <<: *notify
   script:
-    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT has finished! 🎉 See message in this channel from SiteSpeed.io bot or $CI_PIPELINE_URL for more info." ci_passing
+    - bin/slack qa-performance "🎉 $TEST_TYPE against $TARGET_ENVIRONMENT has finished! 🎉 See last message in this channel from SiteSpeed.io bot or $CI_PIPELINE_URL for more info." ci_passing
   when: on_success
   only:
     variables:

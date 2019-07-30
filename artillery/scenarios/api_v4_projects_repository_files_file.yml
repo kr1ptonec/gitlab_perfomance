@@ -1,11 +1,11 @@
 config:
-  http:
-    pool: 10
-
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
+      Accept: "application/json"
+
+  ensure:
+    maxErrorRate: 1
 
   plugins:
     expect: {}
@@ -23,6 +23,6 @@ config:
 scenarios:
   - flow:
       - get:
-          url: /api/v4/projects/{{GITLABHQ_GROUP}}%2F{{GITLABHQ_PROJECT}}/repository/files/{{GITLABHQ_FILE_PATH}}?ref=master
+          url: /api/v4/projects/{{PROJECT_GROUP}}%2F{{PROJECT_NAME}}/repository/files/{{PROJECT_FILE_PATH}}?ref=master
           expect:
             - statusCode: 200

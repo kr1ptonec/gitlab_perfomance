@@ -29,6 +29,9 @@ def usage!
 
     Runs the specified scenario(s) against the given environment. Requires the specified scenario(s) and environment files to exist.
 
+    Required Environment Variables:
+      ACCESS_TOKEN - A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions.
+
     Optional Environment Variables:
       ARTILLERY_VERBOSE - Shows all output from Artillery. Warning: This output is very verbose. Default: false.
       QUARANTINED - Will include any tests inside the artillery/scenarios/quarantined folder when true. Default: false.
@@ -88,7 +91,7 @@ def run(run_name, final_config)
   warn
 
   final_result = {
-    Result: run_success ? "Yes" : "No",
+    Result: run_success ? "Passed" : "Failed",
     P95: run_result.dig("aggregate", "latency", "p95"),
     RPS_Count: run_result.dig("aggregate", "rps", "count"),
     RPS_Mean: run_result.dig("aggregate", "rps", "mean")

@@ -1,11 +1,11 @@
 config:
-  http:
-    pool: 10
-
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
+      Accept: "application/json"
+
+  ensure:
+    maxErrorRate: 1
 
   plugins:
     expect: {}

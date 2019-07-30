@@ -2,4 +2,6 @@ https://onprem.testbed.gitlab.net
 https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq
 https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/issues
 https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests
-https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/6
+https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/10495
+https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/10495/commits
+https://onprem.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/10495/diffs

@@ -5,7 +5,7 @@ config:
   defaults:
     headers:
       PRIVATE-TOKEN: "{{ $processEnvironment.ACCESS_TOKEN }}"
-      Content-Type: "application/json"
+      Accept: "application/json"
 
   phases:
     - duration: 1
