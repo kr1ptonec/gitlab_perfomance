@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem "down"
+gem "optimist"
 gem "table_print"
 
 gem 'gitlab-styles', '~> 2.7', require: false

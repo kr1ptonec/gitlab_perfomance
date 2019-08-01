@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+
+require 'http'
+require "down/http"
+require 'optimist'
+require 'uri'
+
+opts = Optimist.options do
+  banner "Usage: import-project [options]"
+  banner "\nImports a GitLab Project tarball (local or remote) into the specified environment.\nDefaults to importing the gitlab-ce project under the qa-perf-testing group from a remote filestore."
+  banner "\nOptions:"
+  opt :environment_url, "Full URL for the environment to import to.", short: :none, type: :string, required: true
+  opt :project_tarball, "Location of project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz'
+  opt :namespace, "The ID or path of the namespace that the project will be imported to, such as a Group.", short: :none, type: :string
+  opt :project_name, "Name for project. Can be also be a combined path and name if required.", short: :none, type: :string, required: true
+  opt :help, 'Show help message'
+  banner "\nEnvironment Variables:"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
+  banner "\nExamples:"
+  banner "  import-project --environment-url onprem.testbed.gitlab.net"
+  banner "  import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project"
+end
+
+raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
+
+def get(url, headers)
+  HTTP.follow.get(
+    url,
+    headers: headers
+  )
+end
+
+def post(url, payload, headers)
+  res = HTTP.follow.post(
+    url,
+    form: payload,
+    headers: headers
+  )
+  raise HTTP::ResponseError "Post request has failed:\n#{grp_response.status} - #{JSON.parse(grp_response.body.to_s)}" if res.status.client_error? || res.status.server_error?
+
+  puts "\n#{res.status}"
+  pp JSON.parse(res.body.to_s)
+  res
+end
+
+headers = {
+  'PRIVATE-TOKEN': ENV['ACCESS_TOKEN']
+}
+env_url = "http://#{opts[:environment_url].sub(%r{^https?\:\/\/}, '')}"
+
+puts "Importing Project '#{opts[:project_name]}' from tarball '#{opts[:project_tarball]}'" + (opts[:namespace] ? " under namespace '#{opts[:namespace]}'" : '') + " to GitLab environment '#{opts[:environment_url]}'"
+
+# Check that the tarball file is valid
+if opts[:project_tarball].match?(URI.regexp(%w[http https ftp]))
+  puts "Tarball is remote, caching..."
+  proj_file = Down::Http.download(opts[:project_tarball])
+else
+  proj_file = opts[:project_tarball]
+end
+raise Errno::ENOENT unless File.exist?(proj_file)
+
+# Create Group
+if opts[:namespace] && !get("#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers).status.success?
+  puts "Creating Namespace #{opts[:namespace]}..."
+  grp_url = "#{env_url}/api/v4/groups"
+  grp_payload = {
+    name: opts[:namespace],
+    path: opts[:namespace],
+    visibility: 'public'
+  }
+  post(grp_url, grp_payload, headers)
+end
+
+# Create Project
+puts "Creating project #{opts[:project_name]}..."
+proj_url = "#{env_url}/api/v4/projects/import"
+proj_payload = {
+  namespace: opts[:namespace],
+  path: opts[:project_name],
+  file: HTTP::FormData::File.new(proj_file)
+}
+proj_res = post(proj_url, proj_payload, headers)
+proj_id = JSON.parse(proj_res.body.to_s)['id']
+
+puts "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
+print "\nWaiting until Project '#{proj_id}' has imported successfully..."
+loop do
+  proj_imp_res = JSON.parse(get("#{env_url}/api/v4/projects/#{proj_id}/import", headers).body.to_s)
+
+  case proj_imp_res['import_status']
+  when 'finished'
+    puts "\nProject has successfully imported:\n#{opts[:environment_url]}/#{proj_imp_res['path_with_namespace']}"
+    exit
+  when 'failed'
+    puts "\nProject has failed to import. Reason:\n#{proj_imp_res['import_error']}"
+    exit
+  when 'scheduled', 'started'
+    print '.'
+    sleep 5
+  else
+    sleep 5
+  end
+end

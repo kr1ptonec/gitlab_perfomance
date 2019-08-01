@@ -16,18 +16,68 @@ On each machine you intend to use as a test runner you will need to install the 
 1. Next proceed to install / update the required tools by running the following commands at the root of this project:
     * `bundle install --path vendor/bundle && npm install`
 
-### Test Project Setup
+### Test Data Setup via Project Import
 
-The intended environment should be prepared with a test [project](https://docs.gitlab.com/ee/user/project/) that will be used by the tests. Project's lie at the heart of GitLab's functionality and for performance testing the project used should be large, realistic and containing data that covers all intended areas of GitLab for your environment.
+The intended environment should be prepared with representative test data, namely a [project](https://docs.gitlab.com/ee/user/project/) that will be used by the tests.
 
-At this time, our recommended test project is our very own - [GitLab CE](https://gitlab.com/gitlab-org/gitlab-ce/). For convenience, this is imported via our `gitlab-ce` backup from [GitHub](https://github.com/gitlabhq/gitlabhq) (which is named `gitlabhq`) using our [GitHub Import](https://docs.gitlab.com/ee/user/project/import/github.html) feature. Note, that this unfortunately can take quite long but the Quality team is looking at improving this as a priority. We'll also be continuously iterating on our recommended test project with the possibility of more projects or other data sets in the future.
+The default setup for the tests is importing our own [GitLab CE](https://gitlab.com/gitlab-org/gitlab-ce/) project under a group named `qa-perf-testing`. Project tarballs for performance testing can be found over on the [performance-data](https://gitlab.com/gitlab-org/quality/performance-data) project. A different setup could be used if required but doing so will require adapting the tests accordingly as detailed in the [Test Configuration](#test-configuration) section. 
 
-It should also be highlighted that it's possible to use your own test project and details on how to configure the tests to use this can be found below in the [Test Configuration](#test-configuration) section.
+There's several options for importing the project into your GitLab environment. They are detailed as follows with the assumption that the recommended group `qa-perf-testing` and project `gitlabhq` are being set up:
 
-To set up the recommended test project, follow these steps:
+#### Importing via UI
 
-1. Create a public, top-level group in your environment. Typically we use `qa-perf-testing`.
-1. Import the GitLab CE project from it's GitHub backup - [`gitlabhq`](https://github.com/gitlabhq/gitlabhq) - via [GitHub Import](https://docs.gitlab.com/ee/user/project/import/github.html). Make sure to import the Project into the group you have created or selected.
+The first option is to simply [import the Project tarball file via the GitLab UI](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project):
+
+1. Create the [Group](https://docs.gitlab.com/ee/user/group/#create-a-new-group) `qa-perf-testing`
+2. Import the [GitLab CE Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz) into the Group.
+
+It should take around 12 minutes for the project to import fully. You can head to the project's main page for the current status.
+
+#### Importing via the `import-project` script
+
+A convenience script, `tools/import-project`, is provided with this project to import the Project tarball into a GitLab environment via API from the terminal.
+
+The following is the help output for the command that details how to use it to import the [GitLab CE](https://gitlab.com/gitlab-org/gitlab-ce/) project:
+<p>
+<details>
+<summary><code>tools/import-project -h</code></summary>
+
+```
+Usage: import-project [options]
+
+Imports a GitLab Project tarball (local or remote) into the specified environment.
+Defaults to importing the gitlab-ce project under the qa-perf-testing group from a remote filestore.
+
+Options:
+  --environment-url=<s>    Full URL for the environment to import to.
+  --project-tarball=<s>    Location of project tarball to import. Can be local or remote. (Default:
+                           https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz)
+  --namespace=<s>          The ID or path of the namespace that the project will be imported to, such as a Group.
+  --project-name=<s>       Name for project. Can be also be a combined path and name if required.
+  -h, --help               Show help message
+
+Environment Variables:
+  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and
+have API and read_repository permissions. (Default: nil)
+
+Examples:
+  import-project --environment-url onprem.testbed.gitlab.net
+  import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project
+```
+
+</details>
+</p>
+
+The process should take around 12 minutes for the project to import fully. The script will keep checking periodically for the status and exit once import has completed.
+
+#### Importing via GitHub
+
+The last option is to [import the Project via the GitHub](https://docs.gitlab.com/ee/user/project/import/github.html):
+
+1. Create the [Group](https://docs.gitlab.com/ee/user/group/#create-a-new-group) `qa-perf-testing`
+2. Import the [GitLab CE backup on GitHub](https://github.com/gitlabhq/gitlabhq) into the Group via the UI.
+
+This method will take longer to import than the other methods and will depend on several factors. It's recommended to use the other methods.
 
 ### Test Configuration
 
@@ -184,7 +234,9 @@ Running the Artillery tests can be done with one of two convenience commands - [
 
 The following is the help output for each command that details how to use them and what variables they accept:
 
-**`artillery/run-environment`**
+<p>
+<details>
+<summary><code>artillery/run-environment</code></summary>
 
 ```bash
 Usage: artillery/run-environment [environment-name]
@@ -192,7 +244,7 @@ Usage: artillery/run-environment [environment-name]
 Runs all available scenarios against the specified environment. Requires the specified environment config script to exist in artillery/environments.
 
 Required Environment Variables:
-  ACCESS_TOKEN - A valid [GitLab Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions.
+  ACCESS_TOKEN - A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions.
 
 Optional Environment Variables:
   ARTILLERY_VERBOSE - Shows all output from Artillery when true. Warning: This output is very verbose. Default: false.
@@ -202,7 +254,12 @@ Example(s):
   bundle exec artillery/run-environment onprem.testbed.gitlab.net
 ```
 
-**`artillery/run-scenarios`**
+</details>
+</p>
+
+<p>
+<details>
+<summary><code>artillery/run-environment</code></summary>
 
 ```bash
 Usage: artillery/run-scenarios [environment-script] -- [scenario-script(s)]
@@ -210,7 +267,7 @@ Usage: artillery/run-scenarios [environment-script] -- [scenario-script(s)]
 Runs the specified scenario(s) against the given environment. Requires the specified scenario(s) and environment files to exist.
 
 Required Environment Variables:
-  ACCESS_TOKEN - A valid [GitLab Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions.
+  ACCESS_TOKEN - A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions.
 
 Optional Environment Variables:
   ARTILLERY_VERBOSE - Shows all output from Artillery when true. Warning: This output is very verbose. Default: false.
@@ -219,6 +276,9 @@ Optional Environment Variables:
 Example(s):
   bundle exec artillery/run-scenarios artillery/environments/onprem.testbed.gitlab.net.yaml -- artillery/scenarios/api_v4_projects_merge_requests.yml
 ```
+
+</details>
+</p>
 
 #### Artillery High RPS (Responses per Second) Tests
 
