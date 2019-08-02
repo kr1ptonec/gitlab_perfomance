@@ -44,7 +44,7 @@ def usage!
 end
 
 def output_path
-  ENV["OUTPUT_PATH"] || File.join("out", "#{$env_name}_#{$current_time}")
+  ENV["OUTPUT_PATH"] || File.join("artillery/results", "#{$env_name}_#{$current_time}")
 end
 
 def file_output_path(files, suffix)
