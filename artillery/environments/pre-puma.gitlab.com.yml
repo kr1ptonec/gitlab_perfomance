@@ -10,3 +10,13 @@ config:
     PROJECT_MR_COMMITS_IID: 10495
     PROJECT_MR_NOTES_IID: 6946
     PROJECT_SIGNED_COMMIT_SHA: 6526e91f
+
+  phases:
+    - duration: 2
+      arrivalRate: 1
+      rampTo: 2
+      name: "Warm up"
+
+    - duration: 10
+      arrivalRate: 2
+      name: "Load"

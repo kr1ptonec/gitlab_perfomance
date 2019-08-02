@@ -1,0 +1,13 @@
+{
+  "browsertime": {
+    "browser": "chrome",
+    "viewPort": "1366x1080",
+    "iterations": 1,
+    "pageCompleteCheck": "return (function() {try { return (Date.now() - window.performance.timing.loadEventEnd) > 20000;} catch(e) {} return true;})()"
+  },
+  "slack": {
+    "type": "summary"
+  },
+  "outputFolder": "sitespeed/results",
+  "summary-detail": true
+}

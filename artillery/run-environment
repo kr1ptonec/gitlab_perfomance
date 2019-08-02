@@ -21,6 +21,8 @@ unless ARGV.any?
   exit 1
 end
 
+aggregated_success = true
+
 def run_environment(name)
   script_path = File.dirname(__FILE__)
 
@@ -38,5 +40,8 @@ def run_environment(name)
 end
 
 ARGV.each do |environment_name|
-  run_environment(environment_name)
+  result = run_environment(environment_name)
+  aggregated_success = false unless result
 end
+
+exit(1) unless aggregated_success
