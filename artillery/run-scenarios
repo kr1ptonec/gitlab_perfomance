@@ -64,7 +64,7 @@ def run_artillery_command(cmd_name, *args)
 
   stdout_stderr_str, status = Open3.capture2e(*cmd)
   # Filter and print output to reduce significant noise with Artillery Expect plugin
-  stdout_stderr_str.gsub!(%r{\*\s[A-Z]+\s[a-zA-Z0-9\-%\/_.]+\s\R[a-zA-Z\s]+200\s\R}, '') unless ENV['ARTILLERY_VERBOSE']
+  stdout_stderr_str.gsub!(/\*\s[A-Z]+\s[a-zA-Z0-9\-%\/_.]+\s\R[a-zA-Z\s]+200\s\R/, '') unless ENV['ARTILLERY_VERBOSE']
   puts stdout_stderr_str
 
   status.success?

@@ -7,7 +7,7 @@ require 'uri'
 
 opts = Optimist.options do
   banner "Usage: import-project [options]"
-  banner "\nImports a GitLab Project tarball (local or remote) into the specified environment.\nDefaults to importing the gitlab-ce project under the qa-perf-testing group from a remote filestore."
+  banner "\nImports a GitLab Project tarball (local or remote) into the specified environment.\nDefaults to importing the gitlabhq project from a remote filestore to the specified environment, group and project namespace."
   banner "\nOptions:"
   opt :environment_url, "Full URL for the environment to import to.", short: :none, type: :string, required: true
   opt :project_tarball, "Location of project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz'
@@ -15,7 +15,7 @@ opts = Optimist.options do
   opt :project_name, "Name for project. Can be also be a combined path and name if required.", short: :none, type: :string, required: true
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
-  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access for the ability to import projects. (Default: nil)"
   banner "\nExamples:"
   banner "  import-project --environment-url onprem.testbed.gitlab.net"
   banner "  import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project"
@@ -46,7 +46,7 @@ end
 headers = {
   'PRIVATE-TOKEN': ENV['ACCESS_TOKEN']
 }
-env_url = "http://#{opts[:environment_url].sub(%r{^https?\:\/\/}, '')}"
+env_url = "http://#{opts[:environment_url].sub(/^https?\:\/\//, '')}"
 
 puts "Importing Project '#{opts[:project_name]}' from tarball '#{opts[:project_tarball]}'" + (opts[:namespace] ? " under namespace '#{opts[:namespace]}'" : '') + " to GitLab environment '#{opts[:environment_url]}'"
 
