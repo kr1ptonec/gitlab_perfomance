@@ -1,0 +1,230 @@
+#!/usr/bin/env ruby
+
+require 'chronic_duration'
+require 'down/http'
+require 'fileutils'
+require 'http'
+require 'json'
+require 'open3'
+require 'optimist'
+require 'os'
+require 'rainbow'
+require 'table_print'
+require 'time'
+require 'tmpdir'
+
+dir_name = File.dirname($PROGRAM_NAME)
+
+opts = Optimist.options do
+  banner "Usage: run-k6 [options]"
+  banner "\nRuns k6 Test(s) with the given Scenario against the specified Environment."
+  banner "\nOptions:"
+  opt :environment, "Environment Config file path that contains the relevant Environment Variables to be passed to the tests.", type: :string, required: true
+  opt :scenario, "Path of Scenario Config file path that the tests should be run with.", type: :string, default: "#{dir_name}/scenarios/20s_2rps.json"
+  opt :tests, "Path of Test file or folder paths to run.", type: :strings, default: ["#{dir_name}/tests"]
+  opt :quarantined, "Include any tests inside the #{dir_name}/scenarios/quarantined folder when true.", type: :flag, default: false
+  opt :upload_results, "Upload test results to a InfluxDB server. Requires INFLUXDB_URL Environment Variable to be set.", type: :flag, default: false
+  opt :help, 'Show this help message'
+  banner "\nEnvironment Variables:"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
+  banner "  INFLUXDB_URL             URL for a InfluxDB server that k6 will upload results to (creates database named k6db). (Default: nil)"
+  banner "\nExamples:"
+  banner "  Running all Tests with the 60s_200rps Scenario against the 10k Environment:"
+  banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/10k.json --scenario #{dir_name}/scenarios/60s_200rps.json"
+  banner "  Run a specific Test with the 20s_2rps Scenario against the onprem Environment:"
+  banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/onprem.json --scenario #{dir_name}/scenarios/20s_2rps.json --tests #{dir_name}/tests/api_v4_projects.js"
+end
+
+def setup_k6
+  k6_version = ENV['K6_VERSION'] || '0.25.1'
+
+  ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
+    return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip == "k6 v#{k6_version}"
+  end
+
+  if OS.linux?
+    k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux#{OS.bits}.tar.gz"
+    warn Rainbow("k6 not found or different version detected. Downloading k6 v#{k6_version} from #{k6_url} to system temp folder...").yellow
+
+    k6_archive = Down::Http.download(k6_url)
+    extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
+    raise "k6 archive extract failed:\b#{extract_output}" unless extract_status
+  elsif OS.mac?
+    k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-mac.zip"
+    warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
+
+    k6_archive = Down::Http.download(k6_url)
+    extract_output, extract_status = Open3.capture2e('unzip', '-j', k6_archive.path, '-d', File.dirname(k6_archive.path))
+    raise "k6 archive extract failed:\b#{extract_output}" unless extract_status
+  elsif OS.windows?
+    raise "k6 not found or wrong version detected. Please install k6 version #{k6_version} on your machine and ensure it's found on the PATH"
+  end
+
+  File.join(File.dirname(k6_archive.path), 'k6')
+end
+
+def get_env_vars(env_file:)
+  expected_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAME PROJECT_COMMIT_SHA PROJECT_BRANCH
+                     PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_NOTES_IID PROJECT_SIGNED_COMMIT_SHA]
+  env_file_vars = JSON.parse(File.read(env_file))
+  env_vars = {}
+  expected_vars.each do |var_name|
+    raise "Required environment variable #{var_name} has not been set via config file or globally. Exiting..." unless ENV[var_name] || env_file_vars[var_name]
+
+    env_vars[var_name] = ENV[var_name] || env_file_vars[var_name]
+  end
+  env_vars
+end
+
+def get_env_version(env_vars:)
+  res = HTTP.headers('PRIVATE-TOKEN': ENV['ACCESS_TOKEN']).get("#{env_vars['ENVIRONMENT_URL']}/api/v4/version")
+  version = JSON.parse(res.body.to_s).values.join(' ')
+  version == '401 Unauthorized' ? nil : version
+end
+
+def get_tests(test_paths:, quarantined:)
+  tests = []
+  test_paths.each do |test|
+    if File.directory?(test)
+      tests += Dir.glob("#{test}/*.js")
+      tests += Dir.glob("#{test}/quarantined/*.js") if quarantined
+    elsif File.file?(test)
+      tests << test
+    end
+  end
+  raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
+
+  tests.uniq.sort
+end
+
+def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, results_json_file:, upload_results: false)
+  test_name = File.basename(test_file, '.js')
+  puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
+
+  cmd = [k6_path, 'run']
+  cmd += ['--config', scenario_file] if scenario_file
+  cmd += ['--out', "json=#{results_json_file}"] if results_json_file
+  cmd += ['--out', "influxdb=#{ENV['INFLUXDB_URL']}/k6db"] if upload_results && ENV['INFLUXDB_URL']
+  cmd += ['--tag', "environment=#{env_vars['ENVIRONMENT_NAME']}"]
+  cmd += ['--summary-time-unit', 'ms']
+  cmd += [test_file]
+
+  status = nil
+  output = []
+  Open3.popen2e(env_vars, *cmd) do |stdin, stdout_stderr, wait_thr|
+    stdin.close
+    stdout_stderr.each do |line|
+      raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line =~ /(GoError:).*(ACCESS_TOKEN)/
+
+      output << line.lstrip
+      puts line
+    end
+    status = wait_thr.value
+  end
+
+  raise output.match(/(GoError:).*(ACCESS_TOKEN)/)[2] if output =~ /(GoError:).*(ACCESS_TOKEN)/
+
+  [status.success?, output]
+end
+
+def parse_k6_results(output:)
+  results = {}
+  lines = output.delete_if { |line| line !~ /Test finished|http_req_duration|iterations.*s/ }
+
+  results[:Duration] = ChronicDuration.parse(lines[0].match(/(t=)(.*s)/)[2]).round(2).to_s + 's'
+  results[:P95] = lines[1].match(/(p\(95\)=)(\d+\.\d+)([a-z])/)[2] + lines[1].match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[3]
+  results[:RPS_Count] = lines[0].match(/(i=)(\d+)/)[2]
+  results[:RPS_Mean] = lines[2].match(/(\d+\.\d+\/s)/)[1]
+
+  results
+rescue NoMethodError
+  raise "Error parsing stdout test results. Exiting..."
+end
+
+puts Rainbow("GitLab Performance Toolkit - k6 load test runner").color(230, 83, 40)
+warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
+
+k6_path = setup_k6
+
+# Variables
+env_vars = get_env_vars(env_file: opts[:environment])
+env_version = get_env_version(env_vars: env_vars)
+start_time = Time.now
+
+results_dir = File.join("#{dir_name}/results", "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y%m%d_%H%M%S')}")
+puts "\nSaving all test results to #{results_dir}"
+FileUtils.mkdir_p(results_dir)
+
+aggregated_results = []
+aggregated_success = true
+
+# Collect and run tests
+tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined])
+tests.each do |test_file|
+  test_name = File.basename(test_file, '.js')
+  results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{test_name}_results.json")
+
+  success, output = run_k6(k6_path: k6_path, env_vars: env_vars, scenario_file: opts[:scenario], test_file: test_file,
+                           results_json_file: results_json, upload_results: opts[:upload_results])
+
+  parsed_results = parse_k6_results(output: output)
+  success = false if parsed_results.nil?
+  aggregated_results << { Name: test_name, Result: success ? "Passed" : "Failed" }.merge(parsed_results)
+  aggregated_success &&= success
+rescue Interrupt
+  warn Rainbow("Caught the interrupt. Stopping.").yellow
+  exit
+rescue ArgumentError => e
+  warn Rainbow(e.message).yellow
+  next
+rescue StandardError => e
+  warn Rainbow("Test failed: #{e.message}.").red
+  aggregated_success = false
+end
+
+# Save test times
+end_time = Time.now
+run_time = (end_time - start_time).round(2)
+test_epoch_times_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_test_epoch_times.txt")
+File.open(test_epoch_times_txt, 'w') do |file|
+  file.write("START_TIME=#{(start_time.to_f * 1000).to_i}\n")
+  file.write("END_TIME=#{(end_time.to_f * 1000).to_i}\n")
+  file.write("RUN_TIME=#{run_time}")
+end
+
+puts Rainbow("\nAll k6 tests have finished after #{run_time}s!").green
+
+# Parse results
+if aggregated_results.empty?
+  puts "No tests reported any results. Exiting..."
+  exit
+end
+
+aggregated_results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_aggregated_results.json")
+aggregated_results_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_aggregated_results.txt")
+
+test_details_summary = <<~DOC
+  Environment:    #{env_vars['ENVIRONMENT_NAME']} #{env_version ? "(#{env_version})" : ''}
+  Scenario:       #{File.basename(opts[:scenario], '.json')}
+  Date:           #{start_time.strftime('%F')}
+  Run Time:       #{run_time}s (Start: #{start_time.utc.strftime('%T %Z')}, End: #{end_time.utc.strftime('%T %Z')})
+DOC
+puts "\nResults summary:\n\n#{test_details_summary}\n"
+tp.set(:max_width, 100)
+tp(aggregated_results)
+
+puts "\nSaving results summary to:\n#{aggregated_results_json}\n#{aggregated_results_txt}"
+File.write(aggregated_results_json, aggregated_results.to_json)
+File.open(aggregated_results_txt, 'w') do |file|
+  file.write("```\n")
+  file.write("#{test_details_summary}\n")
+  tp.set :io, file
+  tp(aggregated_results)
+  tp.clear :io
+  file.write("```\n")
+end
+
+unless aggregated_success
+  puts Rainbow("\nOne or more k6 tests have failed...").red
+  exit(1)
+end

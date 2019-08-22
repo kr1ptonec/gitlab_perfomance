@@ -1,16 +1,37 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.6.0)
+      public_suffix (>= 2.0.2, < 4.0)
     ast (2.4.0)
+    chronic_duration (0.10.6)
+      numerizer (~> 0.1.1)
+    domain_name (0.5.20190701)
+      unf (>= 0.0.5, < 1.0.0)
+    down (4.8.1)
+      addressable (~> 2.5)
     gitlab-styles (2.7.0)
       rubocop (~> 0.69.0)
       rubocop-gitlab-security (~> 0.1.0)
       rubocop-performance (~> 1.1.0)
       rubocop-rspec (~> 1.19)
+    http (4.1.1)
+      addressable (~> 2.3)
+      http-cookie (~> 1.0)
+      http-form_data (~> 2.0)
+      http_parser.rb (~> 0.6.0)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
+    http-form_data (2.1.1)
+    http_parser.rb (0.6.0)
     jaro_winkler (1.5.3)
+    numerizer (0.1.1)
+    optimist (3.0.0)
+    os (1.0.1)
     parallel (1.17.0)
     parser (2.6.3.0)
       ast (~> 2.4.0)
+    public_suffix (3.1.1)
     rainbow (3.0.0)
     rubocop (0.69.0)
       jaro_winkler (~> 1.5.1)
@@ -27,17 +48,26 @@ GEM
       rubocop (>= 0.52.1)
     ruby-progressbar (1.10.1)
     table_print (1.5.6)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.6)
     unicode-display_width (1.6.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  chronic_duration
+  down
   gitlab-styles (~> 2.7)
+  http
+  optimist
+  os
+  rainbow
   rubocop (~> 0.69.0)
   rubocop-performance (~> 1.1.0)
   rubocop-rspec (~> 1.22.1)
   table_print
 
 BUNDLED WITH
-   2.0.1
+   2.0.2

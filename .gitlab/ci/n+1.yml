@@ -53,7 +53,7 @@
 ######################
 
 # These jobs can't run in parallel because each enables a feature flag before
-# running the tests and and then disables the feature flag.
+# running the tests and then disables the feature flag.
 
 nplus1-testbed:
   <<: *nplus1-testbed

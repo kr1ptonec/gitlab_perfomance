@@ -9,5 +9,8 @@
   "dependencies": {
     "artillery": "^1.6.0-27",
     "artillery-plugin-expect": "^1.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0"
   }
 }

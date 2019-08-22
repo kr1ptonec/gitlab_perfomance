@@ -1,0 +1,33 @@
+#########################
+##     Lint Checks     ##
+#########################
+check:rubocop:
+  stage: check
+  image: ruby:2.6.3-alpine
+  before_script:
+    - apk add make gcc libc-dev
+    - gem install bundler -v 2.0.2
+    - export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
+    - bundle install --without run
+  script:
+    - rubocop --parallel
+  except:
+    - schedules
+
+check:yamllint:
+  stage: check
+  # Use an up to date image of yamllint that can handle unicode emojis
+  image: pipelinecomponents/yamllint
+  script:
+    - yamllint .gitlab-ci.yml artillery/environments artillery/scenarios .gitlab/ci/
+  except:
+    - schedules
+
+check:eslint:
+  stage: check
+  image: node:alpine
+  script:
+    - npm install eslint --global
+    - eslint './**/*.js'
+  except:
+    - schedules

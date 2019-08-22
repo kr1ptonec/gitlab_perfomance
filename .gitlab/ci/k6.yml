@@ -1,0 +1,104 @@
+.k6-base:
+  image: ruby:2.6.3-alpine
+  before_script:
+    - apk add --no-cache gcc g++ make libc6-compat libc-dev
+    - gem install bundler -v 2.0.2
+    - export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
+    - bundle install --without dev
+
+#######################
+##     MR Checks     ##
+#######################
+check:k6:
+  stage: check
+  extends: .k6-base
+  script:
+    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api_v4_projects.js
+  except:
+    - schedules
+
+#######################
+##   k6 Load Tests   ##
+#######################
+k6-environment-all-tests:
+  stage: test
+  extends: .k6-base
+  script:
+    - k6/run-k6 -u -e k6/environments/$ENVIRONMENT_NAME.json -s k6/scenarios/$SCENARIO_NAME.json $([ -n "$QUARANTINED" ] && echo "-q")
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "k6"
+  artifacts:
+    when: always
+    paths:
+      - k6/results/
+    expire_in: 14d
+
+#######################
+##    Report Jobs    ##
+#######################
+.report:
+  image: alpine
+  stage: report
+  before_script:
+    - apk add curl
+  only:
+    - schedules
+
+report-k6-success-slack:
+  extends: .report
+  script:
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
+    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
+    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has finished! $k6_summary" ci_passing
+  when: on_success
+  only:
+    variables:
+      - $TEST_TYPE == "k6"
+  except:
+    variables:
+      - $CI_SLACK_REPORT != "true"
+      - $CI_SLACK_WEBHOOK_URL == null
+      - $CI_SLACK_CHANNEL == null
+
+report-k6-failure-slack:
+  extends: .report
+  script:
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
+    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
+    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has failed! $k6_summary" ci_failing
+  when: on_failure
+  only:
+    variables:
+      - $TEST_TYPE == "k6"
+  except:
+    variables:
+      - $CI_SLACK_REPORT != "true"
+      - $CI_SLACK_WEBHOOK_URL == null
+      - $CI_SLACK_CHANNEL == null
+
+report-k6-wiki:
+  extends: .report
+  script:
+    # Different formatting required for Wiki
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
+    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - '[ -r $k6_summary_file ] && echo "* Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "* Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
+    - '[ -n "$k6_summary" ] && bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"'
+  when: always
+  only:
+    variables:
+      - $TEST_TYPE == "k6"
+  except:
+    variables:
+      - $CI_WIKI_REPORT != "true"
