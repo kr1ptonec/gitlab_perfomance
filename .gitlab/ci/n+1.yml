@@ -1,13 +1,13 @@
-.nplus1-base: &nplus1-base
+.base-nplus1:
   image: registry.gitlab.com/gitlab-org/gitlab-build-images:gitlab-qa-alpine
   services:
-    - docker:1.13-dind
+    - docker:stable-dind
   stage: test
   tags:
     - docker
   artifacts:
     when: always
-    expire_in: 10d
+    expire_in: 14d
     paths:
       - ./gitlab-qa-run-*
   variables:
@@ -15,69 +15,72 @@
     DOCKER_HOST: tcp://docker:2375
     QA_ARTIFACTS_DIR: $CI_PROJECT_DIR
     QA_DEBUG: 1
-    # The password contains $ so we need to wrap around it
-    # to workaround https://gitlab.com/gitlab-org/gitlab-ce/issues/27436
-    GITLAB_FORKER_PASSWORD: $GITLAB_FORKER_PASSWORD_INPUT
     QA_CAN_TEST_GIT_PROTOCOL_V2: 'false'
-
-.nplus1-testbed: &nplus1-testbed
-  <<: *nplus1-base
-  only:
-    refs:
-      - schedules
-    variables:
-      - $TEST_TYPE == "Gitaly N+1 Tests"
-  variables:
-    SIGNUP_DISABLED: 'true'
-  before_script:
-    # Right now we can't only use the admin user to toggle a feature flag
-    # and still run the tests as a non-admin user.
-    # So for now we run the tests as an admin user
-    - export GITLAB_USERNAME="gitlab-qa-admin"
-    - export GITLAB_PASSWORD=$GITLAB_QA_ADMIN_PASSWORD
-    - gem install gitlab-qa --no-document
-
-.nplus1-nightly: &nplus1-nightly
-  <<: *nplus1-base
   only:
     refs:
       - schedules
     variables:
       - $TEST_TYPE == "Gitaly N+1 Tests"
   before_script:
-    - unset GITLAB_QA_ACCESS_TOKEN
-    - gem install gitlab-qa --no-document
+    - gem install gitlab-qa
+    - apk add jq curl sed
 
 ######################
-# Testbed/preprod jobs
+# N+1 Load Tests
 ######################
-
-# These jobs can't run in parallel because each enables a feature flag before
-# running the tests and then disables the feature flag.
-
-nplus1-testbed:
-  <<: *nplus1-testbed
+nplus1-environment:
+  extends: .base-nplus1
   script:
-    - gitlab-qa Test::Instance::Preprod --enable-feature gitaly_enforce_requests_limits
+    # Set user to admin as that's required for feature flag toggle
+    - export GITLAB_USERNAME=$GITLAB_ADMIN_USERNAME GITLAB_PASSWORD=$GITLAB_ADMIN_PASSWORD GITLAB_QA_ACCESS_TOKEN=$GITLAB_QA_ADMIN_ACCESS_TOKEN
+    # Set correct ee-qa image by polling environment
+    - version=$(curl $TARGET_URL/api/v4/version?private_token=$GITLAB_QA_ADMIN_ACCESS_TOKEN)
+    # Version exposed by the API currently does not match the deployed version. See: https://gitlab.com/gitlab-org/release/framework/issues/421
+    - image_url="dev.gitlab.org:5005/gitlab/omnibus-gitlab/gitlab-ee-qa:$image_tag"
+    - gitlab-qa Test::Instance::$TARGET_ENVIRONMENT $image_url --enable-feature gitaly_enforce_requests_limits -- qa/specs/features/api qa/specs/features/browser_ui $([ ! -z $QUARANTINED ] && echo "--tag quarantine")
+  only:
+    variables:
+      - $TARGET_ENVIRONMENT
 
-nplus1-testbed-quarantine:
-  <<: *nplus1-testbed
-  allow_failure: true
-  stage: test-quarantine
+nplus1-image:
+  extends: .base-nplus1
   script:
-    - gitlab-qa Test::Instance::Preprod --enable-feature gitaly_enforce_requests_limits -- --tag quarantine
+    - unset GITLAB_USERNAME GITLAB_PASSWORD GITLAB_QA_ACCESS_TOKEN
+    - gitlab-qa Test::Instance::Image $TARGET_IMAGE --enable-feature gitaly_enforce_requests_limits -- qa/specs/features/api qa/specs/features/browser_ui $([ ! -z $QUARANTINED ] && echo "--tag quarantine")
+  only:
+    variables:
+      - $TARGET_IMAGE
 
-##############
-# Nightly jobs
-##############
+#######################
+##    Report Jobs    ##
+#######################
+.report:
+  image: alpine
+  stage: report
+  before_script:
+    - apk add curl
+  only:
+    - schedules
+  except:
+    variables:
+      - $CI_SLACK_REPORT != "true"
+      - $CI_SLACK_WEBHOOK_URL == null
+      - $CI_SLACK_CHANNEL == null
 
-nplus1-nightly-ce:
-  <<: *nplus1-nightly
+report-slack-nplus1-success:
+  extends: .report
   script:
-    - gitlab-qa Test::Instance::Image CE --enable-feature gitaly_enforce_requests_limits
+    - bin/slack "Test $TEST_TYPE against $TARGET_ENVIRONMENT$TARGET_IMAGE has passed!\nPipeline - $CI_PIPELINE_URL" ci_passing
+  when: on_success
+  only:
+    variables:
+      - $TEST_TYPE == "Gitaly N+1 Tests"
 
-nplus1-nightly-ce-quarantine:
-  <<: *nplus1-nightly
-  allow_failure: true
+report-slack-nplus1-fail:
+  extends: .report
   script:
-    - gitlab-qa Test::Instance::Image CE --enable-feature gitaly_enforce_requests_limits -- --tag quarantine
+    - bin/slack "Test $TEST_TYPE against $TARGET_ENVIRONMENT$TARGET_IMAGE has failed!\nPipeline - $CI_PIPELINE_URL" ci_failing
+  when: on_failure
+  only:
+    variables:
+      - $TEST_TYPE == "Gitaly N+1 Tests"
