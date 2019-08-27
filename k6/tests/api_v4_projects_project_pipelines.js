@@ -3,17 +3,23 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError } from "./modules/log_error.js";
-
-export let successRate = new Rate("successful_requests");
-export let options = {
-  thresholds: {
-    "successful_requests": ["rate>0.95"]
-  }
-};
+import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
+export let rpsThresholds = getRpsThresholds()
+export let successRate = new Rate("successful_requests");
+export let options = {
+  thresholds: {
+    "successful_requests": ["rate>0.95"],
+    "http_reqs": [`count>=${rpsThresholds['count']}`]
+  }
+};
+
+export function setup() {
+  console.log('')
+  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+}
 export default function() {
   group("API - Project Pipelines", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };

@@ -3,15 +3,21 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError } from "./modules/log_error.js";
+import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
 
+export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": ["rate>0.95"],
+    "http_reqs": [`count>=${rpsThresholds['count']}`]
   }
 };
 
+export function setup() {
+  console.log('')
+  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+}
 export default function() {
   group("API - Merge Request Overview", function() {
     let params = { headers: { "Accept": "application/json" } };

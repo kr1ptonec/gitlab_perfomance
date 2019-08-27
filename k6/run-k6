@@ -63,16 +63,26 @@ def setup_k6
   File.join(File.dirname(k6_archive.path), 'k6')
 end
 
-def get_env_vars(env_file:)
-  expected_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAME PROJECT_COMMIT_SHA PROJECT_BRANCH
+def get_env_vars(env_file:, scenario_file:)
+  required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAME PROJECT_COMMIT_SHA PROJECT_BRANCH
                      PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_NOTES_IID PROJECT_SIGNED_COMMIT_SHA]
   env_file_vars = JSON.parse(File.read(env_file))
-  env_vars = {}
-  expected_vars.each do |var_name|
+  required_vars.each do |var_name|
     raise "Required environment variable #{var_name} has not been set via config file or globally. Exiting..." unless ENV[var_name] || env_file_vars[var_name]
-
-    env_vars[var_name] = ENV[var_name] || env_file_vars[var_name]
   end
+
+  env_vars = {}
+  env_file_vars.each do |var_name, var_value|
+    env_vars[var_name] = ENV[var_name] || var_value
+  end
+
+  env_vars['RPS_COUNT_THRESHOLD'] ||= begin
+    scenario_file_vars = JSON.parse(File.read(scenario_file))
+    duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('^0-9').to_f }
+    (duration * scenario_file_vars['rps'].to_f * 0.8).to_i.to_s
+  end
+  env_vars['RPS_MEAN_THRESHOLD'] ||= (scenario_file_vars['rps'].to_f * 0.8).to_s
+
   env_vars
 end
 
@@ -128,17 +138,26 @@ def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, results_json_file:, 
 end
 
 def parse_k6_results(output:)
-  results = {}
-  lines = output.delete_if { |line| line !~ /Test finished|http_req_duration|iterations.*s/ }
+  results = []
 
-  results[:Duration] = ChronicDuration.parse(lines[0].match(/(t=)(.*s)/)[2]).round(2).to_s + 's'
-  results[:P95] = lines[1].match(/(p\(95\)=)(\d+\.\d+)([a-z])/)[2] + lines[1].match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[3]
-  results[:RPS_Count] = lines[0].match(/(i=)(\d+)/)[2]
-  results[:RPS_Mean] = lines[2].match(/(\d+\.\d+\/s)/)[1]
+  output.each do |line|
+    case line
+    when /Test finished/
+      match = line.match(/(t=)(.*s)/)
+      results.insert(0, [:Duration, ChronicDuration.parse(match[2]).round(2).to_s + 's'])
+    when /http_req_duration/
+      match = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
+      results.insert(1, [:P95, match[2] + match[3]])
+    when /http_reqs/
+      match = line.match(/(\d+)\s+(\d+\.\d+\/s)/)
+      results.insert(2, [:RPS, "#{match[2]} (#{match[1]})"])
+    when /RPS Threshold/
+      match = line.match(/\d+\.\d+\/s \(\d+\)/)
+      results.insert(3, [:RPS_Threshold, match[0]])
+    end
+  end
 
-  results
-rescue NoMethodError
-  raise "Error parsing stdout test results. Exiting..."
+  results.compact.to_h
 end
 
 puts Rainbow("GitLab Performance Toolkit - k6 load test runner").color(230, 83, 40)
@@ -147,7 +166,7 @@ warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various test
 k6_path = setup_k6
 
 # Variables
-env_vars = get_env_vars(env_file: opts[:environment])
+env_vars = get_env_vars(env_file: opts[:environment], scenario_file: opts[:scenario])
 env_version = get_env_version(env_vars: env_vars)
 start_time = Time.now
 
@@ -169,7 +188,7 @@ tests.each do |test_file|
 
   parsed_results = parse_k6_results(output: output)
   success = false if parsed_results.nil?
-  aggregated_results << { Name: test_name, Result: success ? "Passed" : "Failed" }.merge(parsed_results)
+  aggregated_results << { Name: test_name }.merge(parsed_results).merge({ Result: success ? "Passed" : "Failed" })
   aggregated_success &&= success
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping.").yellow

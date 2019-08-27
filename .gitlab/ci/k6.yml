@@ -1,9 +1,8 @@
 .k6-base:
   image: ruby:2.6.3-alpine
   before_script:
-    - apk add --no-cache gcc g++ make libc6-compat libc-dev
-    - gem install bundler -v 2.0.2
-    - export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
+    - apk add --no-cache gcc g++ make libc6-compat libc-dev curl
+    - gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
     - bundle install --without dev
 
 #######################
@@ -13,7 +12,7 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api_v4_projects.js
+    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api_v4_groups_projects.js
   except:
     - schedules
 
@@ -55,7 +54,7 @@ report-k6-success-slack:
     - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
     - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
     - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
-    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has finished! $k6_summary" ci_passing
+    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has passed! $k6_summary" ci_passing
   when: on_success
   only:
     variables:
