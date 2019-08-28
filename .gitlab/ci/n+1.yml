@@ -19,8 +19,9 @@
   only:
     refs:
       - schedules
+  except:
     variables:
-      - $TEST_TYPE == "Gitaly N+1 Tests"
+      - $TEST_TYPE != "Gitaly N+1 Tests"
   before_script:
     - gem install gitlab-qa
     - apk add jq curl sed
