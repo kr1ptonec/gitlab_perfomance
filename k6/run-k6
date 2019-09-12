@@ -107,13 +107,12 @@ def get_tests(test_paths:, quarantined:)
   tests.uniq.sort
 end
 
-def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, results_json_file:, upload_results: false)
+def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: false)
   test_name = File.basename(test_file, '.js')
   puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
   cmd = [k6_path, 'run']
   cmd += ['--config', scenario_file] if scenario_file
-  cmd += ['--out', "json=#{results_json_file}"] if results_json_file
   cmd += ['--out', "influxdb=#{ENV['INFLUXDB_URL']}/k6db"] if upload_results && ENV['INFLUXDB_URL']
   cmd += ['--tag', "environment=#{env_vars['ENVIRONMENT_NAME']}"]
   cmd += ['--summary-time-unit', 'ms']
@@ -181,10 +180,8 @@ aggregated_success = true
 tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined])
 tests.each do |test_file|
   test_name = File.basename(test_file, '.js')
-  results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{test_name}_results.json")
 
-  success, output = run_k6(k6_path: k6_path, env_vars: env_vars, scenario_file: opts[:scenario], test_file: test_file,
-                           results_json_file: results_json, upload_results: opts[:upload_results])
+  success, output = run_k6(k6_path: k6_path, env_vars: env_vars, scenario_file: opts[:scenario], test_file: test_file, upload_results: opts[:upload_results])
 
   parsed_results = parse_k6_results(output: output)
   success = false if parsed_results.nil?
