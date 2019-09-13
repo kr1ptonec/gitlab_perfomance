@@ -113,7 +113,7 @@ def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: fals
 
   cmd = [k6_path, 'run']
   cmd += ['--config', scenario_file] if scenario_file
-  cmd += ['--out', "influxdb=#{ENV['INFLUXDB_URL']}/k6db"] if upload_results && ENV['INFLUXDB_URL'] && HTTP.get("#{ENV['INFLUXDB_URL']}/k6db").success?
+  cmd += ['--out', "influxdb=#{ENV['INFLUXDB_URL']}/k6db"] if upload_results && ENV['INFLUXDB_URL'] && HTTP.get("#{ENV['INFLUXDB_URL']}/ping").status.success?
   cmd += ['--tag', "environment=#{env_vars['ENVIRONMENT_NAME']}"]
   cmd += ['--summary-time-unit', 'ms']
   cmd += [test_file]

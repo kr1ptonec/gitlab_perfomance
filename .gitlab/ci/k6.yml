@@ -49,8 +49,8 @@ k6-environment-all-tests:
 report-k6-success-slack:
   extends: .report
   script:
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
-    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -d "k6/results" ] && k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"'
+    - '[ -d "k6/results" ] && k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"'
     - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
     - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
@@ -69,8 +69,8 @@ report-k6-success-slack:
 report-k6-failure-slack:
   extends: .report
   script:
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
-    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -d "k6/results" ] && k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"'
+    - '[ -d "k6/results" ] && k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"'
     - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
     - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
@@ -90,8 +90,8 @@ report-k6-wiki:
   extends: .report
   script:
     # Different formatting required for Wiki
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
-    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -d "k6/results" ] && k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"'
+    - '[ -d "k6/results" ] && k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"'
     - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "* Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
     - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "* Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
