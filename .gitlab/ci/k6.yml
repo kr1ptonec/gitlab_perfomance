@@ -49,10 +49,11 @@ k6-environment-all-tests:
 report-k6-success-slack:
   extends: .report
   script:
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
-    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
+    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
-    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
     - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
     - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has passed! $k6_summary" ci_passing
   when: on_success
@@ -68,10 +69,11 @@ report-k6-success-slack:
 report-k6-failure-slack:
   extends: .report
   script:
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
-    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
+    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
-    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
     - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
     - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has failed! $k6_summary" ci_failing
   when: on_failure
@@ -88,10 +90,11 @@ report-k6-wiki:
   extends: .report
   script:
     # Different formatting required for Wiki
-    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
-    - source $(find k6/results -name *_test_epoch_times.txt -print -quit)
+    - k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit) || echo "k6 results file not found"
+    - k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit) || echo "k6 times file not found"
+    - '[ -r $k6_times_file ] && source $k6_times_file'
     - '[ -r $k6_summary_file ] && echo "* Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file'
-    - '[ -r $k6_summary_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "* Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
+    - '[ -r $k6_summary_file ] && [ -r $k6_times_file ] && [ -n "$GRAFANA_DASHBOARD_URL" ] && echo "* Grafana - $GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file'
     - k6_summary=$([ -r $k6_summary_file ] && echo "$(cat $k6_summary_file)")
     - '[ -n "$k6_summary" ] && bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"'
   when: always
