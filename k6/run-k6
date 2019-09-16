@@ -22,7 +22,8 @@ opts = Optimist.options do
   opt :environment, "Environment Config file path that contains the relevant Environment Variables to be passed to the tests.", type: :string, required: true
   opt :scenario, "Path of Scenario Config file path that the tests should be run with.", type: :string, default: "#{dir_name}/scenarios/20s_2rps.json"
   opt :tests, "Path of Test file or folder paths to run.", type: :strings, default: ["#{dir_name}/tests"]
-  opt :quarantined, "Include any tests inside the #{dir_name}/scenarios/quarantined folder when true.", type: :flag, default: false
+  opt :standalone, "Include any tests inside the #{dir_name}/tests/standalone folder when true.", type: :flag, default: false
+  opt :quarantined, "Include any tests inside the #{dir_name}/tests/quarantined folder when true.", type: :flag, default: false
   opt :upload_results, "Upload test results to a InfluxDB server. Requires INFLUXDB_URL Environment Variable to be set.", type: :flag, default: false
   opt :help, 'Show this help message'
   banner "\nEnvironment Variables:"
@@ -92,12 +93,13 @@ def get_env_version(env_vars:)
   version == '401 Unauthorized' ? nil : version
 end
 
-def get_tests(test_paths:, quarantined:)
+def get_tests(test_paths:, quarantined:, standalone:)
   tests = []
   test_paths.each do |test|
     if File.directory?(test)
       tests += Dir.glob("#{test}/*.js")
       tests += Dir.glob("#{test}/quarantined/*.js") if quarantined
+      tests += Dir.glob("#{test}/standalone/*.js") if standalone
     elsif File.file?(test)
       tests << test
     end
@@ -177,7 +179,7 @@ aggregated_results = []
 aggregated_success = true
 
 # Collect and run tests
-tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined])
+tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined], standalone: opts[:standalone])
 tests.each do |test_file|
   test_name = File.basename(test_file, '.js')
 
