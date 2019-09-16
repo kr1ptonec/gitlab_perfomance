@@ -23,7 +23,7 @@ k6-environment-all-tests:
   stage: test
   extends: .k6-base
   script:
-    - k6/run-k6 -u -e k6/environments/$ENVIRONMENT_NAME.json -s k6/scenarios/$SCENARIO_NAME.json $([ -n "$QUARANTINED" ] && echo "-q")
+    - k6/run-k6 -u -a -e k6/environments/$ENVIRONMENT_NAME.json -s k6/scenarios/$SCENARIO_NAME.json $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules
