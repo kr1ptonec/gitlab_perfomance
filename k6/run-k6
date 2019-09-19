@@ -106,7 +106,7 @@ def get_tests(test_paths:, quarantined:, standalone:)
   end
   raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
-  tests.uniq.sort
+  tests.uniq.sort_by { |path| File.basename(path, '.js') }
 end
 
 def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: false)
@@ -180,6 +180,8 @@ aggregated_success = true
 
 # Collect and run tests
 tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined], standalone: opts[:standalone])
+puts tests
+exit
 tests.each do |test_file|
   test_name = File.basename(test_file, '.js')
 
