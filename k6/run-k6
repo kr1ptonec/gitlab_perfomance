@@ -180,8 +180,6 @@ aggregated_success = true
 
 # Collect and run tests
 tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined], standalone: opts[:standalone])
-puts tests
-exit
 tests.each do |test_file|
   test_name = File.basename(test_file, '.js')
 
