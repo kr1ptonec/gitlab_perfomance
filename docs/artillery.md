@@ -41,7 +41,7 @@ config:
     PROJECT_BRANCH: 10-0-stable
     PROJECT_FILE_PATH: qa%2Fqa%2Erb
     PROJECT_MR_COMMITS_IID: 10495
-    PROJECT_MR_NOTES_IID: 6946
+    PROJECT_MR_DISCUSSIONS_IID: 6958
     PROJECT_SIGNED_COMMIT_SHA: 6526e91f
 
   phases:
@@ -69,7 +69,7 @@ Going through this example section by section:
   * `PROJECT_BRANCH` - The name of a large branch available in the project. The size of the branch should be tuned to your environment's requirements.
   * `PROJECT_FILE_PATH` - The relative path to a normal sized file in your project.
   * `PROJECT_MR_COMMITS_IID` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
-  * `PROJECT_MR_NOTES_IID` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of notes / comments. The size of the MR notes should be tuned to your environment's requirements.
+  * `PROJECT_MR_DISCUSSIONS_IID` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of discussions / comments. The size of the MR discussions should be tuned to your environment's requirements.
   * `PROJECT_SIGNED_COMMIT_SHA` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
 * `phases.*` - This is an optional section for Environments that define the [Artillery Load Phases](https://artillery.io/docs/script-reference/#load-phases) to be used for performing tests. These are typically defined in Scenario files but can be overridden here if the particular environment requires.
 
