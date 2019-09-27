@@ -3,9 +3,15 @@
 export function logError(res) {
   if ( typeof logError.last == 'undefined' ) logError.last = '';
 
-  let parsedError = JSON.parse(res.body)['message']
-  if (logError.last != parsedError) {
-    logError.last = parsedError;
+  let error;
+  try {
+    error = JSON.parse(res.body)['message']
+  } catch (e) {
+    error = res.body
+  }
+  
+  if (logError.last != error) {
+    logError.last = error;
     console.warn(`Error detected: '${logError.last}'`);
   }
 }

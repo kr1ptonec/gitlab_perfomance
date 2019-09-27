@@ -11,7 +11,7 @@ export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
-    "successful_requests": ["rate>0.95"],
+    "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   }
 };
@@ -19,6 +19,7 @@ export let options = {
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
 export default function() {
   group("API - Project Repository Commits List", function() {
