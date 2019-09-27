@@ -74,7 +74,7 @@ def setup_env_vars(env_file:, scenario_file:)
 
   env_vars = {}
   env_file_vars.each do |var_name, var_value|
-    env_vars[var_name] = ENV[var_name] || var_value
+    env_vars[var_name] = ENV[var_name].dup || var_value
   end
 
   env_vars['ENVIRONMENT_URL'].chomp!('/')
