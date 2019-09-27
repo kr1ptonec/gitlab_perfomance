@@ -64,7 +64,7 @@ def setup_k6
   File.join(File.dirname(k6_archive.path), 'k6')
 end
 
-def get_env_vars(env_file:, scenario_file:)
+def setup_env_vars(env_file:, scenario_file:)
   required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAME PROJECT_COMMIT_SHA PROJECT_BRANCH
                      PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_DISCUSSIONS_IID PROJECT_SIGNED_COMMIT_SHA]
   env_file_vars = JSON.parse(File.read(env_file))
@@ -77,12 +77,16 @@ def get_env_vars(env_file:, scenario_file:)
     env_vars[var_name] = ENV[var_name] || var_value
   end
 
+  env_vars['ENVIRONMENT_URL'].chomp!('/')
+
   env_vars['RPS_COUNT_THRESHOLD'] ||= begin
     scenario_file_vars = JSON.parse(File.read(scenario_file))
     duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('^0-9').to_f }
     (duration * scenario_file_vars['rps'].to_f * 0.8).to_i.to_s
   end
   env_vars['RPS_MEAN_THRESHOLD'] ||= (scenario_file_vars['rps'].to_f * 0.8).to_s
+
+  env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
 
   env_vars
 end
@@ -140,23 +144,29 @@ end
 
 def parse_k6_results(output:)
   results = []
+  matches = {}
 
   output.each do |line|
     case line
     when /Test finished/
-      match = line.match(/(t=)(.*s)/)
-      results.insert(0, [:Duration, ChronicDuration.parse(match[2]).round(2).to_s + 's'])
+      matches[:duration] = line.match(/(t=)(.*s)/)
     when /http_req_duration/
-      match = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
-      results.insert(1, [:P95, match[2] + match[3]])
-    when /http_reqs/
-      match = line.match(/(\d+)\s+(\d+\.\d+\/s)/)
-      results.insert(2, [:RPS, "#{match[2]} (#{match[1]})"])
+      matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
     when /RPS Threshold/
-      match = line.match(/\d+\.\d+\/s \(\d+\)/)
-      results.insert(3, [:RPS_Threshold, match[0]])
+      matches[:rps_threshold] = line.match(/\d+\.\d+\/s/)
+    when /http_reqs/
+      matches[:rps] = line.match(/(\d+\.\d+)(\/s)/)
+    when /Success Rate Threshold/
+      matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
+    when /successful_requests/
+      matches[:success_rate] = line.match(/\d+(\.\d+)?\%/)
     end
   end
+
+  results.insert(0, [:Duration, ChronicDuration.parse(matches[:duration][2]).round(2).to_s + 's'])
+  results.insert(1, [:P95, matches[:p95][2] + matches[:p95][3]])
+  results.insert(2, [:RPS, "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
+  results.insert(3, [:'Success Rate', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
 
   results.compact.to_h
 end
@@ -167,7 +177,7 @@ warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various test
 k6_path = setup_k6
 
 # Variables
-env_vars = get_env_vars(env_file: opts[:environment], scenario_file: opts[:scenario])
+env_vars = setup_env_vars(env_file: opts[:environment], scenario_file: opts[:scenario])
 env_version = get_env_version(env_vars: env_vars)
 start_time = Time.now
 

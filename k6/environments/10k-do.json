@@ -1,6 +1,6 @@
 {
   "ENVIRONMENT_NAME": "10k",
-  "ENVIRONMENT_URL": "http://34.73.165.75",
+  "ENVIRONMENT_URL": "http://10k.testbed.gitlab.net",
   "PROJECT_GROUP": "qa-perf-testing",
   "PROJECT_NAME": "gitlabhq",
   "PROJECT_COMMIT_SHA": "0a99e022",
