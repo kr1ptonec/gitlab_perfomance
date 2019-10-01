@@ -1,4 +1,5 @@
 {
+  "userAgent": "GitlabK6PerformanceTest/1.0",
   "stages": [
     { "duration": "5s", "target": 20 },
     { "duration": "10s", "target": 200 },
