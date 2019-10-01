@@ -79,8 +79,9 @@ def setup_env_vars(env_file:, scenario_file:)
 
   env_vars['ENVIRONMENT_URL'].chomp!('/')
 
+  scenario_file_vars = JSON.parse(File.read(scenario_file))
+  env_vars['RPS_TARGET'] = scenario_file_vars['rps'].to_s
   env_vars['RPS_COUNT_THRESHOLD'] ||= begin
-    scenario_file_vars = JSON.parse(File.read(scenario_file))
     duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('^0-9').to_f }
     (duration * scenario_file_vars['rps'].to_f * 0.8).to_i.to_s
   end
