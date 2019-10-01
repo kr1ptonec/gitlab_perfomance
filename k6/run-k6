@@ -89,6 +89,8 @@ def setup_env_vars(env_file:, scenario_file:)
 
   env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
 
+  env_vars['GIT_PROTOCOL_MODIFIER'] ||= '0.02'
+
   env_vars
 end
 
