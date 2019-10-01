@@ -1,6 +1,6 @@
 {
   "ENVIRONMENT_NAME": "50k",
-  "ENVIRONMENT_URL": "http://34.102.191.226",
+  "ENVIRONMENT_URL": "http://104.196.1.224",
   "PROJECT_GROUP": "qa-perf-testing",
   "PROJECT_NAME": "gitlabhq",
   "PROJECT_COMMIT_SHA": "0a99e022",

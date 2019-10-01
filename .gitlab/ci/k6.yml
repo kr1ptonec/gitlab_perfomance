@@ -19,7 +19,7 @@ check:k6:
 #######################
 ##   k6 Load Tests   ##
 #######################
-k6-environment-all-tests:
+k6:
   stage: test
   extends: .k6-base
   script:
@@ -29,6 +29,8 @@ k6-environment-all-tests:
       - schedules
     variables:
       - $TEST_TYPE == "k6"
+  tags:
+    - performance
   artifacts:
     when: always
     paths:
