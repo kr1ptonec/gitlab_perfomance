@@ -6,7 +6,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: TBC
+// Issue: https://gitlab.com/gitlab-org/gitlab/issues/33150
 export let rpsThresholds = getRpsThresholds(0.25)
 export let successRate = new Rate("successful_requests");
 export let options = {
