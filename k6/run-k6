@@ -79,14 +79,16 @@ def setup_env_vars(env_file:, scenario_file:)
 
   env_vars['ENVIRONMENT_URL'].chomp!('/')
 
-  env_vars['RPS_COUNT_THRESHOLD'] ||= begin
-    scenario_file_vars = JSON.parse(File.read(scenario_file))
-    duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('^0-9').to_f }
-    (duration * scenario_file_vars['rps'].to_f * 0.8).to_i.to_s
+  scenario_file_vars = JSON.parse(File.read(scenario_file))
+  env_vars['RPS_TARGET'] = scenario_file_vars['rps'].to_s
+  env_vars['RPS_COUNT_TARGET'] ||= begin
+    duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
+    (duration * scenario_file_vars['rps'].to_f).to_i.to_s
   end
-  env_vars['RPS_MEAN_THRESHOLD'] ||= (scenario_file_vars['rps'].to_f * 0.8).to_s
+  env_vars['RPS_MEAN_TARGET'] ||= scenario_file_vars['rps'].to_f.to_s
 
   env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
+  env_vars['GIT_ENDPOINT_THRESHOLD'] ||= '0.02'
 
   env_vars
 end
