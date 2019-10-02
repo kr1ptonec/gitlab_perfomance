@@ -5,19 +5,20 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(__ENV.GIT_PROTOCOL_MODIFIER);
+export let gitProtoRps = Math.ceil(parseFloat(__ENV.RPS_TARGET) * __ENV.GIT_PROTOCOL_THRESHOLD);
+export let rpsThresholds = getRpsThresholds(__ENV.GIT_PROTOCOL_THRESHOLD);
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
-  rps: `${(parseFloat(__ENV.RPS_TARGET) * __ENV.GIT_PROTOCOL_MODIFIER).toFixed(0)}`
+  rps: gitProtoRps
 };
 
 export function setup() {
   console.log('')
-  console.log(`Git Protocol RPS: ${(parseFloat(__ENV.RPS_TARGET) * __ENV.GIT_PROTOCOL_MODIFIER).toFixed(0)}`)
+  console.log(`Git Protocol RPS: ${gitProtoRps}`)
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
