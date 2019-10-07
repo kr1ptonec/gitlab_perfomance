@@ -14,7 +14,7 @@ export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "iterations": [`count>=${rpsThresholds['count']}`]
+    "http_reqs": [`count>=${rpsThresholds['count']}`]
   }
 };
 

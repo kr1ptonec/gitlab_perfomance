@@ -132,7 +132,7 @@ def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: fals
     stdin.close
     stdout_stderr.each do |line|
       raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line =~ /(GoError:).*(ACCESS_TOKEN)/
-      raise "No iterations completed in time by the end of the test. This is likely due to no responses being received from the server." if line =~ /No data generated/
+      raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server." if line =~ /No data generated/
 
       output << line.lstrip
       puts line
@@ -155,7 +155,7 @@ def parse_k6_results(output:)
       matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
     when /RPS Threshold/
       matches[:rps_threshold] = line.match(/\d+\.\d+\/s/)
-    when /iterations/
+    when /http_reqs/
       matches[:rps] = line.match(/(\d+\.\d+)(\/s)/)
     when /Success Rate Threshold/
       matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
