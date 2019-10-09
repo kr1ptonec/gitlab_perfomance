@@ -24,3 +24,16 @@ export function getRpsThresholds(modifier=1.0) {
   }
   return thresholds;
 }
+
+export function adjustRps(modifier=1.0) {
+   return Math.ceil(parseFloat(__ENV.SCENARIO_RPS) * modifier);
+}
+
+export function adjustStageVUs(modifier=1.0) {
+  let stages = JSON.parse(__ENV.SCENARIO_STAGES)
+  stages.map((stage) => {
+    stage.target = Math.ceil(stage.target * modifier);
+    return stage
+  });
+  return stages;
+}
