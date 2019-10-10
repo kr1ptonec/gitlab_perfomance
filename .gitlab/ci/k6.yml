@@ -60,7 +60,7 @@ report-k6-success-slack:
       if [ -r "$k6_summary_file" ] && [ -r "$k6_times_file" ]; then
         echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file
         source $k6_times_file
-        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "$ENVIRONMENT_NAME Performance Grafana Dashboard - $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME" >> $k6_summary_file
+        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME" >> $k6_summary_file
         k6_summary=$(echo "$(cat $k6_summary_file)")
       else
         k6_summary="\nPipeline - $CI_PIPELINE_URL"
@@ -83,7 +83,7 @@ report-k6-failure-slack:
       if [ -r "$k6_summary_file" ] && [ -r "$k6_times_file" ]; then
         echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file
         source $k6_times_file
-        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "$ENVIRONMENT_NAME Performance Grafana Dashboard - $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file
+        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "Grafana- $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file
         k6_summary=$(echo "$(cat $k6_summary_file)")
       else
         k6_summary="\nPipeline - $CI_PIPELINE_URL"

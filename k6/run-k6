@@ -133,7 +133,7 @@ def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: fals
     stdin.close
     stdout_stderr.each do |line|
       raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line =~ /(GoError:).*(ACCESS_TOKEN)/
-      raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server." if line =~ /No data generated/
+      raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line =~ /No data generated/
 
       output << line.lstrip
       puts line
@@ -208,7 +208,7 @@ rescue ArgumentError => e
   warn Rainbow(e.message).yellow
   next
 rescue StandardError => e
-  warn Rainbow("Test failed: #{e.message}.").red
+  warn Rainbow("Test failed: #{e.message}").red
   aggregated_success = false
 end
 
