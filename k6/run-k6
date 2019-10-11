@@ -24,11 +24,11 @@ opts = Optimist.options do
   opt :tests, "Path of Test file or folder paths to run.", type: :strings, default: ["#{dir_name}/tests"]
   opt :standalone, "Include any tests inside the #{dir_name}/tests/standalone folder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the #{dir_name}/tests/quarantined folder when true.", type: :flag, default: false
-  opt :upload_results, "Upload test results to a InfluxDB server. Requires K6_INFLUXDB_URL Environment Variable to be set.", type: :flag, default: false
+  opt :upload_results, "Optionally upload test results to a InfluxDB server. Requires K6_INFLUXDB_URL Environment Variable to be set.", type: :flag, default: false
   opt :help, 'Show this help message'
   banner "\nEnvironment Variables:"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
-  banner "  K6_INFLUXDB_URL             URL for a InfluxDB server that k6 will upload results to (creates database named k6db). (Default: nil)"
+  banner "  K6_INFLUXDB_URL          Optional URL for a InfluxDB server that k6 will upload results to (creates database named k6db). (Default: nil)"
   banner "\nExamples:"
   banner "  Running all Tests with the 60s_200rps Scenario against the 10k Environment:"
   banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/10k.json --scenario #{dir_name}/scenarios/60s_200rps.json"
