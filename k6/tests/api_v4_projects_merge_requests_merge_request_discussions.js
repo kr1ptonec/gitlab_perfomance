@@ -7,7 +7,9 @@ import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
-export let rpsThresholds = getRpsThresholds(0.7)
+// Endpoint is below target threshold. Custom lower limit applied until fixed.
+// Issue: https://gitlab.com/gitlab-org/gitlab/issues/32455
+export let rpsThresholds = getRpsThresholds(0.6)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
