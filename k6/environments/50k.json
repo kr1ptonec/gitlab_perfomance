@@ -2,7 +2,7 @@
   "ENVIRONMENT_NAME": "50k",
   "ENVIRONMENT_URL": "http://35.237.211.103",
   "PROJECT_GROUP": "qa-perf-testing",
-  "PROJECT_NAME": "gitlabhq",
+  "PROJECT_NAMES": "gitlabhq,gitlabhq2",
   "PROJECT_COMMIT_SHA": "0a99e022",
   "PROJECT_BRANCH": "10-0-stable",
   "PROJECT_FILE_PATH": "qa%2fqa%2erb",

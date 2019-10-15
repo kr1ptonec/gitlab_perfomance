@@ -14,6 +14,10 @@ export let options = {
   }
 };
 
+export let projectNames = __ENV.PROJECT_NAMES.split(',');
+
+let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -23,7 +27,7 @@ export function setup() {
 export default function() {
   group("API - Merge Request Changes", function() {
     let params = { headers: { "Accept": "application/json" } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${__ENV.PROJECT_NAME}/merge_requests/${__ENV.PROJECT_MR_COMMITS_IID}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${projectName}/merge_requests/${__ENV.PROJECT_MR_COMMITS_IID}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

@@ -14,6 +14,8 @@ export let options = {
   }
 };
 
+export let projectNames = __ENV.PROJECT_NAMES.split(',');
+
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -22,7 +24,9 @@ export function setup() {
 
 export default function() {
   group("Web - Projects Blob Controller Show HTML", function() {
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${__ENV.PROJECT_GROUP}/${__ENV.PROJECT_NAME}/blob/master/${__ENV.PROJECT_FILE_PATH}`);
+    let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${__ENV.PROJECT_GROUP}/${projectName}/blob/master/${__ENV.PROJECT_FILE_PATH}`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

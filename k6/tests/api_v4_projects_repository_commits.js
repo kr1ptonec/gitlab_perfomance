@@ -16,6 +16,8 @@ export let options = {
   }
 };
 
+export let projectNames = __ENV.PROJECT_NAMES.split(',');
+
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -23,8 +25,10 @@ export function setup() {
 }
 export default function() {
   group("API - Project Repository Commits List", function() {
+    let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${__ENV.PROJECT_NAME}/repository/commits`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${projectName}/repository/commits`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

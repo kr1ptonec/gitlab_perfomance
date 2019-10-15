@@ -65,7 +65,7 @@ def setup_k6
 end
 
 def setup_env_vars(env_file:, scenario_file:)
-  required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAME PROJECT_COMMIT_SHA PROJECT_BRANCH
+  required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAMES PROJECT_COMMIT_SHA PROJECT_BRANCH
                      PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_DISCUSSIONS_IID PROJECT_SIGNED_COMMIT_SHA]
   env_file_vars = JSON.parse(File.read(env_file))
   required_vars.each do |var_name|

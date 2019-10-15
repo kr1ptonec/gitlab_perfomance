@@ -16,6 +16,8 @@ export let options = {
   rps: gitProtoRps
 };
 
+export let projectNames = __ENV.PROJECT_NAME.split(',');
+
 export function setup() {
   console.log('')
   console.log(`Git Protocol RPS: ${gitProtoRps}`)
@@ -25,7 +27,9 @@ export function setup() {
 
 export default function() {
   group("Git - Refs List", function() {
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${__ENV.PROJECT_GROUP}/${__ENV.PROJECT_NAME}.git/info/refs?service=git-upload-pack`);
+    let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${__ENV.PROJECT_GROUP}/${projectName}.git/info/refs?service=git-upload-pack`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
