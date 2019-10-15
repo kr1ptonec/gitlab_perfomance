@@ -16,6 +16,8 @@ export let options = {
   }
 };
 
+export let projectNames = __ENV.PROJECT_NAME.split(',');
+
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -24,6 +26,8 @@ export function setup() {
 
 export default function() {
   group("API - Project Repository Tree", function() {
+    let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${projectName}/repository/tree`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
