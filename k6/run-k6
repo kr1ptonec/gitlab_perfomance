@@ -33,7 +33,7 @@ opts = Optimist.options do
   banner "  Running all Tests with the 60s_200rps Scenario against the 10k Environment:"
   banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/10k.json --scenario #{dir_name}/scenarios/60s_200rps.json"
   banner "  Run a specific Test with the 20s_2rps Scenario against the onprem Environment:"
-  banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/onprem.json --scenario #{dir_name}/scenarios/20s_2rps.json --tests #{dir_name}/tests/api_v4_projects.js"
+  banner "    #{$PROGRAM_NAME} --environment #{dir_name}/environments/onprem.json --scenario #{dir_name}/scenarios/20s_2rps.json --tests #{dir_name}/tests/api_v4_groups_projects.js"
 end
 
 def setup_k6
