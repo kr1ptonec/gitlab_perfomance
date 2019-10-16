@@ -162,9 +162,9 @@ def parse_k6_results(output:)
     end
   end
 
-  results.insert(0, [:'RPS Target', matches[:rps_target][1]])
+  results.insert(0, [:'RPS Target', "#{matches[:rps_target][1]}/s"])
   results.insert(1, [:'RPS Result', "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
-  results.insert(2, [:'Response Time P95', matches[:p95][2] + matches[:p95][3]])
+  results.insert(2, [:'Response P95', matches[:p95][2] + matches[:p95][3]])
   results.insert(3, [:'Request Success Rate', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
 
   results.compact.to_h
