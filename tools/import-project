@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'chronic_duration'
-require "down/http"
+require 'down/http'
 require 'http'
 require 'optimist'
 require 'time'
@@ -25,14 +25,14 @@ end
 
 raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
 
-def get(url, headers)
+def get(url, headers = {})
   HTTP.follow.get(
     url,
     headers: headers
   )
 end
 
-def post(url, payload, headers)
+def post(url, payload, headers = {})
   res = HTTP.follow.post(
     url,
     form: payload,
