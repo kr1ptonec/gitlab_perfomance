@@ -65,19 +65,17 @@ def setup_k6
 end
 
 def setup_env_vars(env_file:, scenario_file:)
-  required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAMES PROJECT_COMMIT_SHA PROJECT_BRANCH
-                     PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_DISCUSSIONS_IID PROJECT_SIGNED_COMMIT_SHA]
-  env_file_vars = JSON.parse(File.read(env_file))
-  required_vars.each do |var_name|
-    raise "Required environment variable #{var_name} has not been set via config file or globally. Exiting..." unless ENV[var_name] || env_file_vars[var_name]
-  end
+  # required_vars = %w[ENVIRONMENT_NAME ENVIRONMENT_URL PROJECT_GROUP PROJECT_NAMES PROJECT_COMMIT_SHA PROJECT_BRANCH
+  #                    PROJECT_FILE_PATH PROJECT_MR_COMMITS_IID PROJECT_MR_DISCUSSIONS_IID PROJECT_SIGNED_COMMIT_SHA]
 
+  # required_vars.each do |var_name|
+  #  raise "Required environment variable #{var_name} has not been set via config file or globally. Exiting..." unless ENV[var_name] || env_file_vars[var_name]
+  # end
   env_vars = {}
-  env_file_vars.each do |var_name, var_value|
-    env_vars[var_name] = ENV[var_name].dup || var_value
-  end
+  env_file_vars = JSON.parse(File.read(env_file))
 
-  env_vars['ENVIRONMENT_URL'].chomp!('/')
+  env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
+  env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
 
   scenario_file_vars = JSON.parse(File.read(scenario_file))
   env_vars['SCENARIO_RPS'] = scenario_file_vars['rps'].to_s
@@ -95,7 +93,9 @@ def setup_env_vars(env_file:, scenario_file:)
 end
 
 def get_env_version(env_vars:)
+  puts "hi"
   res = HTTP.headers('PRIVATE-TOKEN': ENV['ACCESS_TOKEN']).get("#{env_vars['ENVIRONMENT_URL']}/api/v4/version")
+  puts "hi2"
   version = JSON.parse(res.body.to_s).values.join(' ')
   version == '401 Unauthorized' ? nil : version
 end
