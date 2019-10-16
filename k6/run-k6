@@ -79,12 +79,11 @@ def setup_env_vars(env_file:, scenario_file:)
 
   scenario_file_vars = JSON.parse(File.read(scenario_file))
   env_vars['SCENARIO_RPS'] = scenario_file_vars['rps'].to_s
-  env_vars['SCENARIO_STAGES'] = scenario_file_vars['stages'].to_json
-  env_vars['RPS_COUNT_TARGET'] ||= begin
+  env_vars['SCENARIO_RPS_COUNT'] ||= begin
     duration = scenario_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
     (duration * scenario_file_vars['rps'].to_f).to_i.to_s
   end
-  env_vars['RPS_MEAN_TARGET'] ||= scenario_file_vars['rps'].to_f.to_s
+  env_vars['SCENARIO_STAGES'] = scenario_file_vars['stages'].to_json
 
   env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
   env_vars['GIT_ENDPOINT_THRESHOLD'] ||= '0.1'
@@ -148,10 +147,10 @@ def parse_k6_results(output:)
 
   output.each do |line|
     case line
-    when /Test finished/
-      matches[:duration] = line.match(/(t=)(.*s)/)
     when /http_req_duration/
       matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
+    when /vus_max/
+      matches[:rps_target] = line.match(/max=(\d+)/)
     when /RPS Threshold/
       matches[:rps_threshold] = line.match(/\d+\.\d+\/s/)
     when /http_reqs/
@@ -163,10 +162,10 @@ def parse_k6_results(output:)
     end
   end
 
-  results.insert(0, [:Duration, ChronicDuration.parse(matches[:duration][2]).round(2).to_s + 's'])
-  results.insert(1, [:P95, matches[:p95][2] + matches[:p95][3]])
-  results.insert(2, [:RPS, "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
-  results.insert(3, [:'Success Rate', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
+  results.insert(0, [:'RPS Target', matches[:rps_target][1]])
+  results.insert(1, [:'RPS Result', "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
+  results.insert(2, [:'Response Time P95', matches[:p95][2] + matches[:p95][3]])
+  results.insert(3, [:'Request Success Rate', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
 
   results.compact.to_h
 end
