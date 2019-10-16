@@ -3,9 +3,10 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, adjustRps, adjustStageVUs } from "../modules/custom_k6_modules.js";
 
 export let issueRps = adjustRps(0.1);
+export let issueStages = adjustStageVUs(0.1);
 export let rpsThresholds = getRpsThresholds(0.1)
 export let successRate = new Rate("successful_requests");
 export let options = {
@@ -13,6 +14,7 @@ export let options = {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
+  stages: issueStages,
   rps: issueRps
 };
 
