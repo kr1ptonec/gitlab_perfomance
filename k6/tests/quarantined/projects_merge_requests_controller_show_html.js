@@ -3,7 +3,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, selectProject } from "./modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -14,7 +14,7 @@ export let options = {
   }
 };
 
-export let projectNames = __ENV.PROJECT_NAMES.split(',');
+export let projects = JSON.parse(open(`../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
 
 export function setup() {
   console.log('')
@@ -24,9 +24,9 @@ export function setup() {
 
 export default function() {
   group("Web - Merge Request Controller Show HTML", function() {
-    let projectName = projectNames[Math.floor(Math.random() * projectNames.length)];
+    let project = selectProject(projects);
   
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${__ENV.PROJECT_GROUP}/${projectName}/merge_requests/${__ENV.PROJECT_MR_COMMITS_IID}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
