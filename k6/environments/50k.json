@@ -33,6 +33,16 @@
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958"
+    },
+    {
+      "name": "gitlabhq4",
+      "group": "qa-perf-testing",
+      "commit_sha": "0a99e022",
+      "commit_sha_signed": "6526e91f",
+      "branch": "10-0-stable",
+      "file_path": "qa%2fqa%2erb",
+      "mr_commits_iid": "10495",
+      "mr_discussions_iid": "6958"
     }
   ]
 }
