@@ -12,7 +12,7 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "10495"
+      "mr_discussions_iid": "6958"
     },
     {
       "name": "gitlabhq2",
@@ -22,7 +22,7 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "10495"
+      "mr_discussions_iid": "6958"
     }
   ]
 }

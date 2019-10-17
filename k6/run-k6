@@ -165,7 +165,7 @@ def parse_k6_results(output:)
   results.insert(0, [:RPS, "#{matches[:rps_target][1]}/s"])
   results.insert(1, [:'RPS Result', "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
   results.insert(2, [:'Response P95', matches[:p95][2] + matches[:p95][3]])
-  results.insert(3, [:'Success Rate', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
+  results.insert(3, [:'Request Results', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
 
   results.compact.to_h
 end
@@ -237,7 +237,7 @@ test_details_summary = <<~DOC
   Run Time:       #{run_time}s (Start: #{start_time.utc.strftime('%T %Z')}, End: #{end_time.utc.strftime('%T %Z')})
 DOC
 puts "\nResults summary:\n\n#{test_details_summary}\n"
-tp.set(:max_width, 100)
+tp.set(:max_width, 60)
 tp(aggregated_results)
 
 puts "\nSaving results summary to:\n#{aggregated_results_json}\n#{aggregated_results_txt}"
