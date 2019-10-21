@@ -1,5 +1,5 @@
 # 1st Stage
-FROM ruby:2.6.3-alpine AS build
+FROM ruby:2.6-alpine AS build
 
 ARG K6_VERSION="0.25.1"
 ENV K6_VERSION="${K6_VERSION}"
@@ -15,7 +15,7 @@ RUN gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDL
 RUN wget -q -P /tmp/ https://github.com/loadimpact/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux64.tar.gz && tar -xzvf /tmp/k6-v${K6_VERSION}-linux64.tar.gz -C /usr/local/bin --strip-components 1
 
 # 2nd Stage
-FROM ruby:2.6.3-alpine
+FROM ruby:2.6-alpine
 
 ARG K6_VERSION="0.25.1"
 ENV K6_VERSION="${K6_VERSION}"
