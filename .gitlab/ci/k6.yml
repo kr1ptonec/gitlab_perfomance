@@ -41,31 +41,15 @@ k6:
 ##    Report Jobs    ##
 #######################
 .report-k6:
-  image: alpine
   stage: report
-  before_script:
-    - apk add curl
-    - |
-      if [ -d "k6/results" ]; then
-        k6_summary_file=$(find k6/results -name *_aggregated_results.txt -print -quit)
-        k6_times_file=$(find k6/results -name *_test_epoch_times.txt -print -quit)
-      fi
+  extends: .k6-base
   only:
     - schedules
 
 report-k6-success-slack:
   extends: .report-k6
   script:
-    - |
-      if [ -r "$k6_summary_file" ] && [ -r "$k6_times_file" ]; then
-        echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file
-        source $k6_times_file
-        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "Grafana - $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME" >> $k6_summary_file
-        k6_summary=$(echo "$(cat $k6_summary_file)")
-      else
-        k6_summary="\nPipeline - $CI_PIPELINE_URL"
-      fi
-    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has passed! $k6_summary" ci_passing
+    - SUCCESS_TEST_RUN="true" k6/scripts/report-results-slack
   when: on_success
   only:
     variables:
@@ -79,16 +63,7 @@ report-k6-success-slack:
 report-k6-failure-slack:
   extends: .report-k6
   script:
-    - |
-      if [ -r "$k6_summary_file" ] && [ -r "$k6_times_file" ]; then
-        echo "Pipeline - $CI_PIPELINE_URL" >> $k6_summary_file
-        source $k6_times_file
-        [ -n "$ENVIRONMENT_GRAFANA_DASHBOARD_URL" ] && echo "Grafana- $ENVIRONMENT_GRAFANA_DASHBOARD_URL?from=$START_TIME&to=$END_TIME&var-environment=$ENVIRONMENT_NAME" >> $k6_summary_file
-        k6_summary=$(echo "$(cat $k6_summary_file)")
-      else
-        k6_summary="\nPipeline - $CI_PIPELINE_URL"
-      fi
-    - bin/slack "Test $TEST_TYPE against $ENVIRONMENT_NAME has failed! $k6_summary" ci_failing
+    - SUCCESS_TEST_RUN="false" k6/scripts/report-results-slack
   when: on_failure
   only:
     variables:
@@ -103,8 +78,14 @@ report-k6-wiki:
   extends: .report-k6
   script:
     - |
+      if [ -d "k6/results" ]; then
+        k6_summary_file=$(find k6/results -name *_results.txt -print -quit)
+      fi
       if [ -r "$k6_summary_file" ]; then
-        k6_summary=$(echo "$(cat $k6_summary_file)")
+        echo '```' > wiki_results
+        cat $results_file >> wiki_results
+        echo '```' >> wiki_results
+        k6_summary=$(echo "$(cat $wiki_results)")
         bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
       fi
   when: always
