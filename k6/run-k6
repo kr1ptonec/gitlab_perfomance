@@ -215,12 +215,9 @@ end
 # Save test times
 end_time = Time.now
 run_time = (end_time - start_time).round(2)
-test_epoch_times_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_test_epoch_times.txt")
-File.open(test_epoch_times_txt, 'w') do |file|
-  file.write("START_TIME=#{(start_time.to_f * 1000).to_i}\n")
-  file.write("END_TIME=#{(end_time.to_f * 1000).to_i}\n")
-  file.write("RUN_TIME=#{run_time}")
-end
+test_epoch_times_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_test_epoch_times.json")
+test_epoch_times = { start_time: (start_time.to_f * 1000).to_i, end_time: (end_time.to_f * 1000).to_i, run_time: run_time }
+File.write(test_epoch_times_json, test_epoch_times.to_json)
 
 puts Rainbow("\nAll k6 tests have finished after #{run_time}s!").green
 
@@ -230,8 +227,8 @@ if aggregated_results.empty?
   exit
 end
 
-aggregated_results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_aggregated_results.json")
-aggregated_results_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_aggregated_results.txt")
+aggregated_results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y-%m-%d_%H:%M:%S')}_results.json")
+aggregated_results_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y-%m-%d_%H:%M:%S')}_results.txt")
 
 test_details_summary = <<~DOC
   Environment:    #{env_vars['ENVIRONMENT_NAME']} #{env_version ? "(#{env_version})" : ''}
@@ -246,12 +243,10 @@ tp(aggregated_results)
 puts "\nSaving results summary to:\n#{aggregated_results_json}\n#{aggregated_results_txt}"
 File.write(aggregated_results_json, aggregated_results.to_json)
 File.open(aggregated_results_txt, 'w') do |file|
-  file.write("```\n")
-  file.write("#{test_details_summary}\n")
+  file.write(test_details_summary)
   tp.set :io, file
   tp(aggregated_results)
   tp.clear :io
-  file.write("```\n")
 end
 
 unless aggregated_success
