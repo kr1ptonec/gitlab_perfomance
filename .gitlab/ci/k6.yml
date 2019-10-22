@@ -83,7 +83,7 @@ report-k6-wiki:
       fi
       if [ -r "$k6_summary_file" ]; then
         echo '```' > wiki_results
-        cat $results_file >> wiki_results
+        cat $k6_summary_file >> wiki_results
         echo '```' >> wiki_results
         k6_summary=$(echo "$(cat $wiki_results)")
         bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
