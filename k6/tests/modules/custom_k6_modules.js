@@ -38,6 +38,10 @@ export function adjustStageVUs(modifier=1.0) {
   return stages;
 }
 
+export function getProjects() {
+  return JSON.parse(open(`../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+}
+
 export function selectProject(projects) {
   return projects.length == 1 ? projects[0] : projects[projects.length * Math.random() << 0];
 }

@@ -3,7 +3,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, adjustRps, getProjects, selectProject } from "./modules/custom_k6_modules.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THRESHOLD);
 export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THRESHOLD);
@@ -16,7 +16,7 @@ export let options = {
   rps: gitProtoRps
 };
 
-export let projects = JSON.parse(open(`../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+export let projects = getProjects();
 
 export function setup() {
   console.log('')

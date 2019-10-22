@@ -3,7 +3,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
 // Issue: https://gitlab.com/gitlab-org/gitlab/issues/33150
@@ -16,7 +16,7 @@ export let options = {
   }
 };
 
-export let projects = JSON.parse(open(`../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+export let projects = getProjects();
 
 export function setup() {
   console.log('')
