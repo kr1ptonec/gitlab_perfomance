@@ -1,7 +1,7 @@
 {
   "environment": {
     "name": "50k",
-    "url": "http://35.237.211.103"
+    "url": "http://50k.testbed.gitlab.net"
   },
   "projects": [
     {
