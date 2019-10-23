@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /:group/:project.git/info/refs?service=git-upload-pack` <br> `POST /:group/:project.git/git-upload-pack` </br>
+@description: Git pull from master having another branch locally 
+*/
 
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps, adjustStageVUs } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, adjustRps, adjustStageVUs } from "../modules/custom_k6_modules.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THRESHOLD);
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THRESHOLD);
@@ -29,7 +33,7 @@ export function setup() {
 }
 
 export default function (data) {
-  group("Gitaly - git pull", function() {
+  group("Git - git pull", function() {
     group("API - Get Refs List", function () {
       let refsListResponse = getRefsList();
       /20(0|1)/.test(refsListResponse.status) ? successRate.add(true) : successRate.add(false) && logError(refsListResponse);
