@@ -1,15 +1,17 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/repository/commits/:sha/diff`
+@description: [Get the diff of a commit in a project](https://docs.gitlab.com/ee/api/commits.html#get-the-diff-of-a-commit)
+*/
 
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds } from "../modules/custom_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
-// Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: https://gitlab.com/gitlab-org/gitlab/issues/32455
-export let rpsThresholds = getRpsThresholds(0.6)
+export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
@@ -25,9 +27,9 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Merge Request Discussions", function() {
+  group("API - Project Repository Commit Diff", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${__ENV.PROJECT_NAME}/merge_requests/${__ENV.PROJECT_MR_DISCUSSIONS_IID}/discussions`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${__ENV.PROJECT_GROUP}%2F${__ENV.PROJECT_NAME}/repository/commits/${__ENV.PROJECT_COMMIT_SHA}/diff`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

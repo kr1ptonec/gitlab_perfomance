@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'open3'
+require 'table_print'
+require 'time'
+
+# Get parent folder(`k6`) path from the current file
+k6_dir = File.expand_path("..", File.dirname(__FILE__))
+
+def get_tests(dir_name)
+  tests = Dir.glob("#{dir_name}/tests/**/*.js")
+  tests -= Dir.glob("#{dir_name}/tests/modules/*") # exclude module folder
+  raise "\nNo tests found in specified path(s):\n#{tests.join("\n")}\nExiting..." if tests.empty?
+
+  tests.uniq.sort_by { |path| File.basename(path, '.js') }
+end
+
+def parse_test_docs(test_file)
+  docs = {}
+  test_filename = File.basename(test_file)
+  test_type = test_file.split("/")[-2] # folder name is type
+  test_repo_url = "https://gitlab.com/gitlab-org/quality/performance/blob/master/k6/tests/#{test_type}/#{test_filename}"
+  docs[:test] = "[#{test_filename}](#{test_repo_url})"
+
+  test_file_content = File.open(test_file, "r")
+  test_file_content.each_line do |line|
+    case line
+    when /@endpoint/
+      match = line.match(/@endpoint: (.*)\n/)
+      docs[:endpoint] = match[1]
+    when /@description/
+      match = line.match(/@description: (.*)\n/)
+      docs[:description] = match[1]
+    end
+  end
+  test_file_content.close
+  docs[:endpoint] = 'No documentaion' if docs[:endpoint].nil?
+  docs[:type] = test_type
+  docs
+end
+
+current_time = Time.now
+results_dir = File.join("#{k6_dir}/results", "tests_wiki_#{current_time.strftime('%Y%m%d_%H%M%S')}")
+puts "\nCollecting all test info and saving to #{results_dir}"
+FileUtils.mkdir_p(results_dir)
+
+tests = get_tests(k6_dir)
+
+aggregated_tests = []
+tests.each do |test|
+  aggregated_tests << parse_test_docs(test)
+end
+test_types = aggregated_tests.map { |test| test[:type] }.uniq
+aggregated_tests_doc_txt = File.join(results_dir, "aggregated_tests_doc.txt")
+docs_summary = <<~DOC
+  GitLab Performance Toolkit consists of different types of tests:
+  * `api` - API endpoint tests
+  * `git` - git-related tests
+  * `standalone` - standalone test scenarios
+  * `web` - Web page tests
+  * `quarantined` - tests that are quarantined because of some ongoing issue with endpoint or test itself
+DOC
+tp.set(:max_width, 800)
+
+File.open(aggregated_tests_doc_txt, 'w') do |file|
+  file.write("#{docs_summary}\n")
+  tp.set :io, file
+  test_types.each do |type|
+    file.write("\n## #{type.upcase}\n")
+    aggregated_tests_by_type = aggregated_tests.select { |test| test[:type] == type }
+    tp(aggregated_tests_by_type)
+  end
+  tp.clear :io
+end

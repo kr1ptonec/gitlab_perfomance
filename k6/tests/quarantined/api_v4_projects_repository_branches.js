@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/repository/branches`
+@description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
+*/
 
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds } from "../modules/custom_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
