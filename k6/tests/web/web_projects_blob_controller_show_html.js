@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "../../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
