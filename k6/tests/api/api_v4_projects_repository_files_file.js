@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/repository/files/:file_path`
+@description: [Get information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-from-repository)
+*/
 
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
@@ -25,11 +29,11 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Project Pipelines", function() {
+  group("API - Project Repository File", function() {
     let project = selectProject(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/pipelines`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/files/${project['file_path']}?ref=master`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

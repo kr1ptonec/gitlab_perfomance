@@ -1,9 +1,15 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/repository/commits/:sha/diff`
+@description: [Get the diff of a commit in a project](https://docs.gitlab.com/ee/api/commits.html#get-the-diff-of-a-commit)
+*/
 
 import http from "k6/http";
-import { group } from "k6";
+import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+
+if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -23,11 +29,11 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Merge Request Overview", function() {
+  group("API - Project Repository Commit Diff", function() {
     let project = selectProject(projects);
 
-    let params = { headers: { "Accept": "application/json" } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/commits/${project['commit_sha']}/diff`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/languages`
+@description: [Get languages used in a project with percentage value](https://docs.gitlab.com/ee/api/projects.html#languages)
+*/
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -16,8 +20,6 @@ export let options = {
 
 export let projects = getProjects();
 
-let project = selectProject(projects);
-
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -25,9 +27,11 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Merge Request Changes", function() {
+  let project = selectProject(projects);
+
+  group("API - Project Languages List", function() {
     let params = { headers: { "Accept": "application/json" } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/languages`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

@@ -12,7 +12,7 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api_v4_groups_projects.js
+    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api/api_v4_groups_projects.js
   except:
     - schedules
 
@@ -29,6 +29,9 @@ k6:
       - schedules
     variables:
       - $TEST_TYPE == "k6"
+  except:
+    variables:
+      - $ENVIRONMENT_NAME == null
   tags:
     - performance
   artifacts:
@@ -74,7 +77,7 @@ report-k6-failure-slack:
       - $CI_SLACK_WEBHOOK_URL == null
       - $CI_SLACK_CHANNEL == null
 
-report-k6-wiki:
+report-k6-results-wiki:
   extends: .report-k6
   script:
     - |
@@ -95,3 +98,23 @@ report-k6-wiki:
   except:
     variables:
       - $CI_WIKI_REPORT != "true"
+
+report-k6-tests-wiki:
+  stage: report
+  extends: .k6-base
+  script:
+    - |
+      k6/scripts/collect-test-info
+      if [ -d "k6/results" ]; then
+        k6_summary_file=$(find k6/results -name aggregated_tests_doc.txt -print -quit)
+      fi
+      if [ -r $k6_summary_file ]; then
+        k6_summary=$(echo "$(cat $k6_summary_file)")
+      fi
+      if [ -n "$k6_summary" ]; then
+        bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis "Current Test Details" "$k6_summary"
+      fi
+  only:
+    variables:
+      - $TEST_TYPE == "k6"
+      - $CI_TEST_DOCS_WIKI_REPORT == "true"

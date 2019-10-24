@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/merge_requests/:merge_request_iid`
+@description: [Get information about a single merge request](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr)
+*/
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -23,10 +27,11 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Projects Blob Controller Show HTML", function() {
+  group("API - Merge Request Overview", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/blob/master/${project['file_path']}`);
+    let params = { headers: { "Accept": "application/json" } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

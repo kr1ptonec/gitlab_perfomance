@@ -1,13 +1,17 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/merge_requests`
+@description: [Get all merge requests for this project](https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests)
+*/
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: https://gitlab.com/gitlab-org/gitlab/issues/31321
-export let rpsThresholds = getRpsThresholds(0.1)
+// Issue: https://gitlab.com/gitlab-org/gitlab/issues/33150
+export let rpsThresholds = getRpsThresholds(0.25)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
@@ -25,10 +29,11 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Merge Request Commits", function() {
+  group("API - Merge Requests List", function() {
     let project = selectProject(projects);
+
     let params = { headers: { "Accept": "application/json" } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}/commits`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

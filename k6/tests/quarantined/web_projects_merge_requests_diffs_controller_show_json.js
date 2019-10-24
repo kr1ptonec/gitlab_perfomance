@@ -1,11 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs.json`
+@description: Web - Merge Request Diffs Controller Show JSON
+*/
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
-
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -25,11 +27,10 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Project Repository File Raw", function() {
+  group("Web - Merge Request Diffs Controller Show JSON", function() {
     let project = selectProject(projects);
 
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/files/${project['file_path']}/raw?ref=master`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs.json`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }

@@ -1,11 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/changes`
+@description: [Get single MR changes](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-changes)
+*/
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
-
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -16,6 +18,10 @@ export let options = {
   }
 };
 
+export let projects = getProjects();
+
+let project = selectProject(projects);
+
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
@@ -23,9 +29,9 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Users List", function() {
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/user`, params);
+  group("API - Merge Request Changes", function() {
+    let params = { headers: { "Accept": "application/json" } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
