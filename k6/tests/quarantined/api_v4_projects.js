@@ -1,9 +1,13 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects`
+@description: [Get a list of all visible projects across GitLab for the authenticated user](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
+*/
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds } from "../modules/custom_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");

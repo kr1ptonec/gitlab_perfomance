@@ -1,4 +1,8 @@
 /* global __ENV, __VU, __ITER */
+/*
+@endpoint: `POST /projects/:id/issues`
+@description: Setup stage: Create group and project <br>Test: [Creates a new project issue](https://docs.gitlab.com/ee/api/issues.html#new-issue) <br>Teardown stage: Delete group
+*/
 
 import http from "k6/http";
 import { group, fail } from "k6";

@@ -1,9 +1,15 @@
 /*global __ENV : true  */
+/*
+@endpoint: `GET /projects/:id/pipelines`
+@description: [List project pipelines](https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines)
+*/
 
 import http from "k6/http";
-import { group } from "k6";
+import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "./modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+
+if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
 
 export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
@@ -23,10 +29,11 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Merge Request Diffs Controller Show JSON", function() {
+  group("API - Project Pipelines", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs.json`);
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/pipelines`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
