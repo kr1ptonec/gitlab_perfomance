@@ -13,7 +13,6 @@ Documentation on how to use the toolkit can be found in the [`docs/`](/docs/READ
 
 * [Environment Preparation](docs/environment_prep.md)
 * [Running Load Performance Tests with `k6`](docs/k6.md)
-    * [Running Load Performance Tests with `Artillery` **(Deprecated)**](docs/artillery.md)
 * [Running Web Performance Tests with `SiteSpeed`](docs/sitespeed.md)
 
 ## Further Reading

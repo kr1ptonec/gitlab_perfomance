@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'chronic_duration'
-require "down/http"
+require 'down/http'
 require 'http'
 require 'optimist'
 require 'time'
@@ -15,24 +15,25 @@ opts = Optimist.options do
   opt :project_tarball, "Location of project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz'
   opt :namespace, "The ID or path of the namespace that the project will be imported to, such as a Group.", short: :none, type: :string
   opt :project_name, "Name for project. Can be also be a combined path and name if required.", short: :none, type: :string, required: true
+  opt :storage_name, "Name for target repository storage (Gitaly).", short: :none, type: :string, default: 'default'
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access for the ability to import projects. (Default: nil)"
   banner "\nExamples:"
-  banner "  import-project --environment-url onprem.testbed.gitlab.net"
+  banner "  import-project --environment-url 10k.testbed.gitlab.net"
   banner "  import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project"
 end
 
 raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
 
-def get(url, headers)
+def get(url, headers = {})
   HTTP.follow.get(
     url,
     headers: headers
   )
 end
 
-def post(url, payload, headers)
+def post(url, payload, headers = {})
   res = HTTP.follow.post(
     url,
     form: payload,
@@ -92,9 +93,10 @@ puts "Creating project #{opts[:project_name]}..."
 start_time = Time.now.to_i
 proj_url = "#{env_url}/api/v4/projects/import"
 proj_payload = {
+  file: HTTP::FormData::File.new(proj_file),
   namespace: opts[:namespace],
   path: opts[:project_name],
-  file: HTTP::FormData::File.new(proj_file)
+  'override_params[repository_storage]': opts[:storage_name]
 }
 proj_res = post(proj_url, proj_payload, headers)
 proj_id = JSON.parse(proj_res.body.to_s)['id']

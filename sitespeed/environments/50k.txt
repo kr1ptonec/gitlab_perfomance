@@ -1,0 +1,13 @@
+http://50k.testbed.gitlab.net
+http://50k.testbed.gitlab.net/qa-perf-testing/
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/-/branches
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/tree/10-0-stable
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/commits/master
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/issues
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/6958
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/6958/diffs
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/merge_requests/10495/commits
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/blob/master/qa/qa.rb
+http://50k.testbed.gitlab.net/qa-perf-testing/gitlabhq/pipelines
