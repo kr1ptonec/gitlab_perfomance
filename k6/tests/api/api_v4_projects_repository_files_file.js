@@ -20,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects();
+export let projects = getProjects(['name', 'group', 'file_path']);
 
 export function setup() {
   console.log('')

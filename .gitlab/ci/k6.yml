@@ -88,7 +88,7 @@ report-k6-results-wiki:
         echo '```' > wiki_results
         cat $k6_summary_file >> wiki_results
         echo '```' >> wiki_results
-        k6_summary=$(echo "$(cat $wiki_results)")
+        k6_summary=$(echo "$(cat wiki_results)")
         bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
       fi
   when: always
@@ -117,4 +117,6 @@ report-k6-tests-wiki:
   only:
     variables:
       - $TEST_TYPE == "k6"
-      - $CI_TEST_DOCS_WIKI_REPORT == "true"
+  except:
+    variables:
+      - $CI_TEST_DOCS_WIKI_REPORT != "true"

@@ -1,4 +1,5 @@
 /*global __ENV : true  */
+import { fail } from "k6";
 
 export function logError(res) {
   if ( typeof logError.last == 'undefined' ) logError.last = '';
@@ -38,8 +39,18 @@ export function adjustStageVUs(modifier=1.0) {
   return stages;
 }
 
-export function getProjects() {
-  return JSON.parse(open(`../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+// Returns projects that contain all keys (if passed) or exits if none found
+export function getProjects(keys=[]) {
+  let projects = JSON.parse(open(`../../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+  let check_project_key = (project, keys) => keys.every(key => Object.prototype.hasOwnProperty.call(project, key));
+
+  let projects_with_keys = {};
+  if (Array.isArray(keys) && keys.length > 0) {
+    projects_with_keys = projects.filter(project => check_project_key(project, keys));
+  }
+
+  if (projects_with_keys.length == 0) fail('No projects found with required keys for test. Exiting...');
+  return projects_with_keys
 }
 
 export function selectProject(projects) {

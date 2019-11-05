@@ -20,7 +20,7 @@ export let options = {
   rps: gitProtoRps
 };
 
-export let projects = getProjects();
+export let projects = getProjects(['name', 'group']);
 
 export function setup() {
   console.log('')

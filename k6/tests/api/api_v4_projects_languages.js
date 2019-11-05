@@ -18,7 +18,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects();
+export let projects = getProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -27,9 +27,9 @@ export function setup() {
 }
 
 export default function() {
-  let project = selectProject(projects);
-
   group("API - Project Languages List", function() {
+    let project = selectProject(projects);
+
     let params = { headers: { "Accept": "application/json" } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/languages`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);

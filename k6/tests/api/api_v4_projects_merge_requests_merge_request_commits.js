@@ -20,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects();
+export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
 
 export function setup() {
   console.log('')

@@ -18,7 +18,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects();
+export let projects = getProjects(['group']);
 
 export function setup() {
   console.log('')
