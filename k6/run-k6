@@ -169,7 +169,7 @@ def parse_k6_results(output:)
   results.compact.to_h
 end
 
-puts Rainbow("GitLab Performance Toolkit - k6 load test runner").color(230, 83, 40)
+puts Rainbow("GitLab Performance Tool - k6 load test runner").color(230, 83, 40)
 warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
 
 k6_path = setup_k6

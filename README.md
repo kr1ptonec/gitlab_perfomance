@@ -1,19 +1,15 @@
-# GitLab Performance Toolkit
+# GitLab Performance Tool
 
-The GitLab Performance Toolkit (`gpt`) provides several tools that enables you to performance test any GitLab instance. The toolkit is built with several standard tools that cover different areas of performance:
+The GitLab Performance Tool (`gpt`) has been built by the GitLab Quality team to provide performance testing of any GitLab instance. The tool has been built upon the industry leading open source tool [k6](https://k6.io) and provides numerous tests that are designed to effectively performance test GitLab:
 
-* Load Performance - [k6](https://k6.io)
-* Web Rendering Performance - [SiteSpeed](https://www.sitespeed.io)
-
-This project also performs automated testing for GitLab with the toolkit via [Pipelines](https://gitlab.com/gitlab-org/quality/performance/pipeline_schedules).
+THe tool can be used both manually and automatically, with us doing the latter for automated testing of reference environments via [Pipelines](https://gitlab.com/gitlab-org/quality/performance/pipeline_schedules).
 
 ## Documentation
 
-Documentation on how to use the toolkit can be found in the [`docs/`](/docs/README.md) folder:
+Documentation on how to use the tool can be found in the [`docs/`](/docs/README.md) folder:
 
 * [Environment Preparation](docs/environment_prep.md)
-* [Running Load Performance Tests with `k6`](docs/k6.md)
-* [Running Web Performance Tests with `SiteSpeed`](docs/sitespeed.md)
+* [Running Tests](docs/k6.md)
 
 ## Further Reading
 

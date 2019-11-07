@@ -54,7 +54,7 @@ end
 test_types = aggregated_tests.map { |test| test[:type] }.uniq
 aggregated_tests_doc_txt = File.join(results_dir, "aggregated_tests_doc.txt")
 docs_summary = <<~DOC
-  GitLab Performance Toolkit consists of different types of tests:
+  GitLab Performance Tool consists of different types of tests:
   * `api` - API endpoint tests
   * `git` - git-related tests
   * `standalone` - standalone test scenarios
