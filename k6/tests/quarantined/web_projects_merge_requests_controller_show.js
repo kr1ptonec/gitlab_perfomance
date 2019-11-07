@@ -7,21 +7,26 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../modules/custom_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
+export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THRESHOLD);
+export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THRESHOLD);
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THRESHOLD)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
-  }
+  },
+  rps: webProtoRps,
+  stages: webProtoStages
 };
 
 export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
 
 export function setup() {
   console.log('')
+  console.log(`Web Protocol RPS: ${webProtoRps}`)
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
