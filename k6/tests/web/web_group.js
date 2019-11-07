@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs.json`
-@description: Web - Merge Request Diffs Controller Show JSON
+@endpoint: `GET /:group`
+@description: Web - Group page. <br>Controllers: `GroupsController#index`</br>
 */
 
 import http from "k6/http";
@@ -22,7 +22,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
+export let projects = getProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -32,10 +32,11 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Merge Request Diffs Controller Show JSON", function() {
+  group("Web - Groups Controller Index HTML", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs.json`);
+    let params = { headers: { "Cache-Control": "no-cache" } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
