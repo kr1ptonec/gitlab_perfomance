@@ -19,7 +19,7 @@ check:yamllint:
   # Use an up to date image of yamllint that can handle unicode emojis
   image: pipelinecomponents/yamllint
   script:
-    - yamllint .gitlab-ci.yml artillery/environments artillery/scenarios .gitlab/ci/
+    - yamllint .gitlab-ci.yml .gitlab/ci/
   except:
     - schedules
 
