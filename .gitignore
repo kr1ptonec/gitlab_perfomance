@@ -1,7 +1,4 @@
-artillery/results/*
 k6/results/*
-sitespeed-results/*
-sitespeed/results/*
 node_modules/
 .bundle/
 vendor/bundle/
@@ -13,4 +10,3 @@ tmp/
 .idea
 package-lock.json
 .DS_Store
-sitespeed/environments/host.docker.internal.txt

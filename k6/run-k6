@@ -24,6 +24,7 @@ opts = Optimist.options do
   opt :tests, "Path of Test file or folder paths to run.", type: :strings, default: ["#{dir_name}/tests"]
   opt :standalone, "Include any tests inside the #{dir_name}/tests/standalone folder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the #{dir_name}/tests/quarantined folder when true.", type: :flag, default: false
+  opt :http_debug, "Turn on HTTP debug to see request logs", type: :flag, default: false
   opt :upload_results, "Optionally upload test results to a InfluxDB server. Requires K6_INFLUXDB_URL Environment Variable to be set.", type: :flag, default: false
   opt :help, 'Show this help message'
   banner "\nEnvironment Variables:"
@@ -81,6 +82,7 @@ def setup_env_vars(env_file:, scenario_file:)
 
   env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
   env_vars['GIT_ENDPOINT_THRESHOLD'] ||= '0.1'
+  env_vars['WEB_ENDPOINT_THRESHOLD'] ||= '0.1'
 
   env_vars
 end
@@ -109,7 +111,7 @@ def get_tests(test_paths:, quarantined:, standalone:)
   tests.uniq.sort_by { |path| File.basename(path, '.js') }
 end
 
-def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: false)
+def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: false, http_debug:)
   test_name = File.basename(test_file, '.js')
   puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
@@ -118,6 +120,7 @@ def run_k6(k6_path:, env_vars:, scenario_file:, test_file:, upload_results: fals
   cmd += ['--out', "influxdb=#{ENV['K6_INFLUXDB_URL']}/k6db"] if upload_results && ENV['K6_INFLUXDB_URL'] && HTTP.get("#{ENV['K6_INFLUXDB_URL']}/ping").status.success?
   cmd += ['--tag', "environment=#{env_vars['ENVIRONMENT_NAME']}"]
   cmd += ['--summary-time-unit', 'ms']
+  cmd += ['--http-debug'] if http_debug
   cmd += [test_file]
 
   status = nil
@@ -166,7 +169,7 @@ def parse_k6_results(output:)
   results.compact.to_h
 end
 
-puts Rainbow("GitLab Performance Toolkit - k6 load test runner").color(230, 83, 40)
+puts Rainbow("GitLab Performance Tool - k6 load test runner").color(230, 83, 40)
 warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
 
 k6_path = setup_k6
@@ -188,7 +191,7 @@ tests = get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined], sta
 tests.each do |test_file|
   test_name = File.basename(test_file, '.js')
 
-  success, output = run_k6(k6_path: k6_path, env_vars: env_vars, scenario_file: opts[:scenario], test_file: test_file, upload_results: opts[:upload_results])
+  success, output = run_k6(k6_path: k6_path, env_vars: env_vars, scenario_file: opts[:scenario], test_file: test_file, upload_results: opts[:upload_results], http_debug: opts[:http_debug])
 
   parsed_results = parse_k6_results(output: output)
   success = false if parsed_results.nil?

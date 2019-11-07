@@ -1,13 +1,14 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs.json`
-@description: Web - Merge Request Diffs Controller Show JSON
+@endpoint: `GET /:group/:project/pipelines`
+@description: Web - Project Pipelines page. <br>Controllers: `Projects::PipelinesController`</br>
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THRESHOLD);
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THRESHOLD);
@@ -22,7 +23,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
+export let projects = getProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -32,10 +33,11 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Merge Request Diffs Controller Show JSON", function() {
+  group("Web - Projects Pipelines Controller Show HTML", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs.json`);
+    let params = { headers: { "Cache-Control": "no-cache" } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/pipelines`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
