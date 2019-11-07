@@ -1,4 +1,4 @@
-# GitLab Performance Toolkit - Environment Preparation
+# GitLab Performance Tool - Environment Preparation
 
 Before running any of the tests they require that the GitLab environment is prepared. This involves seeding the environment with one or more representative [Projects](https://docs.gitlab.com/ee/user/project/) along with setting up an [Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for authentication.
 
