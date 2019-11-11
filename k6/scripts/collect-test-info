@@ -57,7 +57,7 @@ docs_summary = <<~DOC
   GitLab Performance Tool consists of different types of tests:
   * `api` - API endpoint tests
   * `git` - git-related tests
-  * `standalone` - standalone test scenarios
+  * `scenarios` - standalone test scenarios
   * `web` - Web page tests
   * `quarantined` - tests that are quarantined because of some ongoing issue with endpoint or test itself
 DOC
