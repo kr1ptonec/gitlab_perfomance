@@ -16,6 +16,36 @@ check:k6:
   except:
     - schedules
 
+########################
+##      Env Tasks     ##
+########################
+
+update-environment:
+  stage: .pre
+  variables:
+    ENVIRONMENT_NAME: $ENVIRONMENT_NAME
+    ENVIRONMENT_ACTION: update
+    GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+  trigger:
+    project: gitlab-org/quality/performance-environment-builder
+    strategy: depend
+  only:
+    variables:
+      - $ENVIRONMENT_UPDATE == "true"
+
+stop-environment:
+  stage: .post
+  variables:
+    ENVIRONMENT_NAME: $ENVIRONMENT_NAME
+    ENVIRONMENT_ACTION: stop
+    GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+  trigger:
+    project: gitlab-org/quality/performance-environment-builder
+    strategy: depend
+  only:
+    variables:
+      - $ENVIRONMENT_STOP == "true"
+
 #######################
 ##   k6 Load Tests   ##
 #######################
