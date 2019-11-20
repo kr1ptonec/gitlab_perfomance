@@ -2,15 +2,15 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests`
 @description: [Get all merge requests for this project](https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests)
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/33150, https://gitlab.com/gitlab-org/gitlab/issues/30180
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: https://gitlab.com/gitlab-org/gitlab/issues/33150
 export let rpsThresholds = getRpsThresholds(0.25)
 export let successRate = new Rate("successful_requests");
 export let options = {

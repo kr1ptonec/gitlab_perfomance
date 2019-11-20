@@ -12,7 +12,7 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api/api_v4_groups_projects.js
+    - bin/run-k6 -e k6/environments/staging.json -t k6/tests/api/api_v4_groups_projects.js
   except:
     - schedules
 
@@ -53,7 +53,7 @@ k6:
   stage: test
   extends: .k6-base
   script:
-    - k6/run-k6 -u -s -e k6/environments/$ENVIRONMENT_NAME.json -o k6/options/$OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q")
+    - bin/run-k6 -u -s -e k6/environments/$ENVIRONMENT_NAME.json -o k6/options/$OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules
@@ -82,7 +82,7 @@ k6:
 report-k6-success-slack:
   extends: .report-k6
   script:
-    - SUCCESS_TEST_RUN="true" k6/scripts/report-results-slack
+    - SUCCESS_TEST_RUN="true" bin/report-results-slack
   when: on_success
   only:
     variables:
@@ -96,7 +96,7 @@ report-k6-success-slack:
 report-k6-failure-slack:
   extends: .report-k6
   script:
-    - SUCCESS_TEST_RUN="false" k6/scripts/report-results-slack
+    - SUCCESS_TEST_RUN="false" bin/report-results-slack
   when: on_failure
   only:
     variables:
@@ -119,7 +119,7 @@ report-k6-results-wiki:
         cat $k6_summary_file >> wiki_results
         echo '```' >> wiki_results
         k6_summary=$(echo "$(cat wiki_results)")
-        bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
+        bin/update-wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
       fi
   when: always
   only:
@@ -134,7 +134,7 @@ report-k6-tests-wiki:
   extends: .k6-base
   script:
     - |
-      k6/scripts/collect-test-info
+      bin/collect-test-info
       if [ -d "k6/results" ]; then
         k6_summary_file=$(find k6/results -name aggregated_tests_doc.txt -print -quit)
       fi
@@ -142,7 +142,7 @@ report-k6-tests-wiki:
         k6_summary=$(echo "$(cat $k6_summary_file)")
       fi
       if [ -n "$k6_summary" ]; then
-        bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis "Current Test Details" "$k6_summary"
+        bin/update-wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis "Current Test Details" "$k6_summary"
       fi
   only:
     variables:

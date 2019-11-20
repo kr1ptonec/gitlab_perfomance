@@ -59,7 +59,7 @@ Environment Variables:
   ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access for the ability to import projects. (Default: nil)
 
 Examples:
-  import-project --environment-url onprem.testbed.gitlab.net
+  import-project --environment-url 10k.testbed.gitlab.net
   import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project
 ```
 
