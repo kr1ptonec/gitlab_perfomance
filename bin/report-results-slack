@@ -6,7 +6,7 @@ require 'http'
 require 'json'
 
 # Get parent folder(`k6`) path from the current file
-k6_dir = File.expand_path("..", File.dirname(__FILE__))
+k6_dir = File.expand_path('../k6', __dir__)
 
 def send_results_to_slack(results_file_path, message, content = nil)
   url = "https://slack.com/api/files.upload"
