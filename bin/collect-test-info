@@ -23,14 +23,17 @@ tests.each do |test|
   aggregated_tests << TestInfo.parse_test_docs_for_info(test)
 end
 test_types = aggregated_tests.map { |test| test[:type] }.uniq
+aggregated_issues = TestInfo.get_known_issues(k6_dir)
 aggregated_tests_doc_txt = File.join(results_dir, "aggregated_tests_doc.txt")
 docs_summary = <<~DOC
   GitLab Performance Tool consists of different types of tests:
-  * `api` - API endpoint tests
-  * `git` - git-related tests
-  * `scenarios` - standalone test scenarios
-  * `web` - Web page tests
-  * `quarantined` - tests that are quarantined because of some ongoing issue with endpoint or test itself
+  * [`api`](#api) - API endpoint tests
+  * [`git`](#git) - git-related tests
+  * [`scenarios`](#scenarios) - standalone test scenarios
+  * [`web`](#web) - Web page tests
+  * [`quarantined`](#quarantined) - tests that are quarantined because of some ongoing issue with endpoint or test itself
+
+  **Note:** Some endpoints have [known issues](#known-issues). These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed.
 DOC
 tp.set(:max_width, 800)
 
@@ -42,5 +45,7 @@ File.open(aggregated_tests_doc_txt, 'w') do |file|
     aggregated_tests_by_type = aggregated_tests.select { |test| test[:type] == type }
     tp(aggregated_tests_by_type)
   end
+  file.write("\n## Known Issues\n")
+  tp(aggregated_issues)
   tp.clear :io
 end
