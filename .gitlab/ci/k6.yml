@@ -69,6 +69,11 @@ k6:
     paths:
       - k6/results/
     expire_in: 14d
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 #######################
 ##    Report Jobs    ##
