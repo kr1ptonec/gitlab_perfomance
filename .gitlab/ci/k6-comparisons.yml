@@ -1,0 +1,88 @@
+# Depends: .k6-base.yml
+
+##############################################
+##   k6 Load Tests - Version Comparisions   ##
+##############################################
+.k6-compare-base:
+  stage: test
+  extends: .k6-base
+  services:
+    - docker:stable-dind
+  tags:
+    - docker
+    - performance
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375
+    OPTIONS_FILE: 45s_2rps
+    # SHA Signature not available on older versions
+    EXCLUDED_TESTS: api_v4_projects_repository_commits_sha_signature
+  script:
+    - apk add docker
+    - export MINOR_VERSION=$((MINOR_VERSION_START + CI_NODE_INDEX - 1))
+    - echo "registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
+    - bin/run-gitlab-docker --image registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0
+    - sleep $(( 30 * CI_NODE_INDEX ))
+    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q") -x $EXCLUDED_TESTS
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "k6 comparison"
+  artifacts:
+    when: always
+    paths:
+      - k6/results/
+    expire_in: 14d
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - unknown_failure
+
+k6-11-compare:
+  extends: .k6-compare-base
+  parallel: 5
+  variables:
+    MAJOR_VERSION: 11
+    MINOR_VERSION_START: 7
+
+k6-12-compare:
+  extends: .k6-compare-base
+  parallel: 6
+  variables:
+    MAJOR_VERSION: 12
+    MINOR_VERSION_START: 0
+
+###############################
+##    Report Jobs - Slack    ##
+###############################
+report-k6-compare-success-slack:
+  extends: .report-k6-slack-base
+  script:
+    - SUCCESS_TEST_RUN="true" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
+  only:
+    variables:
+      - $TEST_TYPE == "k6 comparison"
+  when: on_success
+
+report-k6-compare-failure-slack:
+  extends: .report-k6-slack-base
+  script:
+    - SUCCESS_TEST_RUN="false" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
+  only:
+    variables:
+      - $TEST_TYPE == "k6 comparison"
+  when: on_failure
+
+##############################
+##    Report Jobs - Wiki    ##
+##############################
+report-k6-compare-results-wiki:
+  extends: .report-k6-wiki-base
+  script:
+    - bin/ci-report-results-wiki -p "Benchmarks/GitLab Versions"
+  only:
+    variables:
+      - $TEST_TYPE == "k6 comparison"

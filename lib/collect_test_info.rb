@@ -3,7 +3,7 @@ require 'run_k6'
 
 module TestInfo
   def self.get_known_issues(k6_dir)
-    tests = RunK6.get_tests(test_paths: ["#{k6_dir}/tests"], quarantined: true, scenarios: true, custom: true)
+    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, custom: true)
 
     aggregated_issues = []
     tests.each do |test|
@@ -42,7 +42,7 @@ module TestInfo
       case line
       when /@endpoint/
         match = line.match(/@endpoint: (.*)\n/)
-        docs[:endpoint] = match[1]
+        docs[:endpoint] = match[1].tr('`', '_')
       when /@description/
         match = line.match(/@description: (.*)\n/)
         docs[:description] = match[1]

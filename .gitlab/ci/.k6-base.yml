@@ -1,0 +1,38 @@
+.k6-base:
+  image: ruby:2.6-alpine
+  before_script:
+    - apk add --no-cache gcc g++ make libc6-compat libc-dev curl
+    - gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
+    - bundle install --without dev
+
+.report-k6-slack-base:
+  stage: report
+  extends: .k6-base
+  only:
+    refs:
+      - schedules
+  except:
+    variables:
+      - $CI_SLACK_REPORT != "true"
+      - $CI_SLACK_CHANNEL == null
+  artifacts:
+    when: always
+    paths:
+      - k6/results/
+    expire_in: 14d
+
+.report-k6-wiki-base:
+  stage: report
+  extends: .k6-base
+  when: always
+  only:
+    refs:
+      - schedules
+  except:
+    variables:
+      - $CI_WIKI_REPORT != "true"
+  artifacts:
+    when: always
+    paths:
+      - k6/results/
+    expire_in: 14d
