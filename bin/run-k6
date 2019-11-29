@@ -8,31 +8,37 @@ require 'fileutils'
 require 'optimist'
 require 'rainbow'
 require 'run_k6'
+require 'pathname'
 require 'table_print'
 require 'time'
 require 'tmpdir'
 
-k6_dir = File.expand_path('../k6', __dir__)
+k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
 opts = Optimist.options do
   banner "Usage: run-k6 [options]"
   banner "\nRuns k6 Test(s) with the given Options against the specified Environment."
   banner "\nOptions:"
   opt :help, 'Show this help message'
-  opt :environment, "Environment Config file path that contains the relevant Environment Variables to be passed to the tests.", type: :string, required: true
-  opt :options, "Path of Options Config file path that the tests should be run with.", type: :string, default: "#{k6_dir}/options/20s_2rps.json"
-  opt :tests, "Path of Test file or folder paths to run.", type: :strings, default: ["#{k6_dir}/tests"]
-  opt :custom, "Include any tests inside the k6/tests/custom folder when true.", type: :flag, default: false
-  opt :scenarios, "Include any scenario tests inside the #{k6_dir}/tests/scenarios folder when true.", type: :flag, default: false
-  opt :quarantined, "Include any tests inside the #{k6_dir}/tests/quarantined folder when true.", type: :flag, default: false
-  opt :http_debug, "Enable `k6` HTTP debug logs in output", type: :flag, default: false
+  opt :environment, "Name of Environment Config file in #{k6_dir}/environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
+  opt :options, "Name of Options Config file in #{k6_dir}/options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
+  opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs", type: :strings, default: ["#{k6_dir}/tests"]
+  opt :custom, "Include any tests inside the test directory's custom subfolder when true.", type: :flag, default: false
+  opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
+  opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
+  opt :http_debug, "Enable k6 HTTP debug logs in output", type: :flag, default: false
+  opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings, default: []
   banner "\nEnvironment Variable(s):"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
   banner "\nExamples:"
-  banner "  Running all Tests with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment #{k6_dir}/environments/10k.json --options #{k6_dir}/options/60s_200rps.json"
+  banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
+  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
+  banner "  Run all Tests including any in custom subfolder with the 60s_200rps Options file against the 10k Environment:"
+  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --custom"
+  banner "  Run all API Tests with the 60s_200rps Options file against the 10k Environment:"
+  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api"
   banner "  Run a specific Test with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment #{k6_dir}/environments/10k.json --options #{k6_dir}/options/60s_200rps.json --tests #{k6_dir}/tests/api/api_v4_groups_projects.js"
+  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api_v4_groups_projects.js"
 end
 
 puts Rainbow("GitLab Performance Tool - k6 load test runner").color(230, 83, 40)
@@ -41,28 +47,32 @@ warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various test
 k6_path = RunK6.setup_k6
 
 # Variables
-env_vars = RunK6.setup_env_vars(env_file: opts[:environment], options_file: opts[:options])
+env_file = Dir.glob([opts[:environment], "#{k6_dir}/environments/#{opts[:environment]}"])[0]
+raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file)
+
+options_file = Dir.glob([opts[:options], "#{k6_dir}/options/#{opts[:options]}"])[0]
+raise "Options config file '#{options_file_path}' not found as given or in default folder.. Exiting..." unless File.file?(options_file)
+
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom])
+
+env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
 env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
-results_dir = File.join("#{k6_dir}/results", "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y%m%d_%H%M%S')}")
+results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_version ? "v#{env_version['version'].tr('.', '-')}" : ''}_#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
+results_dir = File.join("#{k6_dir}/results", results_file_prefix)
 puts "\nSaving all test results to #{results_dir}"
 FileUtils.mkdir_p(results_dir)
 
 aggregated_results = []
 aggregated_success = true
 
-# Collect and run tests
-tests = RunK6.get_tests(test_paths: opts[:tests], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom])
+# Run tests
 tests.each do |test_file|
-  test_name = File.basename(test_file, '.js')
+  status, output = RunK6.run_k6(k6_path: k6_path, env_vars: env_vars, options_file: options_file, test_file: test_file, http_debug: opts[:http_debug])
 
-  success, output = RunK6.run_k6(k6_path: k6_path, env_vars: env_vars, options_file: opts[:options], test_file: test_file, http_debug: opts[:http_debug])
-
-  parsed_results = RunK6.parse_k6_results(output: output)
-  success = false if parsed_results.nil?
-  aggregated_results << { Name: test_name }.merge(parsed_results).merge({ Result: success ? "Passed" : "Failed" })
-  aggregated_success &&= success
+  aggregated_results << RunK6.parse_k6_results(status: status, output: output)
+  aggregated_success &&= status
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping.").yellow
   exit
@@ -74,48 +84,59 @@ rescue StandardError => e
   aggregated_success = false
 end
 
-# Save test times
-end_time = Time.now
-run_time = (end_time - start_time).round(2)
-test_epoch_times_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_test_epoch_times.json")
-test_epoch_times = { start_time: (start_time.to_f * 1000).to_i, end_time: (end_time.to_f * 1000).to_i, run_time: run_time }
-File.write(test_epoch_times_json, test_epoch_times.to_json)
-
-puts Rainbow("\nAll k6 tests have finished after #{run_time}s!").green
-
-# Parse results
 if aggregated_results.empty?
   puts "No tests reported any results. Exiting..."
   exit
 end
 
-aggregated_results_json = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y-%m-%d_%H:%M:%S')}_results.json")
-aggregated_results_txt = File.join(results_dir, "#{env_vars['ENVIRONMENT_NAME']}_#{start_time.strftime('%Y-%m-%d_%H:%M:%S')}_results.txt")
+# Process test times
+end_time = Time.now
+run_time = (end_time - start_time).round(2)
 
-aggregated_issues = TestInfo.get_known_issues(k6_dir)
-puts "\nKnown issues:\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n"
-tp.set(:max_width, 100)
-tp(aggregated_issues)
+puts Rainbow("All k6 tests have finished after #{run_time}s!").green
 
-test_details_summary = <<~DOC
-  Environment:    #{env_vars['ENVIRONMENT_NAME']} #{env_version ? "(#{env_version})" : ''}
-  Option:         #{File.basename(opts[:options], '.json')}
-  Date:           #{start_time.strftime('%F')}
-  Run Time:       #{run_time}s (Start: #{start_time.utc.strftime('%T %Z')}, End: #{end_time.utc.strftime('%T %Z')})
-DOC
-puts "\n\nResults summary:\n\n#{test_details_summary}\n"
-tp(aggregated_results)
-
-puts "\nSaving results summary to:\n#{aggregated_results_json}\n#{aggregated_results_txt}"
-File.write(aggregated_results_json, aggregated_results.to_json)
-File.open(aggregated_results_txt, 'w') do |file|
-  file.write(test_details_summary)
-  tp.set :io, file
-  tp(aggregated_results)
-  tp.clear :io
+# Output known issues
+unless ENV['GPT_SKIP_KNOWN_ISSUES'] == 'true'
+  known_issues = TestInfo.get_known_issues(k6_dir)
+  puts "\nKnown issues:\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n"
+  tp.set(:max_width, 100)
+  tp(known_issues)
+  puts "\nFull list of issues found both past and present can be found here: https://gitlab.com/gitlab-org/gitlab/issues?label_name%5B%5D=Quality%3Aperformance-issues\n"
 end
 
-unless aggregated_success
+# Output and save test results
+# JSON
+results_json = {
+  "name" => env_vars['ENVIRONMENT_NAME'],
+  "version" => env_version ? env_version['version'] : '-',
+  "revision" => env_version ? env_version['revision'] : '-',
+  "option" => File.basename(options_file, '.json'),
+  "date" => start_time.strftime('%F'),
+  "time" => {
+    "start" => start_time.utc.strftime('%T %Z'),
+    "start_epoch" => (start_time.to_f * 1000).to_i,
+    "end" => end_time.utc.strftime('%T %Z'),
+    "end_epoch" => (end_time.to_f * 1000).to_i,
+    "run" => run_time
+  },
+  "overall_result" => aggregated_success,
+  "test_results" => aggregated_results
+}
+results_json_file = File.join(results_dir, "#{results_file_prefix}_results.json")
+File.write(results_json_file, results_json.to_json)
+
+# STDOUT \ Text
+results_summary = RunK6.generate_results_summary(results_json: results_json)
+puts "\nResults summary:\n\n#{results_summary}\n"
+
+results_table = RunK6.generate_results_table(results_json: results_json)
+puts results_table
+results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
+File.write(results_txt_file, "#{results_summary}\n#{results_table}")
+
+puts "\nResults files:\n#{results_json_file}\n#{results_txt_file}"
+
+unless aggregated_success || ENV['GPT_IGNORE_RESULT'] == 'true'
   puts Rainbow("\nOne or more k6 tests have failed...").red
   exit(1)
 end

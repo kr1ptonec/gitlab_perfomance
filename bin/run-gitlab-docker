@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
+require 'gpt_common'
+require 'open3'
+require 'optimist'
+require 'rainbow'
+require 'tty-spinner'
+
+@opts = Optimist.options do
+  banner "Usage: run-gitlab-docker [options]"
+  banner "\nRuns a GitLab Docker image and waits for it to become healthy. Image must be based on official GitLab Images."
+  banner "\nOptions:"
+  opt :image, "Image to use for Gitlab Docker Container", short: :none, type: :string, required: true
+  opt :name, "Name to use for Gitlab Docker Container", short: :none, type: :string, default: "gitlab"
+  opt :hostname, "Address to use that resolves to Gitlab Docker Container", short: :none, type: :string, default: "docker"
+  opt :help, 'Show help message'
+end
+
+raise "Docker not installed. Exiting..." unless Open3.capture2e("docker version" + ';')[1]
+
+start_time = Time.now
+spinner = TTY::Spinner.new("[:spinner] Starting GitLab Docker")
+spinner.auto_spin
+gd_out, gd_status = Open3.capture2e("docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['initial_root_password'] = 'password'; gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
+raise "docker issue:\n#{gd_out}" unless gd_status.success?
+
+spinner.success
+
+spinner = TTY::Spinner.new("[:spinner] Waiting for GitLab Container to be ready")
+spinner.auto_spin
+120.times do
+  docker_healthcheck = Open3.capture2e("docker inspect -f {{.State.Health.Status}} gitlab")[0].strip == 'healthy'
+  gitlab_healthcheck = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/-/liveness", fail_on_error: false).status.success?
+
+  homepage = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}", fail_on_error: false)
+  homepage_healthcheck = !homepage.body.to_s.include?("Deploy in progress") && homepage.status.success?
+
+  api_healthcheck = true
+  100.times do
+    api_healthcheck &&= GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/api/v4/groups", fail_on_error: false).status.success?
+  end
+
+  break if docker_healthcheck && gitlab_healthcheck && homepage_healthcheck && api_healthcheck
+
+  sleep 5
+rescue HTTP::ConnectionError
+  sleep 5
+  next
+rescue Interrupt
+  warn Rainbow("Caught the interrupt. Stopping and removing Docker container.").yellow
+  Open3.capture2e("docker rm -f #{@opts[:name]}")
+  exit
+end
+spinner.success
+
+end_time = Time.now
+run_time = (end_time - start_time).round(2)
+
+puts "GitLab Container (image '#{@opts[:image]}') running successfully after #{run_time}s"

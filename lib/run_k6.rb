@@ -1,7 +1,7 @@
 require 'chronic_duration'
 require 'down/http'
 require 'fileutils'
-require 'http'
+require 'gpt_common'
 require 'json'
 require 'open3'
 require 'os'
@@ -61,28 +61,36 @@ module RunK6
   end
 
   def self.get_env_version(env_vars:)
-    res = HTTP.headers('PRIVATE-TOKEN': ENV['ACCESS_TOKEN']).get("#{env_vars['ENVIRONMENT_URL']}/api/v4/version")
-    version = JSON.parse(res.body.to_s).values.join(' ')
-    version == '401 Unauthorized' ? nil : version
+    headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
+    res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/version", headers: headers, fail_on_error: false)
+    res.status.success? ? JSON.parse(res.body.to_s) : nil
   end
 
-  def self.get_tests(test_paths:, quarantined:, scenarios:, custom:)
+  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:)
     tests = []
-    test_paths.each do |test|
-      if File.directory?(test)
-        tests += Dir.glob("#{test}/api/*.js")
-        tests += Dir.glob("#{test}/git/*.js")
-        tests += Dir.glob("#{test}/web/*.js")
-        tests += Dir.glob("#{test}/quarantined/*.js") if quarantined
-        tests += Dir.glob("#{test}/scenarios/*.js") if scenarios
-        tests += Dir.glob("#{test}/custom/*.js") if custom
-      elsif File.file?(test)
-        tests << test
+    test_paths.each do |test_path|
+      # Add any tests found within given and default folders matching name
+      test_globs = Dir.glob([test_path, "#{k6_dir}/#{test_path}", "#{k6_dir}/tests/#{test_path}"])
+      test_globs.each do |test_glob|
+        tests += Dir.glob(["#{test_glob}.js", "#{test_glob}/*.js", "#{test_glob}/api/*.js", "#{test_glob}/git/*.js", "#{test_glob}/web/*.js"])
+        tests += Dir.glob("#{test_glob}/quarantined/*.js") if quarantined
+        tests += Dir.glob("#{test_glob}/scenarios/*.js") if scenarios
+        tests += Dir.glob("#{test_glob}/custom/*.js") if custom
       end
+
+      # Add any test files given directly if they exist and are of .js type
+      tests += Dir.glob("#{File.dirname(test_path)}/#{File.basename(test_path, File.extname(test_path))}.js")
+      # Add any tests given by name directly in default folder with or with extension
+      tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
     end
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
-    tests.uniq.sort_by { |path| File.basename(path, '.js') }
+    tests = tests.uniq.sort_by { |path| File.basename(path, '.js') }
+    test_excludes.each do |exclude|
+      tests.reject! { |test| test.include? exclude }
+    end
+
+    tests
   end
 
   def self.run_k6(k6_path:, env_vars:, options_file:, test_file:, http_debug:)
@@ -112,32 +120,67 @@ module RunK6
     [status.success?, output]
   end
 
-  def self.parse_k6_results(output:)
-    results = []
+  def self.parse_k6_results(status:, output:)
     matches = {}
+    matches[:success] = status
 
     output.each do |line|
       case line
+      when /script:/
+        matches[:name] = line.match(/([a-z0-9_]*).js/)
       when /http_req_duration/
         matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
       when /vus_max/
         matches[:rps_target] = line.match(/max=(\d+)/)
       when /RPS Threshold/
-        matches[:rps_threshold] = line.match(/\d+\.\d+\/s/)
+        matches[:rps_threshold] = line.match(/(\d+\.\d+)\/s/)
       when /http_reqs/
-        matches[:rps] = line.match(/(\d+\.\d+)(\/s)/)
+        matches[:rps_result] = line.match(/(\d+\.\d+)(\/s)/)
+        matches[:success] = false if line.include?('✗ http_reqs')
       when /Success Rate Threshold/
         matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
       when /successful_requests/
         matches[:success_rate] = line.match(/\d+(\.\d+)?\%/)
+        matches[:success] = false if line.include?('✗ successful_requests')
       end
     end
 
-    results.insert(0, [:RPS, "#{matches[:rps_target][1]}/s"])
-    results.insert(1, [:'RPS Result', "#{matches[:rps][1].to_f.round(2)}#{matches[:rps][2]} (>#{matches[:rps_threshold][0]})"])
-    results.insert(2, [:'Response P95', matches[:p95][2] + matches[:p95][3]])
-    results.insert(3, [:'Request Results', "#{matches[:success_rate][0]} (>#{matches[:success_rate_threshold][0]})"])
+    results = {
+      "name" => matches[:name][1],
+      "rps_target" => matches[:rps_target][1],
+      "rps_result" => matches[:rps_result][1].to_f.round(2).to_s,
+      "rps_threshold" => matches[:rps_threshold][1],
+      "response_p95" => matches[:p95][2],
+      "success_rate" => matches[:success_rate][0],
+      "success_rate_threshold" => matches[:success_rate_threshold][0],
+      "result" => matches[:success]
+    }
+    results
+  end
 
-    results.compact.to_h
+  def self.generate_results_summary(results_json:)
+    <<~DOC
+      * Environment:    #{results_json['name'].capitalize}
+      * Version:        #{results_json['version']} `#{results_json['revision']}`
+      * Option:         #{results_json['option']}
+      * Date:           #{results_json['date']}
+      * Run Time:       #{results_json['time']['run']}s (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
+    DOC
+  end
+
+  def self.generate_results_table(results_json:)
+    tp_results = results_json['test_results'].map do |test_result|
+      {
+        "Name": test_result['name'],
+        "RPS": "#{test_result['rps_target']}/s",
+        "RPS Result": "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)",
+        "Response P95": "#{test_result['response_p95']}ms",
+        "Request Results": "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})",
+        "Result": test_result['result'] ? "Passed" : "Failed"
+      }
+    end
+
+    tp.set(:max_width, 60)
+    TablePrint::Printer.table_print(tp_results)
   end
 end

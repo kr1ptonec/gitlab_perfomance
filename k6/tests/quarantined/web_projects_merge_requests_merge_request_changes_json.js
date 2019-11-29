@@ -1,7 +1,8 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs.json`
-@description: Web - Merge Request Diffs Controller Show JSON
+@description: Web - Merge Request Changes JSON. <br>Controllers: `Projects::MergeRequestsController`</br>
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/30507
 */
 
 import http from "k6/http";
@@ -32,7 +33,7 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Merge Request Diffs Controller Show JSON", function() {
+  group("Web - Merge Request Changes JSON", function() {
     let project = selectProject(projects);
 
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs.json`);

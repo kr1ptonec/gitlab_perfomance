@@ -11,8 +11,9 @@ Documentation on how to use the tool can be found in the [`docs/`](/docs/README.
 * [Environment Preparation](docs/environment_prep.md)
 * [Running Tests](docs/k6.md)
 
-## Further Reading
+# GitLab Test Results
 
-### Wiki
+The GitLab Quality team uses this Tool in frequent automated pipelines to continuously measure the performance of GitLab. The results are uploaded to this project's wiki and made available for anyone to see:
 
-This project's [Wiki](https://gitlab.com/gitlab-org/quality/performance/wikis/home) contains further reading, such as notable test results or benchmarks.
+* Test runs against reference environments - https://gitlab.com/gitlab-org/quality/performance/wikis/Benchmarks/Latest
+* Test runs comparing results of different GitLab versions - https://gitlab.com/gitlab-org/quality/performance/wikis/Benchmarks/GitLab-Versions

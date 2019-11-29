@@ -12,8 +12,10 @@ group :run do
   gem 'chronic_duration'
   gem 'down'
   gem 'http'
+  gem 'naturally'
   gem 'optimist'
   gem 'os'
   gem 'rainbow'
   gem 'table_print'
+  gem 'tty-spinner'
 end

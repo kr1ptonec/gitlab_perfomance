@@ -25,6 +25,7 @@ GEM
     http-form_data (2.1.1)
     http_parser.rb (0.6.0)
     jaro_winkler (1.5.3)
+    naturally (2.2.0)
     numerizer (0.1.1)
     optimist (3.0.0)
     os (1.0.1)
@@ -48,6 +49,9 @@ GEM
       rubocop (>= 0.52.1)
     ruby-progressbar (1.10.1)
     table_print (1.5.6)
+    tty-cursor (0.7.0)
+    tty-spinner (0.9.1)
+      tty-cursor (~> 0.7)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.6)
@@ -61,6 +65,7 @@ DEPENDENCIES
   down
   gitlab-styles (~> 2.7)
   http
+  naturally
   optimist
   os
   rainbow
@@ -68,6 +73,7 @@ DEPENDENCIES
   rubocop-performance (~> 1.1.0)
   rubocop-rspec (~> 1.22.1)
   table_print
+  tty-spinner
 
 BUNDLED WITH
    2.0.2

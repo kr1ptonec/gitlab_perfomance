@@ -10,7 +10,7 @@ import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
+if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
 export let rpsThresholds = getRpsThresholds(0.4)
