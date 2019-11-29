@@ -3,7 +3,7 @@
 #########################
 check:rubocop:
   stage: check
-  image: ruby:2.6.3-alpine
+  image: ruby:2.6-alpine
   before_script:
     - apk add make gcc libc-dev
     - gem install bundler -v 2.0.2

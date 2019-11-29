@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject, adjustRps, adjustStageVUs } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/k6_test_modules.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THRESHOLD);
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THRESHOLD);

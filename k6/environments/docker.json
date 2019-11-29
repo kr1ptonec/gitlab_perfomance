@@ -1,7 +1,7 @@
 {
   "environment": {
-    "name": "pre-puma",
-    "url": "https://pre-puma.gitlab.com"
+    "name": "docker",
+    "url": "http://docker"
   },
   "projects": [
     {

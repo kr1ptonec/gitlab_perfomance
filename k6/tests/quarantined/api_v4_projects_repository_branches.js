@@ -2,17 +2,17 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches`
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
 */
 
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not be set. Exiting...')
+if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
 export let rpsThresholds = getRpsThresholds(0.05)
 export let successRate = new Rate("successful_requests");
 export let options = {

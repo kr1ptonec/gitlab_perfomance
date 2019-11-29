@@ -2,12 +2,13 @@
 /*
 @endpoint: `GET /projects/:id/search?scope=blobs&search=:query`
 @description: [Search throught the code within the specified project](https://docs.gitlab.com/ee/api/search.html#scope-blobs)
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/33562
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
 export let rpsThresholds = getRpsThresholds(0.5)
 export let successRate = new Rate("successful_requests");

@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
 require 'chronic_duration'
 require 'down/http'
-require 'http'
+require 'gpt_common'
 require 'optimist'
 require 'time'
 require 'uri'
@@ -26,34 +28,8 @@ end
 
 raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
 
-def get(url, headers = {})
-  HTTP.follow.get(
-    url,
-    headers: headers
-  )
-end
-
-def post(url, payload, headers = {})
-  res = HTTP.follow.post(
-    url,
-    form: payload,
-    headers: headers
-  )
-
-  begin
-    res_body = JSON.parse(res.body.to_s)
-  rescue JSON::SyntaxError
-    res_body = res.body.to_s
-  end
-
-  raise "Post request has failed:\n#{res.status} - #{res_body}" if res.status.client_error? || res.status.server_error?
-
-  pp res_body
-  res
-end
-
 headers = {
-  'PRIVATE-TOKEN': ENV['ACCESS_TOKEN']
+  'Authorization': "Bearer #{ENV['ACCESS_TOKEN']}"
 }
 env_url = "http://#{opts[:environment_url].sub(/^https?\:\/\//, '')}"
 
@@ -61,7 +37,7 @@ puts "Starting import of Project '#{opts[:project_name]}' from tarball '#{opts[:
 
 # Check that environment can be reached and that token is valid
 puts "Checking that GitLab environment '#{opts[:environment_url]}' is available and that provided Access Token works..."
-check_res = get("#{env_url}/api/v4/version", headers)
+check_res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: headers)
 raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
 version = JSON.parse(check_res.body.to_s).values.join(' ')
@@ -77,34 +53,34 @@ end
 raise Errno::ENOENT unless File.exist?(proj_file)
 
 # Create Group
-if opts[:namespace] && !get("#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers).status.success?
+if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers: headers).status.success?
   puts "Creating Namespace #{opts[:namespace]}..."
   grp_url = "#{env_url}/api/v4/groups"
-  grp_payload = {
+  grp_params = {
     name: opts[:namespace],
     path: opts[:namespace],
     visibility: 'public'
   }
-  post(grp_url, grp_payload, headers)
+  GPTCommon.make_http_request(method: 'post', url: grp_url, params: grp_params, headers: headers, show_response: true)
 end
 
 # Create Project
 puts "Creating project #{opts[:project_name]}..."
 start_time = Time.now.to_i
 proj_url = "#{env_url}/api/v4/projects/import"
-proj_payload = {
+proj_params = {
   file: HTTP::FormData::File.new(proj_file),
   namespace: opts[:namespace],
   path: opts[:project_name],
   'override_params[repository_storage]': opts[:storage_name]
 }
-proj_res = post(proj_url, proj_payload, headers)
+proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: headers, show_response: true)
 proj_id = JSON.parse(proj_res.body.to_s)['id']
 
 puts "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
-print "\nWaiting until Project '#{proj_id}' has imported successfully..."
+print "Waiting until Project '#{proj_id}' has imported successfully..."
 loop do
-  proj_imp_res = JSON.parse(get("#{env_url}/api/v4/projects/#{proj_id}/import", headers).body.to_s)
+  proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/projects/#{proj_id}/import", headers: headers).body.to_s)
 
   case proj_imp_res['import_status']
   when 'finished'

@@ -2,16 +2,17 @@
 /*
 @endpoint: `GET /:group/:project/-/branches`
 @description: Web - Project Branches page. <br>Controllers: `BranchesController`</br>
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THRESHOLD);
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THRESHOLD);
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THRESHOLD * 0.6) // Issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THRESHOLD * 0.6)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {

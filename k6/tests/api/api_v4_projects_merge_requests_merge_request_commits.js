@@ -7,11 +7,9 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../modules/custom_k6_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
 
-// Endpoint is below target threshold. Custom lower limit applied until fixed.
-// Issue: https://gitlab.com/gitlab-org/gitlab/issues/31321
-export let rpsThresholds = getRpsThresholds(0.1)
+export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {

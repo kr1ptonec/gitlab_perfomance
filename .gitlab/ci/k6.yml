@@ -1,9 +1,4 @@
-.k6-base:
-  image: ruby:2.6.3-alpine
-  before_script:
-    - apk add --no-cache gcc g++ make libc6-compat libc-dev curl
-    - gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
-    - bundle install --without dev
+# Depends: .k6-base.yml
 
 #######################
 ##     MR Checks     ##
@@ -12,18 +7,48 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - k6/run-k6 -e k6/environments/staging.json -t k6/tests/api/api_v4_groups_projects.js
+    - bin/run-k6 -e staging.json -t api_v4_groups_projects.js
   except:
     - schedules
 
-#######################
-##   k6 Load Tests   ##
-#######################
+########################
+##  Environment Jobs  ##
+########################
+update-environment:
+  stage: .pre
+  variables:
+    ENVIRONMENT_NAME: $ENVIRONMENT_NAME
+    ENVIRONMENT_ACTION: update
+    GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+  trigger:
+    project: gitlab-org/quality/performance-environment-builder
+    strategy: depend
+  only:
+    variables:
+      - $ENVIRONMENT_UPDATE == "true"
+
+stop-environment:
+  stage: .post
+  variables:
+    ENVIRONMENT_NAME: $ENVIRONMENT_NAME
+    ENVIRONMENT_ACTION: stop
+    GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+  trigger:
+    project: gitlab-org/quality/performance-environment-builder
+    strategy: depend
+  only:
+    variables:
+      - $ENVIRONMENT_STOP == "true"
+  when: always
+
+#####################################
+##   k6 Load Tests - Environments  ##
+#####################################
 k6:
   stage: test
   extends: .k6-base
   script:
-    - k6/run-k6 -u -a -e k6/environments/$ENVIRONMENT_NAME.json -s k6/scenarios/$SCENARIO_NAME.json $([ -n "$QUARANTINED" ] && echo "-q")
+    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules
@@ -39,84 +64,48 @@ k6:
     paths:
       - k6/results/
     expire_in: 14d
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
-#######################
-##    Report Jobs    ##
-#######################
-.report-k6:
-  stage: report
-  extends: .k6-base
-  only:
-    - schedules
-
+###############################
+##    Report Jobs - Slack    ##
+###############################
 report-k6-success-slack:
-  extends: .report-k6
+  extends: .report-k6-slack-base
   script:
-    - SUCCESS_TEST_RUN="true" k6/scripts/report-results-slack
-  when: on_success
+    - SUCCESS_TEST_RUN="true" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
   only:
     variables:
       - $TEST_TYPE == "k6"
-  except:
-    variables:
-      - $CI_SLACK_REPORT != "true"
-      - $CI_SLACK_WEBHOOK_URL == null
-      - $CI_SLACK_CHANNEL == null
+  when: on_success
 
 report-k6-failure-slack:
-  extends: .report-k6
+  extends: .report-k6-slack-base
   script:
-    - SUCCESS_TEST_RUN="false" k6/scripts/report-results-slack
+    - SUCCESS_TEST_RUN="false" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
+  only:
+    variables:
+      - $TEST_TYPE == "k6"
   when: on_failure
-  only:
-    variables:
-      - $TEST_TYPE == "k6"
-  except:
-    variables:
-      - $CI_SLACK_REPORT != "true"
-      - $CI_SLACK_WEBHOOK_URL == null
-      - $CI_SLACK_CHANNEL == null
 
+##############################
+##    Report Jobs - Wiki    ##
+##############################
 report-k6-results-wiki:
-  extends: .report-k6
+  extends: .report-k6-wiki-base
   script:
-    - |
-      if [ -d "k6/results" ]; then
-        k6_summary_file=$(find k6/results -name *_results.txt -print -quit)
-      fi
-      if [ -r "$k6_summary_file" ]; then
-        echo '```' > wiki_results
-        cat $k6_summary_file >> wiki_results
-        echo '```' >> wiki_results
-        k6_summary=$(echo "$(cat wiki_results)")
-        bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis Benchmarks/Latest/$ENVIRONMENT_NAME "$k6_summary"
-      fi
-  when: always
+    - bin/ci-report-results-wiki -p "Benchmarks/Latest/$ENVIRONMENT_NAME"
   only:
     variables:
       - $TEST_TYPE == "k6"
-  except:
-    variables:
-      - $CI_WIKI_REPORT != "true"
 
 report-k6-tests-wiki:
-  stage: report
   extends: .k6-base
   script:
-    - |
-      k6/scripts/collect-test-info
-      if [ -d "k6/results" ]; then
-        k6_summary_file=$(find k6/results -name aggregated_tests_doc.txt -print -quit)
-      fi
-      if [ -r $k6_summary_file ]; then
-        k6_summary=$(echo "$(cat $k6_summary_file)")
-      fi
-      if [ -n "$k6_summary" ]; then
-        bin/wiki https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis "Current Test Details" "$k6_summary"
-      fi
-  only:
-    variables:
-      - $TEST_TYPE == "k6"
+    - bin/ci-report-test-info-wiki -p "Current Test Details"
   except:
     variables:
       - $CI_TEST_DOCS_WIKI_REPORT != "true"
