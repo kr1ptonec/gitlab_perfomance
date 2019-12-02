@@ -126,7 +126,7 @@ module RunK6
 
     output.each do |line|
       case line
-      when /script:/
+      when /^\s*script: /
         matches[:name] = line.match(/([a-z0-9_]*).js/)
       when /http_req_duration/
         matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
