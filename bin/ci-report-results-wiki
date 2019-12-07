@@ -44,8 +44,9 @@ def generate_comparision_table(results)
 
       last_test_result = results[result_num - 1]['test_results'].find { |res| res['name'] == test_result["name"] } unless result_num.zero?
       if last_test_result
-        last_test_difference = (test_result['response_p95'].to_f - last_test_result['response_p95'].to_f).round(2)
-        last_test_difference_str = last_test_difference.positive? ? "_+#{last_test_difference}ms_" : "**#{last_test_difference}ms**"
+        last_test_difference = test_result['response_p95'].to_f - last_test_result['response_p95'].to_f
+        last_test_diff_perc = (last_test_difference * 100 / last_test_result['response_p95'].to_f).round(2)
+        last_test_difference_str = last_test_difference.positive? ? "_+#{last_test_diff_perc}%_" : "**#{last_test_diff_perc}%**"
 
         results_comparision_data[test_result["name"]][result["version"].tr('.', '-')] = "#{test_result['response_p95']}ms (#{last_test_difference_str})"
       else
