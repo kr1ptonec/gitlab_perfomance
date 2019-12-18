@@ -22,6 +22,7 @@ update-environment:
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
   trigger:
     project: gitlab-org/quality/performance-environment-builder
+    branch: $ENVIRONMENT_BUILDER_BRANCH
     strategy: depend
   only:
     variables:
@@ -35,6 +36,7 @@ stop-environment:
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
   trigger:
     project: gitlab-org/quality/performance-environment-builder
+    branch: $ENVIRONMENT_BUILDER_BRANCH
     strategy: depend
   only:
     variables:
