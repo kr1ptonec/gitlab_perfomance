@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
 require 'chronic_duration'
-require 'collect_test_info'
+require 'test_info'
 require 'fileutils'
 require 'optimist'
 require 'rainbow'
@@ -28,6 +28,7 @@ opts = Optimist.options do
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
   opt :http_debug, "Enable k6 HTTP debug logs in output", type: :flag, default: false
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings, default: []
+  opt :read_only, "Enable read-only mode to run tests with only GET requests", type: :flag, default: false
   banner "\nEnvironment Variable(s):"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
   banner "\nExamples:"
@@ -53,7 +54,7 @@ raise "Environment config file '#{opts[:environment]}' not found as given or in 
 options_file = Dir.glob([opts[:options], "#{k6_dir}/options/#{opts[:options]}"])[0]
 raise "Options config file '#{options_file_path}' not found as given or in default folder.. Exiting..." unless File.file?(options_file)
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom])
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom], read_only: opts[:read_only])
 
 env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
 env_version = RunK6.get_env_version(env_vars: env_vars)

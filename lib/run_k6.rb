@@ -1,4 +1,7 @@
+$LOAD_PATH.unshift File.expand_path('.', __dir__)
+
 require 'chronic_duration'
+require 'test_info'
 require 'down/http'
 require 'fileutils'
 require 'gpt_common'
@@ -66,7 +69,7 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : nil
   end
 
-  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:)
+  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:)
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -89,6 +92,8 @@ module RunK6
     test_excludes.each do |exclude|
       tests.reject! { |test| test.include? exclude }
     end
+
+    tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
 
     tests
   end
