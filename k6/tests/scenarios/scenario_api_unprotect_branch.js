@@ -12,7 +12,7 @@ import { getRpsThresholds, getProjects, selectProject, adjustRps, adjustStageVUs
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-// RPS and Success Rate are adjusted to mitigate request conflicts issue
+// RPS and Success Rate are adjusted to mitigate issues with protect/unprotect request conflitcs
 export let unprotectRps = adjustRps(0.05);
 export let unprotectStages = adjustStageVUs(0.05);
 export let rpsThresholds = getRpsThresholds(0.05);
@@ -31,7 +31,6 @@ export let projects = getProjects(['name', 'group', 'branch']);
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
-  console.log(`Success Rate Threshold is lowered to mitigate issues with protect/unprotect request conflitcs`)
   console.log(`Success Rate Threshold: ${parseFloat(successThreshold)*100}%`)
 
   projects.forEach(function(project) {
