@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha/signature`
 @description: [Get GPG signature of a commit](https://docs.gitlab.com/ee/api/commits.html#get-gpg-signature-of-a-commit)
+@gitlab_version: 11.9.0
 */
 
 import http from "k6/http";
