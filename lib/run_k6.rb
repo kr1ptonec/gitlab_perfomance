@@ -69,7 +69,7 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:, env_version:)
+  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:, env_version: '-')
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
