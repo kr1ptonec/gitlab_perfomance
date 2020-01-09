@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
-@endpoint: `DELETE /projects/:id/protected_branches/:branch` <br> `POST /projects/:id/protected_branches`
-@description: [Unprotects the given protected branch or wildcard protected branch](hhttps://docs.gitlab.com/ee/api/protected_branches.html#unprotect-repository-branches)
+@endpoint: `DELETE /projects/:id/protected_branches/:branch`
+@description: [Unprotects the given protected branch or wildcard protected branch](https://docs.gitlab.com/ee/api/protected_branches.html#unprotect-repository-branches)
 @issue: https://gitlab.com/gitlab-org/gitlab/issues/39169
 */
 
