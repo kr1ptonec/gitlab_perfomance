@@ -15,6 +15,7 @@ group :run do
   gem 'naturally'
   gem 'optimist'
   gem 'os'
+  gem 'semantic'
   gem 'rainbow'
   gem 'table_print'
   gem 'tty-spinner'

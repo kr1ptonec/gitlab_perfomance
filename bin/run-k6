@@ -54,13 +54,13 @@ raise "Environment config file '#{opts[:environment]}' not found as given or in 
 options_file = Dir.glob([opts[:options], "#{k6_dir}/options/#{opts[:options]}"])[0]
 raise "Options config file '#{options_file_path}' not found as given or in default folder.. Exiting..." unless File.file?(options_file)
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom], read_only: opts[:read_only])
-
 env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
 env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
-results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_version ? "v#{env_version['version'].tr('.', '-')}" : ''}_#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom], read_only: opts[:read_only], env_version: env_version['version'])
+
+results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_version['version'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_version['version'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
 results_dir = File.join("#{k6_dir}/results", results_file_prefix)
 puts "\nSaving all test results to #{results_dir}"
 FileUtils.mkdir_p(results_dir)
@@ -109,8 +109,8 @@ end
 # JSON
 results_json = {
   "name" => env_vars['ENVIRONMENT_NAME'],
-  "version" => env_version ? env_version['version'] : '-',
-  "revision" => env_version ? env_version['revision'] : '-',
+  "version" => env_version['version'],
+  "revision" => env_version['revision'],
   "option" => File.basename(options_file, '.json'),
   "date" => start_time.strftime('%F'),
   "time" => {
