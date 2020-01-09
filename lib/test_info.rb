@@ -1,5 +1,6 @@
 $LOAD_PATH.unshift File.expand_path('.', __dir__)
 require 'run_k6'
+require 'semantic'
 
 module TestInfo
   def self.get_known_issues(k6_dir)
@@ -64,5 +65,20 @@ module TestInfo
       end
     end
     read_only
+  end
+
+  def self.test_supported_by_version?(test_file, gitlab_version_string)
+    test_version = nil
+    gitlab_version = Semantic::Version.new(gitlab_version_string.match(/\d+\.\d+\.\d+/)[0])
+
+    File.open(test_file, "r") do |test_file_content|
+      test_file_content.each_line do |line|
+        test_version = Semantic::Version.new(line.match(/@gitlab_version: (\d+\.\d+\.\d+)/)[1]) if line.match?(/@gitlab_version: (\d+\.\d+\.\d+)/)
+      end
+    end
+    test_supported_by_version = true unless test_version && gitlab_version < test_version
+
+    warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by GitLab version '#{gitlab_version}'. Requires '#{test_version}' and up. Skipping...").yellow unless test_supported_by_version
+    test_supported_by_version
   end
 end

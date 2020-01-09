@@ -66,10 +66,10 @@ module RunK6
   def self.get_env_version(env_vars:)
     headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/version", headers: headers, fail_on_error: false)
-    res.status.success? ? JSON.parse(res.body.to_s) : nil
+    res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:)
+  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:, env_version:)
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -94,6 +94,7 @@ module RunK6
     end
 
     tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
+    tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
 
     tests
   end
