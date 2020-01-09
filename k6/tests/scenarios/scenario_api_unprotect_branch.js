@@ -16,7 +16,7 @@ if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 export let unprotectRps = adjustRps(0.05);
 export let unprotectStages = adjustStageVUs(0.05);
 export let rpsThresholds = getRpsThresholds(0.05);
-export let successThreshold = __ENV.SUCCESS_RATE_THRESHOLD * 0.8;
+export let successThreshold = (__ENV.SUCCESS_RATE_THRESHOLD * 0.7).toFixed(2);
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
