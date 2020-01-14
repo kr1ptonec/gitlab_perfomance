@@ -10,6 +10,7 @@ check:k6:
     - bin/run-k6 -e staging.json -t api_v4_groups_projects.js
   except:
     - schedules
+    - tags
 
 ########################
 ##  Environment Jobs  ##
