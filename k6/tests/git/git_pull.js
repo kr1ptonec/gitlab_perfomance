@@ -95,7 +95,7 @@ function pullRefsData(project, firstRefSHA, secondRefSHA) {
 }
 
 function getLargeBranchName(project) {
-  let params = { headers: { "Accept": "application/json" } };
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
   let branchName = JSON.parse(res.body)['target_branch'];
   branchName ? console.debug(`Branch with a lot of commits: ${branchName}`) : fail("Branch not found");

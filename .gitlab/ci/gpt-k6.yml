@@ -1,4 +1,4 @@
-# Depends: .k6-base.yml
+# Depends: .gpt-k6-base.yml
 
 #######################
 ##     MR Checks     ##
@@ -15,7 +15,7 @@ check:k6:
 ##  Environment Jobs  ##
 ########################
 update-environment:
-  stage: .pre
+  stage: build
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: update
@@ -29,7 +29,7 @@ update-environment:
       - $ENVIRONMENT_UPDATE == "true"
 
 stop-environment:
-  stage: .post
+  stage: stop
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: stop

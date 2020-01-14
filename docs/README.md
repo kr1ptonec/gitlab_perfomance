@@ -1,4 +1,4 @@
 # GitLab Performance Tool - Documentation
 
-* [Environment Preparation](environment_prep.md)
-* [Running Tests](k6.md)
+* [Preparing the Environment](environment_prep.md)
+* [Running the Tests](k6.md)

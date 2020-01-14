@@ -30,7 +30,7 @@ export default function() {
   group("API - Group Details", function() {
     let project = selectProject(projects);
 
-    let params = { headers: { "Accept": "application/json" } };
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });

@@ -4,7 +4,7 @@ require 'semantic'
 
 module TestInfo
   def self.get_known_issues(k6_dir)
-    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, custom: true, read_only: false)
+    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, read_only: false)
 
     aggregated_issues = []
     tests.each do |test|

@@ -1,4 +1,4 @@
-# Depends: .k6-base.yml
+# Depends: .gpt-k6-base.yml
 
 ##############################################
 ##   k6 Load Tests - Version Comparisions   ##

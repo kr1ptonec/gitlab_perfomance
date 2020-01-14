@@ -41,7 +41,7 @@ export function adjustStageVUs(modifier=1.0) {
 
 // Returns projects that contain all keys (if passed) or exits if none found
 export function getProjects(keys=[]) {
-  let projects = JSON.parse(open(`../../environments/${__ENV.ENVIRONMENT_NAME}.json`))['projects'];
+  let projects = JSON.parse(__ENV.ENVIRONMENT_PROJECTS);
   let check_project_key = (project, keys) => keys.every(key => Object.prototype.hasOwnProperty.call(project, key));
 
   let projects_with_keys = {};

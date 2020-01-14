@@ -8,8 +8,8 @@ The tool can be used both manually and automatically, with us doing the latter f
 
 Documentation on how to use the tool can be found in the [`docs/`](/docs/README.md) folder:
 
-* [Environment Preparation](docs/environment_prep.md)
-* [Running Tests](docs/k6.md)
+* [Preparing the Environment](docs/environment_prep.md)
+* [Running the Tests](docs/k6.md)
 
 # GitLab Test Results
 

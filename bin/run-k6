@@ -20,10 +20,9 @@ opts = Optimist.options do
   banner "\nRuns k6 Test(s) with the given Options against the specified Environment."
   banner "\nOptions:"
   opt :help, 'Show this help message'
-  opt :environment, "Name of Environment Config file in #{k6_dir}/environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
-  opt :options, "Name of Options Config file in #{k6_dir}/options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
-  opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs", type: :strings, default: ["#{k6_dir}/tests"]
-  opt :custom, "Include any tests inside the test directory's custom subfolder when true.", type: :flag, default: false
+  opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
+  opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
+  opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs", type: :strings, default: ["tests"]
   opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
   opt :http_debug, "Enable k6 HTTP debug logs in output", type: :flag, default: false
@@ -33,13 +32,11 @@ opts = Optimist.options do
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API and read_repository permissions. (Default: nil)"
   banner "\nExamples:"
   banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
-  banner "  Run all Tests including any in custom subfolder with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --custom"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
   banner "  Run all API Tests with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api"
   banner "  Run a specific Test with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{$PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api_v4_groups_projects.js"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api_v4_groups_projects.js"
 end
 
 puts Rainbow("GitLab Performance Tool - k6 load test runner").color(230, 83, 40)
@@ -48,22 +45,24 @@ warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various test
 k6_path = RunK6.setup_k6
 
 # Variables
-env_file = Dir.glob([opts[:environment], "#{k6_dir}/environments/#{opts[:environment]}"])[0]
-raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file)
+env_file = Dir.glob([opts[:environment], "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/environments/#{opts[:environment]}", "#{ENV['GPT_DOCKER_ENV_DIR'] || ''}/#{opts[:environment]}"])[0]
+raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
 
-options_file = Dir.glob([opts[:options], "#{k6_dir}/options/#{opts[:options]}"])[0]
-raise "Options config file '#{options_file_path}' not found as given or in default folder.. Exiting..." unless File.file?(options_file)
+options_file = Dir.glob([opts[:options], "#{k6_dir}/#{opts[:options]}", "#{k6_dir}/options/#{opts[:options]}", "#{ENV['GPT_DOCKER_OPTIONS_DIR'] || ''}/#{opts[:options]}"])[0]
+raise "Options config file '#{options_file_path}' not found as given or in default folder.. Exiting..." unless File.file?(options_file.to_s)
 
 env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
 env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], custom: opts[:custom], read_only: opts[:read_only], env_version: env_version['version'])
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], read_only: opts[:read_only], env_version: env_version['version'])
 
+results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
 results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_version['version'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_version['version'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
-results_dir = File.join("#{k6_dir}/results", results_file_prefix)
+results_dir = File.join(results_home, results_file_prefix)
 puts "\nSaving all test results to #{results_dir}"
 FileUtils.mkdir_p(results_dir)
+results_output_file = File.join(results_dir, "#{results_file_prefix}_results_output.log")
 
 aggregated_results = []
 aggregated_success = true
@@ -71,6 +70,10 @@ aggregated_success = true
 # Run tests
 tests.each do |test_file|
   status, output = RunK6.run_k6(k6_path: k6_path, env_vars: env_vars, options_file: options_file, test_file: test_file, http_debug: opts[:http_debug])
+
+  File.open(results_output_file, 'a') do |out_file|
+    out_file.puts output
+  end
 
   aggregated_results << RunK6.parse_k6_results(status: status, output: output)
   aggregated_success &&= status
@@ -135,7 +138,7 @@ puts results_table
 results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
 File.write(results_txt_file, "#{results_summary}\n#{results_table}")
 
-puts "\nResults files:\n#{results_json_file}\n#{results_txt_file}"
+puts "\nResults files:\n#{results_output_file}\n#{results_json_file}\n#{results_txt_file}"
 
 unless aggregated_success || ENV['GPT_IGNORE_RESULT'] == 'true'
   puts Rainbow("\nOne or more k6 tests have failed...").red
