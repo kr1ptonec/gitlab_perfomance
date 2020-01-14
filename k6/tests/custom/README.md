@@ -1,1 +1,0 @@
-Add any custom tests you wish to include here and run them by passing the `--custom` flag to `run-k6`.

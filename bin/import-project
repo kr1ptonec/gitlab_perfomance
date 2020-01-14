@@ -53,7 +53,7 @@ end
 raise Errno::ENOENT unless File.exist?(proj_file)
 
 # Create Group
-if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers: headers).status.success?
+if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers: headers, fail_on_error: false).status.success?
   puts "Creating Namespace #{opts[:namespace]}..."
   grp_url = "#{env_url}/api/v4/groups"
   grp_params = {
@@ -61,11 +61,11 @@ if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: "#{env_u
     path: opts[:namespace],
     visibility: 'public'
   }
-  GPTCommon.make_http_request(method: 'post', url: grp_url, params: grp_params, headers: headers, show_response: true)
+  GPTCommon.make_http_request(method: 'post', url: grp_url, params: grp_params, headers: headers)
 end
 
 # Create Project
-puts "Creating project #{opts[:project_name]}..."
+puts "Importing project #{opts[:project_name]}..."
 start_time = Time.now.to_i
 proj_url = "#{env_url}/api/v4/projects/import"
 proj_params = {

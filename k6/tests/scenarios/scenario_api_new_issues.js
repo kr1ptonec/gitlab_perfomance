@@ -83,7 +83,7 @@ function deleteGroup(groupId) {
 }
 
 function searchForGroup(groupName) {
-  let params = { headers: { "Accept": "application/json" } };
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
   let foundGroup = JSON.parse(res.body)[0];
   let groupId = foundGroup && foundGroup.id;  

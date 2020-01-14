@@ -1,0 +1,28 @@
+# Depends: .gpt-k6-base.yml
+
+gpt-build-docker-tag:
+  stage: build
+  extends: .k6-base
+  services:
+    - docker:stable-dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375
+  tags:
+    - performance
+    - docker
+  script:
+    - apk add -u --no-cache docker
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $GPT_DOCKER_HUB_USER -p $GPT_DOCKER_HUB_PASSWORD
+    - docker build -t gitlab/gitlab-performance-tool:$CI_COMMIT_TAG .
+    - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG gitlab/gitlab-performance-tool:latest
+    - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/gitlab-performance-tool:$CI_COMMIT_TAG
+    - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+    - docker push gitlab/gitlab-performance-tool:$CI_COMMIT_TAG
+    - docker push gitlab/gitlab-performance-tool:latest
+    - docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:$CI_COMMIT_TAG
+    - docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+  only:
+    refs:
+      - tags

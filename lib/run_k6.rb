@@ -47,6 +47,7 @@ module RunK6
 
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
+    env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
 
     options_file_vars = JSON.parse(File.read(options_file))
     env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
@@ -69,16 +70,15 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, custom:, read_only:, env_version: '-')
+  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-')
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
-      test_globs = Dir.glob([test_path, "#{k6_dir}/#{test_path}", "#{k6_dir}/tests/#{test_path}"])
+      test_globs = Dir.glob([test_path, "#{k6_dir}/#{test_path}", "#{k6_dir}/tests/#{test_path}", "#{ENV['GPT_DOCKER_TESTS_DIR'] || ''}/#{test_path}"])
       test_globs.each do |test_glob|
         tests += Dir.glob(["#{test_glob}.js", "#{test_glob}/*.js", "#{test_glob}/api/*.js", "#{test_glob}/git/*.js", "#{test_glob}/web/*.js"])
         tests += Dir.glob("#{test_glob}/quarantined/*.js") if quarantined
         tests += Dir.glob("#{test_glob}/scenarios/*.js") if scenarios
-        tests += Dir.glob("#{test_glob}/custom/*.js") if custom
       end
 
       # Add any test files given directly if they exist and are of .js type
@@ -117,7 +117,7 @@ module RunK6
         raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line =~ /(GoError:).*(ACCESS_TOKEN)/
         raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line =~ /No data generated/
 
-        output << line.lstrip
+        output << line
         puts line
       end
       status = wait_thr.value
@@ -170,7 +170,7 @@ module RunK6
       * Version:        #{results_json['version']} `#{results_json['revision']}`
       * Option:         #{results_json['option']}
       * Date:           #{results_json['date']}
-      * Run Time:       #{results_json['time']['run']}s (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
+      * Run Time:       #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
     DOC
   end
 

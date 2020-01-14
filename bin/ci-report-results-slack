@@ -57,6 +57,7 @@ def prepare_message_text(result, results_json = nil)
   summary = result ? ":ci_passing: #{message} passed! :ci_passing:\n" : ":ci_failing: #{message} failed! :ci_failing:\n"
   summary << "Pipeline - #{ENV['CI_PIPELINE_URL']}\n" if ENV['CI_PIPELINE_URL']
   summary << "Grafana - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json
+  summary << "Results - #{ENV['GPT_RESULTS_URL']}" if ENV['GPT_RESULTS_URL']
   summary
 end
 
