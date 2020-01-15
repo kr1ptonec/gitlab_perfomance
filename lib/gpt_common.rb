@@ -2,7 +2,9 @@ require 'http'
 require 'json'
 
 module GPTCommon
-  def self.make_http_request(method: 'get', url: nil, params: {}, headers: {}, show_response: false, fail_on_error: true)
+  extend self
+
+  def make_http_request(method: 'get', url: nil, params: {}, headers: {}, show_response: false, fail_on_error: true)
     raise "URL not defined for making request. Exiting..." unless url
 
     res = HTTP.follow.method(method).call(url, form: params, headers: headers)

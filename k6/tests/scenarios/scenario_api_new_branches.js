@@ -1,7 +1,8 @@
 /* global __ENV, __VU, __ITER */
 /*
-@endpoint: `POST /projects/:id/issues`
-@description: Setup stage: Create group and project <br>Test: [Creates a new project issue](https://docs.gitlab.com/ee/api/issues.html#new-issue) <br>Teardown stage: Delete group
+@endpoint: `POST /projects/:id/repository/branches`
+@description: [Create a new branch in the repository](https://docs.gitlab.com/ee/api/branches.html#create-repository-branch)
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/196788
 */
 
 import http from "k6/http";
@@ -12,17 +13,17 @@ import { createGroup, CreateProject, deleteGroup } from "../../lib/gpt_scenario_
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-export let issueRps = adjustRps(0.05);
-export let issueStages = adjustStageVUs(0.05);
-export let rpsThresholds = getRpsThresholds(0.05)
+export let rps = adjustRps(0.2);
+export let stages = adjustStageVUs(0.2);
+export let rpsThresholds = getRpsThresholds(0.2);
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
-  stages: issueStages,
-  rps: issueRps
+  stages: stages,
+  rps: rps
 };
 
 export function setup() {
@@ -30,21 +31,21 @@ export function setup() {
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
-  let groupId = createGroup("group-api-v4-new-issues");
-  let projectId = CreateProject(groupId)
+  let groupId = createGroup("group-api-v4-create-branch", __ENV.ENVIRONMENT_URL);
+  let projectId = CreateProject(groupId, __ENV.ENVIRONMENT_URL)
   let data = { groupId, projectId };
   return data;
 }
 
-export default function (data) {
-  group("API - Issue create", function () {
+export default function(data) {
+  group("API - Create New Branch", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let formdata = { title: `issue-${__VU}-${__ITER}` };
-    let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/issues`, formdata, params);
-    /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+
+    let branchName = `test-branch-${__VU}-${__ITER}`
+    let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/repository/branches`, { branch: branchName, ref: "master" }, params);
+    /20(0|1|4)/.test(createBranchRes.status) ? successRate.add(true) : successRate.add(false) && logError(createBranchRes);
   });
 }
-
 export function teardown(data) {
-  deleteGroup(data.groupId);
+  deleteGroup(data.groupId, __ENV.ENVIRONMENT_URL);
 }

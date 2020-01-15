@@ -3,7 +3,9 @@ require 'run_k6'
 require 'semantic'
 
 module TestInfo
-  def self.get_known_issues(k6_dir)
+  extend self
+
+  def get_known_issues(k6_dir)
     tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, read_only: false)
 
     aggregated_issues = []
@@ -14,7 +16,7 @@ module TestInfo
     aggregated_issues
   end
 
-  def self.parse_test_docs_for_issues(test_file)
+  def parse_test_docs_for_issues(test_file)
     docs = {}
     test_filename = File.basename(test_file)
 
@@ -31,7 +33,7 @@ module TestInfo
     docs
   end
 
-  def self.parse_test_docs_for_info(test_file)
+  def parse_test_docs_for_info(test_file)
     docs = {}
     test_filename = File.basename(test_file)
     test_type = test_file.split("/")[-2] # folder name is type
@@ -55,7 +57,7 @@ module TestInfo
     docs
   end
 
-  def self.test_is_read_only?(test_file)
+  def test_is_read_only?(test_file)
     read_only = true
     write_methods = %w[post put del patch]
     File.open(test_file, "r") do |test_file_content|
@@ -67,7 +69,7 @@ module TestInfo
     read_only
   end
 
-  def self.test_supported_by_version?(test_file, gitlab_version_string)
+  def test_supported_by_version?(test_file, gitlab_version_string)
     test_version = nil
     gitlab_version = Semantic::Version.new(gitlab_version_string.match(/\d+\.\d+\.\d+/)[0])
 
