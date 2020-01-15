@@ -9,7 +9,6 @@
   services:
     - docker:stable-dind
   tags:
-    - docker
     - performance
   variables:
     DOCKER_DRIVER: overlay2
