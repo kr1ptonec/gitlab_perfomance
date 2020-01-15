@@ -13,6 +13,7 @@ check:rubocop:
     - rubocop --parallel
   except:
     - schedules
+    - tags
 
 check:yamllint:
   stage: check
@@ -22,6 +23,7 @@ check:yamllint:
     - yamllint .gitlab-ci.yml .gitlab/ci/
   except:
     - schedules
+    - tags
 
 check:eslint:
   stage: check
@@ -31,3 +33,4 @@ check:eslint:
     - eslint './**/*.js'
   except:
     - schedules
+    - tags
