@@ -1,7 +1,6 @@
 # Depends: .gpt-k6-base.yml
 
-gpt-build-docker-tag:
-  stage: build
+.gpt-docker-base:
   extends: .k6-base
   services:
     - docker:stable-dind
@@ -9,8 +8,27 @@ gpt-build-docker-tag:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
   tags:
-    - performance
     - docker
+
+###########################
+##     Commit Checks     ##
+###########################
+check:gpt-docker:
+  stage: check
+  extends: .gpt-docker-base
+  script:
+    - apk add -u --no-cache docker
+    - docker build -t gitlab/gitlab-performance-tool:test .
+    - docker run --rm gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_groups_projects.js
+  except:
+    - schedules
+
+########################
+##   GPT Docker Build ##
+########################
+gpt-build-docker-tag:
+  stage: build
+  extends: .gpt-docker-base
   script:
     - apk add -u --no-cache docker
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -24,5 +42,4 @@ gpt-build-docker-tag:
     - docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:$CI_COMMIT_TAG
     - docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
   only:
-    refs:
-      - tags
+    - tags

@@ -1,8 +1,8 @@
 # Depends: .gpt-k6-base.yml
 
-#######################
-##     MR Checks     ##
-#######################
+###########################
+##     Commit Checks     ##
+###########################
 check:k6:
   stage: check
   extends: .k6-base
