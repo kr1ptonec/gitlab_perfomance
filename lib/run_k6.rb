@@ -13,7 +13,9 @@ require 'table_print'
 require 'tmpdir'
 
 module RunK6
-  def self.setup_k6
+  extend self
+
+  def setup_k6
     k6_version = ENV['K6_VERSION'] || '0.25.1'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
@@ -41,7 +43,7 @@ module RunK6
     File.join(File.dirname(k6_archive.path), 'k6')
   end
 
-  def self.setup_env_vars(env_file:, options_file:)
+  def setup_env_vars(env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
@@ -64,13 +66,13 @@ module RunK6
     env_vars
   end
 
-  def self.get_env_version(env_vars:)
+  def get_env_version(env_vars:)
     headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/version", headers: headers, fail_on_error: false)
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def self.get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-')
+  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-')
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -99,7 +101,7 @@ module RunK6
     tests
   end
 
-  def self.run_k6(k6_path:, env_vars:, options_file:, test_file:, http_debug:)
+  def run_k6(k6_path:, env_vars:, options_file:, test_file:, http_debug:)
     test_name = File.basename(test_file, '.js')
     puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
@@ -126,7 +128,7 @@ module RunK6
     [status.success?, output]
   end
 
-  def self.parse_k6_results(status:, output:)
+  def parse_k6_results(status:, output:)
     matches = {}
     matches[:success] = status
 
@@ -164,7 +166,7 @@ module RunK6
     results
   end
 
-  def self.generate_results_summary(results_json:)
+  def generate_results_summary(results_json:)
     <<~DOC
       * Environment:    #{results_json['name'].capitalize}
       * Version:        #{results_json['version']} `#{results_json['revision']}`
@@ -174,7 +176,7 @@ module RunK6
     DOC
   end
 
-  def self.generate_results_table(results_json:)
+  def generate_results_table(results_json:)
     tp_results = results_json['test_results'].map do |test_result|
       {
         "Name": test_result['name'],

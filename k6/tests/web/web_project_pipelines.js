@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/k6_test_modules.js";
+import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THRESHOLD);

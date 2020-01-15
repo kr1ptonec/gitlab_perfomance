@@ -8,7 +8,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds(0.5)
 export let successRate = new Rate("successful_requests");

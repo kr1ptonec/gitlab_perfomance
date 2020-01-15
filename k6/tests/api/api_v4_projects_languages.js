@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/k6_test_modules.js";
+import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 // Token not typically required for this endpoint but it was in 11.10 \ 11.11 dur to a bug
 // https://gitlab.com/gitlab-org/gitlab-foss/issues/60425
