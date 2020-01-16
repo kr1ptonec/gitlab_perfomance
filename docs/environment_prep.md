@@ -34,7 +34,7 @@ It should take up to 15 minutes for the project to import fully. You can head to
 
 ### Importing via the `import-project` script
 
-A convenience script, `tools/import-project`, is provided with this project to import the Project tarball into a GitLab environment via API from the terminal.
+A convenience script, [`bin/import-project`](https://gitlab.com/gitlab-org/quality/performance/blob/master/bin/import-project), is provided with this project to import a project tarball into a GitLab environment from the terminal.
 
 Note that to use the script, it will require some preparation if you haven't done so already:
 1. First, set up [`Ruby`](https://www.ruby-lang.org/en/documentation/installation/) and [`Ruby Bundler`](https://bundler.io) if they aren't already available on the machine.
