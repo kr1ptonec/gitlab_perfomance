@@ -31,17 +31,16 @@ raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command hel
 headers = {
   'Authorization': "Bearer #{ENV['ACCESS_TOKEN']}"
 }
-env_url = "http://#{opts[:environment_url].sub(/^https?\:\/\//, '')}"
 
 puts "Starting import of Project '#{opts[:project_name]}' from tarball '#{opts[:project_tarball]}'" + (opts[:namespace] ? " under namespace '#{opts[:namespace]}'" : '') + " to GitLab environment '#{opts[:environment_url]}'\n\n"
 
 # Check that environment can be reached and that token is valid
 puts "Checking that GitLab environment '#{opts[:environment_url]}' is available and that provided Access Token works..."
-check_res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: headers)
+check_res = GPTCommon.make_http_request(method: 'get', url: URI.join(opts[:environment_url], '/api/v4/version').to_s, headers: headers)
 raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
 version = JSON.parse(check_res.body.to_s).values.join(' ')
-puts "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n\n"
+puts "Environment and Access Token check was successful - URL: #{opts[:environment_url]}, Version: #{version}\n\n"
 
 # Check that the tarball file is valid
 if opts[:project_tarball].match?(URI.regexp(%w[http https ftp]))
@@ -53,9 +52,9 @@ end
 raise Errno::ENOENT unless File.exist?(proj_file)
 
 # Create Group
-if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/namespaces/#{opts[:namespace]}", headers: headers, fail_on_error: false).status.success?
+if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: URI.join(opts[:environment_url], "/api/v4/namespaces/#{opts[:namespace]}").to_s, headers: headers, fail_on_error: false).status.success?
   puts "Creating Namespace #{opts[:namespace]}..."
-  grp_url = "#{env_url}/api/v4/groups"
+  grp_url = URI.join(opts[:environment_url], '/api/v4/groups').to_s
   grp_params = {
     name: opts[:namespace],
     path: opts[:namespace],
@@ -67,7 +66,7 @@ end
 # Create Project
 puts "Importing project #{opts[:project_name]}..."
 start_time = Time.now.to_i
-proj_url = "#{env_url}/api/v4/projects/import"
+proj_url = URI.join(opts[:environment_url], '/api/v4/projects/import').to_s
 proj_params = {
   file: HTTP::FormData::File.new(proj_file),
   namespace: opts[:namespace],
@@ -80,12 +79,12 @@ proj_id = JSON.parse(proj_res.body.to_s)['id']
 puts "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
 print "Waiting until Project '#{proj_id}' has imported successfully..."
 loop do
-  proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/projects/#{proj_id}/import", headers: headers).body.to_s)
+  proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: URI.join(opts[:environment_url], "/api/v4/projects/#{proj_id}/import").to_s, headers: headers).body.to_s)
 
   case proj_imp_res['import_status']
   when 'finished'
     time_taken = ChronicDuration.output(Time.now.to_i - start_time, format: :long)
-    puts "\nProject has successfully imported in #{time_taken}:\n#{opts[:environment_url]}/#{proj_imp_res['path_with_namespace']}"
+    puts "\nProject has successfully imported in #{time_taken}:\n#{URI.join(opts[:environment_url], proj_imp_res['path_with_namespace'])}"
     exit
   when 'failed'
     raise "Project has failed to import. Reason:\n#{proj_imp_res['import_error']}"
