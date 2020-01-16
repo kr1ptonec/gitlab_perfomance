@@ -13,9 +13,9 @@ import { createGroup, CreateProject, deleteGroup } from "../../lib/gpt_scenario_
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-export let rps = adjustRps(0.2);
-export let stages = adjustStageVUs(0.2);
-export let rpsThresholds = getRpsThresholds(0.2);
+export let rps = adjustRps(0.05);
+export let stages = adjustStageVUs(0.05);
+export let rpsThresholds = getRpsThresholds(0.05);
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
