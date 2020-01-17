@@ -11,7 +11,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.25)
+export let rpsThresholds = getRpsThresholds(0.8)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
