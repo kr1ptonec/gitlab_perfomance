@@ -2,7 +2,6 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches/:branch`
 @description: [Get a single project repository branch](https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch)
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
 */
 
 import http from "k6/http";
@@ -12,8 +11,7 @@ import { logError, getRpsThresholds, getProjects, selectProject } from "../../li
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-// Endpoint is below target threshold. Custom lower limit applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.4)
+export let rpsThresholds = getRpsThresholds()
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
