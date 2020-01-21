@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /projects`
+@endpoint: `GET /projects?order_by=id&sort=asc`
 @description: [Get a list of all visible projects across GitLab for the authenticated user](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 */
 
@@ -27,7 +27,7 @@ export function setup() {
 export default function() {
   group("API - Projects List", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects?order_by=id&sort=asc`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
   });
 }
