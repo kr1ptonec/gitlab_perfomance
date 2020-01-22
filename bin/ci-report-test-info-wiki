@@ -25,7 +25,7 @@ end
 raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN']
 
 puts "Collecting test info..."
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["#{k6_dir}/tests"], quarantined: true, scenarios: true, read_only: false)
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, read_only: false)
 aggregated_tests = []
 tests.each do |test|
   aggregated_tests << TestInfo.parse_test_docs_for_info(test)
