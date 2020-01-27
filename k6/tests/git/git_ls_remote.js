@@ -18,7 +18,8 @@ export let options = {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
-  rps: gitProtoRps
+  rps: gitProtoRps,
+  stages: gitProtoStages
 };
 
 export let projects = getProjects(['name', 'group']);
