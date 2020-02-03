@@ -2,8 +2,7 @@
   image: ruby:2.6-alpine
   before_script:
     - apk add --no-cache gcc g++ make libc6-compat libc-dev curl
-    - gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
-    - bundle install --without dev
+    - gem install bundler && bundle config without dev && bundle install
 
 .report-k6-slack-base:
   stage: report

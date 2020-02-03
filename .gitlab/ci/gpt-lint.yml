@@ -6,9 +6,7 @@ check:rubocop:
   image: ruby:2.6-alpine
   before_script:
     - apk add make gcc libc-dev
-    - gem install bundler -v 2.0.2
-    - export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false
-    - bundle install --without run
+    - gem install bundler && bundle config without run && bundle install
   script:
     - rubocop --parallel
   except:

@@ -1,7 +1,7 @@
 # 1st Stage
 FROM ruby:2.6-alpine AS build
 
-ARG K6_VERSION="0.25.1"
+ARG K6_VERSION="0.26.0"
 ENV K6_VERSION="${K6_VERSION}"
 ENV GEM_HOME="/usr/local/bundle"
 ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
@@ -10,7 +10,7 @@ ADD . /performance
 WORKDIR /performance
 
 RUN apk add --no-cache gcc g++ make libc6-compat libc-dev curl wget tar
-RUN gem install bundler -v 2.0.2 && export BUNDLER_VERSION=2.0.2 && export BUNDLE_PATH__SYSTEM=false && bundle install --without dev
+RUN gem install bundler && bundle config without dev && bundle install
 RUN wget -q -P /tmp/ https://github.com/loadimpact/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux64.tar.gz && tar -xzvf /tmp/k6-v${K6_VERSION}-linux64.tar.gz -C /usr/local/bin --strip-components 1
 
 # 2nd Stage

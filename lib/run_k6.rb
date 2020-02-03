@@ -16,10 +16,10 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.25.1'
+    k6_version = ENV['K6_VERSION'] || '0.26.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
-      return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip == "k6 v#{k6_version}"
+      return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip =~ /^k6 v#{k6_version}/
     end
 
     if OS.linux?
@@ -28,14 +28,14 @@ module RunK6
 
       k6_archive = Down::Http.download(k6_url)
       extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
-      raise "k6 archive extract failed:\b#{extract_output}" unless extract_status
+      raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.mac?
       k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-mac.zip"
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = Down::Http.download(k6_url)
       extract_output, extract_status = Open3.capture2e('unzip', '-j', k6_archive.path, '-d', File.dirname(k6_archive.path))
-      raise "k6 archive extract failed:\b#{extract_output}" unless extract_status
+      raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.windows?
       raise "k6 not found or wrong version detected. Please install k6 version #{k6_version} on your machine and ensure it's found on the PATH"
     end
@@ -101,14 +101,14 @@ module RunK6
     tests
   end
 
-  def run_k6(k6_path:, env_vars:, options_file:, test_file:, http_debug:)
+  def run_k6(k6_path:, env_vars:, options_file:, test_file:, gpt_version:)
     test_name = File.basename(test_file, '.js')
     puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
     cmd = [k6_path, 'run']
     cmd += ['--config', options_file] if options_file
     cmd += ['--summary-time-unit', 'ms']
-    cmd += ['--http-debug'] if http_debug
+    cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += [test_file]
 
     status = nil
@@ -136,11 +136,12 @@ module RunK6
       case line
       when /^\s*script: /
         matches[:name] = line.match(/([a-z0-9_]*).js/)
-      when /http_req_duration/
+      when /http_req_waiting/
+        matches[:avg] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)
         matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
       when /vus_max/
         matches[:rps_target] = line.match(/max=(\d+)/)
-      when /RPS Threshold/
+      when /RPS Threshold:/
         matches[:rps_threshold] = line.match(/(\d+\.\d+)\/s/)
       when /http_reqs/
         matches[:rps_result] = line.match(/(\d+\.\d+)(\/s)/)
@@ -158,6 +159,7 @@ module RunK6
       "rps_target" => matches[:rps_target][1],
       "rps_result" => matches[:rps_result][1].to_f.round(2).to_s,
       "rps_threshold" => matches[:rps_threshold][1],
+      "response_avg" => matches[:avg][2],
       "response_p95" => matches[:p95][2],
       "success_rate" => matches[:success_rate][0],
       "success_rate_threshold" => matches[:success_rate_threshold][0],
@@ -168,11 +170,12 @@ module RunK6
 
   def generate_results_summary(results_json:)
     <<~DOC
-      * Environment:    #{results_json['name'].capitalize}
-      * Version:        #{results_json['version']} `#{results_json['revision']}`
-      * Option:         #{results_json['option']}
-      * Date:           #{results_json['date']}
-      * Run Time:       #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
+      * Environment:                #{results_json['name'].capitalize}
+      * Environment Version:        #{results_json['version']} `#{results_json['revision']}`
+      * Option:                     #{results_json['option']}
+      * Date:                       #{results_json['date']}
+      * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
+      * GPT Version:                v#{results_json['gpt_version']}
     DOC
   end
 
@@ -182,9 +185,10 @@ module RunK6
         "Name": test_result['name'],
         "RPS": "#{test_result['rps_target']}/s",
         "RPS Result": "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)",
-        "Response P95": "#{test_result['response_p95']}ms",
-        "Request Results": "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})",
-        "Result": test_result['result'] ? "Passed" : "Failed"
+        "Req Avg": "#{test_result['response_avg']}ms",
+        "Req P95": "#{test_result['response_p95']}ms",
+        "Req Status": "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})",
+        "Result": test_result['result'] ? Rainbow("Passed").green : Rainbow("FAILED").red
       }
     end
 
