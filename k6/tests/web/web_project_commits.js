@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/commits/:branch`
-@description: Web - Project Commits page. <br>Controllers: `CommitsController`</br>
+@description: Web - Project Commits Page. <br>Controllers: `CommitsController#show`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/issues/31321
 */
 
@@ -10,14 +10,17 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
+export let endpointCount = 1;
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THRESHOLD);
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THRESHOLD);
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THRESHOLD * 0.6)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THRESHOLD, endpointCount);
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`]
+    "http_req_waiting{endpoint:commits}": ["p(95)<750"],
+    "http_reqs": [`count>=${rpsThresholds['count']}`],
+    'http_reqs{endpoint:commits}': [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
   stages: webProtoStages
@@ -33,11 +36,14 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Projects Commits Controller Show HTML", function() {
+  group("Web - Project Commits Page", function() {
     let project = selectProject(projects);
 
-    let params = { headers: { "Cache-Control": "no-cache" } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/commits/${project['branch']}`, params);
-    /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+    let responses = http.batch([
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/commits/master`, null, {tags: {endpoint: 'commits', controller: 'Projects::CommitsController', action: 'show'}}]
+    ]);
+    responses.forEach(function(res) {
+      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+    });
   });
 }

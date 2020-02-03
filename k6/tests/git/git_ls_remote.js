@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project.git/info/refs?service=git-upload-pack`
-@description: Gitaly - Git Refs List
+@description: Git Refs List via HTTPS. <br>Controllers: `Repositories::GitHttpController#info_refs`</br>
 */
 
 import http from "k6/http";

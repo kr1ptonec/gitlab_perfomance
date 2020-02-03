@@ -1,9 +1,10 @@
 {
-  "userAgent": "GitlabK6PerformanceTest/1.0",
   "stages": [
-    { "duration": "5s", "target": 20 },
     { "duration": "5s", "target": 100 },
-    { "duration": "50s", "target": 100 }
+    { "duration": "50s", "target": 100 },
+    { "duration": "5s", "target": 0 }
   ],
-  "rps": 100
+  "rps": 100,
+  "batchPerHost": 0,
+  "maxRedirects": 0
 }

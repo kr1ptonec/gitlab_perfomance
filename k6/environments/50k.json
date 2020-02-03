@@ -12,7 +12,8 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "6958"
+      "mr_discussions_iid": "6958",
+      "user": "root"
     },
     {
       "name": "gitlabhq2",
@@ -22,7 +23,8 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "6958"
+      "mr_discussions_iid": "6958",
+      "user": "root"
     },
     {
       "name": "gitlabhq3",
@@ -32,7 +34,8 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "6958"
+      "mr_discussions_iid": "6958",
+      "user": "root"
     },
     {
       "name": "gitlabhq5",
@@ -42,7 +45,8 @@
       "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
       "mr_commits_iid": "10495",
-      "mr_discussions_iid": "6958"
+      "mr_discussions_iid": "6958",
+      "user": "root"
     }
   ]
 }

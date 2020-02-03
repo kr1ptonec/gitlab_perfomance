@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/merge_requests`
-@description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
+@endpoint: `GET /:user`
+@description: Web - User Page <br>Controllers: `UsersController#show`,`UsersController#calendar.json`</br>
 */
 
 import http from "k6/http";
@@ -17,17 +17,17 @@ export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:merge_requests}": ["p(95)<500"],
-    "http_req_waiting{endpoint:merge_requests?state=all}": ["p(95)<500"],
+    "http_req_waiting{endpoint:user}": ["p(95)<500"],
+    "http_req_waiting{endpoint:calendar.json}": ["p(95)<500"],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    'http_reqs{endpoint:merge_requests}': [`count>=${rpsThresholds['count_per_endpoint']}`],
-    'http_reqs{endpoint:merge_requests?state=all}': [`count>=${rpsThresholds['count_per_endpoint']}`]
+    'http_reqs{endpoint:user}': [`count>=${rpsThresholds['count_per_endpoint']}`],
+    'http_reqs{endpoint:calendar.json}': [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getProjects(['user']);
 
 export function setup() {
   console.log('')
@@ -38,12 +38,12 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Project Merge Requests Page", function() {
+  group("Web - User Page", function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests`, null, {tags: {endpoint: 'merge_requests', controller: 'Projects::MergeRequestsController', action: 'index'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests?state=all`, null, {tags: {endpoint: 'merge_requests?state=all', controller: 'Projects::MergeRequestsController', action: 'index'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['user']}`, null, {tags: {endpoint: 'user', controller: 'UserController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/users/${project['user']}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
