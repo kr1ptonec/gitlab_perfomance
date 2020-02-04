@@ -73,7 +73,11 @@ proj_params = {
   path: opts[:project_name],
   'override_params[repository_storage]': opts[:storage_name]
 }
-proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: headers, show_response: true)
+# we need to enable chunked transfers so cloudfare won't reject uploads > 100MB
+upload_headers = {
+  'Transfer-Encoding': 'chunked'
+}.merge(headers)
+proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: upload_headers, show_response: true)
 proj_id = JSON.parse(proj_res.body.to_s)['id']
 
 puts "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
