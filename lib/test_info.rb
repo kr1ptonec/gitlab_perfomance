@@ -5,6 +5,8 @@ require 'semantic'
 module TestInfo
   extend self
 
+  # Get
+
   def get_known_issues(k6_dir)
     tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, read_only: false)
 
@@ -13,8 +15,11 @@ module TestInfo
       parsed_test = parse_test_docs_for_issues(test)
       aggregated_issues << parsed_test unless parsed_test.empty?
     end
+
     aggregated_issues
   end
+
+  # Parse
 
   def parse_test_docs_for_issues(test_file)
     docs = {}
@@ -25,7 +30,7 @@ module TestInfo
         case line
         when /@issue/
           match = line.match(/@issue: (.*)\n/)
-          docs[:test] = test_filename
+          docs[:test] = File.basename(test_filename, '.js')
           docs[:issue] = match[1]
         end
       end
@@ -56,6 +61,8 @@ module TestInfo
     docs[:type] = test_type
     docs
   end
+
+  # Check
 
   def test_is_read_only?(test_file)
     read_only = true

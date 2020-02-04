@@ -8,16 +8,18 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
 export let rpsThresholds = getRpsThresholds(0.5)
-export let successRate = new Rate("successful_requests");
+export let ttfbThreshold = getTtfbThreshold(4000)
+export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
+    "http_req_waiting": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   }
 };
@@ -27,6 +29,7 @@ export let projects = getProjects(['name', 'group', 'mr_discussions_iid']);
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
 

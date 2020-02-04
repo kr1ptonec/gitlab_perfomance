@@ -19,7 +19,7 @@ check:gpt-docker:
   script:
     - apk add -u --no-cache docker
     - docker build -t gitlab/gitlab-performance-tool:test .
-    - docker run --rm gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_groups_projects.js
+    - docker run --rm -e ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_user.js -l 2000
   except:
     - schedules
 

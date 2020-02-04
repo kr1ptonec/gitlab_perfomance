@@ -54,10 +54,11 @@ end
 
 def prepare_message_text(result, results_json = nil)
   message = "Test #{@opts[:test_name]} against #{ENV['ENVIRONMENT_NAME'].capitalize} has"
-  summary = result ? ":ci_passing: #{message} passed! :ci_passing:\n" : ":ci_failing: #{message} failed! :ci_failing:\n"
-  summary << "Pipeline - #{ENV['CI_PIPELINE_URL']}\n" if ENV['CI_PIPELINE_URL']
-  summary << "Grafana - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json
-  summary << "Results - #{ENV['GPT_RESULTS_URL']}" if ENV['GPT_RESULTS_URL']
+  summary = result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing:"
+  summary << "\nPipeline - #{ENV['CI_PIPELINE_URL']}" if ENV['CI_PIPELINE_URL']
+  summary << "\nGrafana - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json
+  summary << "\nResults - #{ENV['GPT_RESULTS_URL']}" if ENV['GPT_RESULTS_URL']
+  summary << "\nKnown Issues - #{ENV['GPT_KNOWN_ISSUES_URL']}" if ENV['GPT_KNOWN_ISSUES_URL']
   summary
 end
 
@@ -74,7 +75,10 @@ if results_file && File.extname(results_file) == '.json'
 
   results_summary = RunK6.generate_results_summary(results_json: results_json)
   results_table = RunK6.generate_results_table(results_json: results_json)
-  content = "#{results_summary}\n" + "\n#{results_table}"
+  results_footer = RunK6.generate_results_footer(results_json: results_json)
+  content = "#{results_summary}\n#{results_table}\n#{results_footer}"
+  # Remove any terminal ANSI codes
+  content.gsub!(/\e\[([;\d]+)?m/, '')
 
   post_slack_snippet(results_file, message, content)
 else

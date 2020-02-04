@@ -10,11 +10,12 @@ GEM
       unf (>= 0.0.5, < 1.0.0)
     down (4.8.1)
       addressable (~> 2.5)
-    gitlab-styles (2.7.0)
-      rubocop (~> 0.69.0)
+    gitlab-styles (3.1.0)
+      rubocop (~> 0.74.0)
       rubocop-gitlab-security (~> 0.1.0)
-      rubocop-performance (~> 1.1.0)
-      rubocop-rspec (~> 1.19)
+      rubocop-performance (~> 1.4.1)
+      rubocop-rails (~> 2.0)
+      rubocop-rspec (~> 1.36)
     http (4.1.1)
       addressable (~> 2.3)
       http-cookie (~> 1.0)
@@ -24,17 +25,18 @@ GEM
       domain_name (~> 0.5)
     http-form_data (2.1.1)
     http_parser.rb (0.6.0)
-    jaro_winkler (1.5.3)
+    jaro_winkler (1.5.4)
     naturally (2.2.0)
     numerizer (0.1.1)
     optimist (3.0.0)
     os (1.0.1)
-    parallel (1.17.0)
-    parser (2.6.3.0)
+    parallel (1.19.1)
+    parser (2.7.0.2)
       ast (~> 2.4.0)
     public_suffix (3.1.1)
+    rack (2.1.2)
     rainbow (3.0.0)
-    rubocop (0.69.0)
+    rubocop (0.74.0)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
       parser (>= 2.6)
@@ -43,10 +45,13 @@ GEM
       unicode-display_width (>= 1.4.0, < 1.7)
     rubocop-gitlab-security (0.1.1)
       rubocop (>= 0.51)
-    rubocop-performance (1.1.0)
-      rubocop (>= 0.67.0)
-    rubocop-rspec (1.22.2)
-      rubocop (>= 0.52.1)
+    rubocop-performance (1.4.1)
+      rubocop (>= 0.71.0)
+    rubocop-rails (2.4.2)
+      rack (>= 1.1)
+      rubocop (>= 0.72.0)
+    rubocop-rspec (1.37.1)
+      rubocop (>= 0.68.1)
     ruby-progressbar (1.10.1)
     semantic (1.6.1)
     table_print (1.5.6)
@@ -56,7 +61,7 @@ GEM
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.6)
-    unicode-display_width (1.6.0)
+    unicode-display_width (1.6.1)
 
 PLATFORMS
   ruby
@@ -64,18 +69,18 @@ PLATFORMS
 DEPENDENCIES
   chronic_duration
   down
-  gitlab-styles (~> 2.7)
+  gitlab-styles
   http
   naturally
   optimist
   os
   rainbow
-  rubocop (~> 0.69.0)
-  rubocop-performance (~> 1.1.0)
-  rubocop-rspec (~> 1.22.1)
+  rubocop (~> 0.74.0)
+  rubocop-performance (~> 1.4.1)
+  rubocop-rspec (~> 1.37.1)
   semantic
   table_print
   tty-spinner
 
 BUNDLED WITH
-   2.0.2
+   2.1.4

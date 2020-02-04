@@ -9,7 +9,7 @@ ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
 ADD . /performance
 WORKDIR /performance
 
-RUN apk add --no-cache gcc g++ make libc6-compat libc-dev curl wget tar
+RUN apk add --no-cache build-base curl wget tar
 RUN gem install bundler && bundle config without dev && bundle install
 RUN wget -q -P /tmp/ https://github.com/loadimpact/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux64.tar.gz && tar -xzvf /tmp/k6-v${K6_VERSION}-linux64.tar.gz -C /usr/local/bin --strip-components 1
 

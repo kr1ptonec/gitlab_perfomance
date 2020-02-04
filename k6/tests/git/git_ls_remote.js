@@ -7,15 +7,17 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 
-export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THRESHOLD);
-export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THRESHOLD);
-export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THRESHOLD);
-export let successRate = new Rate("successful_requests");
+export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let ttfbThreshold = getTtfbThreshold()
+export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
+    "http_req_waiting": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
   rps: gitProtoRps,
@@ -28,6 +30,7 @@ export function setup() {
   console.log('')
   console.log(`Git Protocol RPS: ${gitProtoRps}`)
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
 
