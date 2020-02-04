@@ -7,18 +7,20 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { createGroup, CreateProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-export let issueRps = adjustRps(0.05);
-export let issueStages = adjustStageVUs(0.05);
-export let rpsThresholds = getRpsThresholds(0.05)
-export let successRate = new Rate("successful_requests");
+export let issueRps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
+export let issueStages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
+export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
+export let ttfbThreshold = getTtfbThreshold()
+export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
+    "http_req_waiting": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
   stages: issueStages,
@@ -28,6 +30,7 @@ export let options = {
 export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   let groupId = createGroup("group-api-v4-new-issues");

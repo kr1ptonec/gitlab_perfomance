@@ -7,7 +7,7 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - bin/run-k6 -e staging.json -t api_v4_groups_projects.js
+    - ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN bin/run-k6 -e staging.json -t api_v4_user.js -l 2000
   except:
     - schedules
     - tags

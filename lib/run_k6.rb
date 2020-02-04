@@ -19,7 +19,7 @@ module RunK6
     k6_version = ENV['K6_VERSION'] || '0.26.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
-      return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip =~ /^k6 v#{k6_version}/
+      return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
     end
 
     if OS.linux?
@@ -43,7 +43,7 @@ module RunK6
     File.join(File.dirname(k6_archive.path), 'k6')
   end
 
-  def setup_env_vars(env_file:, options_file:)
+  def setup_env_vars(env_file:, options_file:, latency:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
@@ -60,8 +60,12 @@ module RunK6
     env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
 
     env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
-    env_vars['GIT_ENDPOINT_THRESHOLD'] ||= '0.1'
-    env_vars['WEB_ENDPOINT_THRESHOLD'] ||= '0.1'
+    env_vars['TTFB_THRESHOLD'] ||= '500'
+    env_vars['TTFB_LATENCY'] ||= latency.to_s
+
+    env_vars['GIT_ENDPOINT_THROUGHPUT'] ||= '0.1'
+    env_vars['WEB_ENDPOINT_THROUGHPUT'] ||= '0.1'
+    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] ||= '0.05'
 
     env_vars
   end
@@ -116,8 +120,8 @@ module RunK6
     Open3.popen2e(env_vars, *cmd) do |stdin, stdout_stderr, wait_thr|
       stdin.close
       stdout_stderr.each do |line|
-        raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line =~ /(GoError:).*(ACCESS_TOKEN)/
-        raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line =~ /No data generated/
+        raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line.match?(/(GoError:).*(ACCESS_TOKEN)/)
+        raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line.match?(/No data generated/)
 
         output << line
         puts line
@@ -137,34 +141,37 @@ module RunK6
       when /^\s*script: /
         matches[:name] = line.match(/([a-z0-9_]*).js/)
       when /http_req_waiting/
-        matches[:avg] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)
-        matches[:p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
+        matches[:ttfb_avg] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)
+        matches[:ttfb_p90] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)
+        matches[:ttfb_p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
       when /vus_max/
         matches[:rps_target] = line.match(/max=(\d+)/)
       when /RPS Threshold:/
         matches[:rps_threshold] = line.match(/(\d+\.\d+)\/s/)
+      when /TTFB P90 Threshold:/
+        matches[:ttfb_threshold] = line.match(/(\d+)ms/)
       when /http_reqs/
         matches[:rps_result] = line.match(/(\d+\.\d+)(\/s)/)
-        matches[:success] = false if line.include?('✗ http_reqs')
       when /Success Rate Threshold/
         matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
       when /successful_requests/
         matches[:success_rate] = line.match(/\d+(\.\d+)?\%/)
-        matches[:success] = false if line.include?('✗ successful_requests')
       end
     end
 
-    results = {
-      "name" => matches[:name][1],
-      "rps_target" => matches[:rps_target][1],
-      "rps_result" => matches[:rps_result][1].to_f.round(2).to_s,
-      "rps_threshold" => matches[:rps_threshold][1],
-      "response_avg" => matches[:avg][2],
-      "response_p95" => matches[:p95][2],
-      "success_rate" => matches[:success_rate][0],
-      "success_rate_threshold" => matches[:success_rate_threshold][0],
-      "result" => matches[:success]
-    }
+    results = {}
+    results["name"] = matches[:name][1]
+    results["rps_target"] = matches[:rps_target][1]
+    results["rps_result"] = matches[:rps_result][1].to_f.round(2).to_s
+    results["rps_threshold"] = matches[:rps_threshold][1]
+    results["ttfb_avg"] = matches[:ttfb_avg][2]
+    results["ttfb_p90"] = matches[:ttfb_p90][2]
+    results["ttfb_p90_threshold"] = matches[:ttfb_threshold][1]
+    results["ttfb_p95"] = matches[:ttfb_p95][2]
+    results["success_rate"] = matches[:success_rate][0]
+    results["success_rate_threshold"] = matches[:success_rate_threshold][0]
+    results["result"] = status
+
     results
   end
 
@@ -181,18 +188,30 @@ module RunK6
 
   def generate_results_table(results_json:)
     tp_results = results_json['test_results'].map do |test_result|
-      {
-        "Name": test_result['name'],
-        "RPS": "#{test_result['rps_target']}/s",
-        "RPS Result": "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)",
-        "Req Avg": "#{test_result['response_avg']}ms",
-        "Req P95": "#{test_result['response_p95']}ms",
-        "Req Status": "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})",
-        "Result": test_result['result'] ? Rainbow("Passed").green : Rainbow("FAILED").red
-      }
+      tp_result = {}
+      tp_result["Name"] = test_result['name']
+      tp_result["RPS"] = "#{test_result['rps_target']}/s"
+      tp_result["RPS Result"] = "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)"
+      tp_result["TTFB Avg"] = "#{test_result['ttfb_avg']}ms"
+      tp_result["TTFB P90"] = "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)"
+      tp_result["Req Status"] = "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})"
+
+      test_result_str = test_result['result'] ? "Passed" : "FAILED"
+      test_result_str << '¹' if test_result['known_issue']
+      test_result_str << '²' unless test_result['result']
+      tp_result["Result"] = test_result['result'] ? Rainbow(test_result_str).green : Rainbow(test_result_str).red
+
+      tp_result
     end
 
     tp.set(:max_width, 60)
     TablePrint::Printer.table_print(tp_results)
+  end
+
+  def generate_results_footer(results_json:)
+    footer = ''
+    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate."
+    footer << "\n² Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
+    footer
   end
 end

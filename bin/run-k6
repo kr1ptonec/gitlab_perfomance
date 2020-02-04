@@ -27,8 +27,9 @@ opts = Optimist.options do
   opt :help, 'Show this help message'
   opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
   opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
-  opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs", type: :strings, default: ["tests"]
+  opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs.", type: :strings, default: ["tests"]
   opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
+  opt :latency, "Specify a network latency time in MS to increase applicable test thresholds by. Only typically used in slow network environments.", type: :integer, default: 0
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings, default: []
   opt :read_only, "Enable read-only mode to run tests with only GET requests", type: :flag, default: false
@@ -54,7 +55,7 @@ raise "Environment config file '#{opts[:environment]}' not found as given or in 
 options_file = Dir.glob([opts[:options], "#{k6_dir}/#{opts[:options]}", "#{k6_dir}/options/#{opts[:options]}", "#{ENV['GPT_DOCKER_OPTIONS_DIR'] || ''}/#{opts[:options]}"])[0]
 raise "Options config file '#{opts[:options]}' not found as given or in default folder. Exiting..." unless File.file?(options_file.to_s)
 
-env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
+env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file, latency: opts[:latency])
 env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
@@ -78,7 +79,7 @@ tests.each do |test_file|
     out_file.puts output
   end
 
-  aggregated_results << RunK6.parse_k6_results(status: status, output: output)
+  aggregated_results << RunK6.parse_k6_results(status: status, output: output).merge({ 'known_issue' => TestInfo.parse_test_docs_for_issues(test_file).key?(:issue) })
   aggregated_success &&= status
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping.").yellow
@@ -105,7 +106,7 @@ puts Rainbow("All k6 tests have finished after #{run_time}s!").green
 # Output known issues
 unless ENV['GPT_SKIP_KNOWN_ISSUES'] == 'true'
   known_issues = TestInfo.get_known_issues(k6_dir)
-  puts "\nKnown issues:\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n"
+  puts "\nKnown issues:\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n\n"
   tp.set(:max_width, 100)
   tp(known_issues)
   puts "\nFull list of issues found both past and present can be found here: https://gitlab.com/gitlab-org/gitlab/issues?label_name%5B%5D=Quality%3Aperformance-issues\n"
@@ -139,12 +140,14 @@ puts "\nResults summary:\n\n#{results_summary}\n"
 
 results_table = RunK6.generate_results_table(results_json: results_json)
 puts results_table
+
+results_footer = RunK6.generate_results_footer(results_json: results_json)
+puts Rainbow(results_footer).italic
+
 results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
-File.write(results_txt_file, "#{results_summary}\n#{results_table}")
+# Write results to file but also remove any terminal ANSI codes
+File.write(results_txt_file, "#{results_summary}\n#{results_table}\n#{results_footer}".gsub(/\e\[([;\d]+)?m/, ''))
 
 puts "\nResults files:\n#{results_output_file}\n#{results_json_file}\n#{results_txt_file}"
 
-unless aggregated_success || ENV['GPT_IGNORE_RESULT'] == 'true'
-  puts Rainbow("\nOne or more k6 tests have failed...").red
-  exit(1)
-end
+abort("\n" + Rainbow("One or more tests have failed...").red) unless aggregated_success || ENV['GPT_IGNORE_RESULT'] == 'true'
