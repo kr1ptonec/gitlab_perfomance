@@ -151,7 +151,7 @@ module RunK6
       when /TTFB P90 Threshold:/
         matches[:ttfb_threshold] = line.match(/(\d+)ms/)
       when /http_reqs/
-        matches[:rps_result] = line.match(/(\d+\.\d+)(\/s)/)
+        matches[:rps_result] = line.match(/(\d+(\.\d+)?)(\/s)/)
       when /Success Rate Threshold/
         matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
       when /successful_requests/
@@ -210,7 +210,7 @@ module RunK6
 
   def generate_results_footer(results_json:)
     footer = ''
-    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate."
+    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate." if results_json['test_results'].any? { |test_result| test_result['known_issue'] }
     footer << "\n² Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
     footer
   end
