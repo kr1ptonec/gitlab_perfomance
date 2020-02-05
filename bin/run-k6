@@ -142,7 +142,7 @@ results_table = RunK6.generate_results_table(results_json: results_json)
 puts results_table
 
 results_footer = RunK6.generate_results_footer(results_json: results_json)
-puts Rainbow(results_footer).italic
+puts Rainbow(results_footer).italic unless results_footer.empty?
 
 results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
 # Write results to file but also remove any terminal ANSI codes
