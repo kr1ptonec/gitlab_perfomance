@@ -37,3 +37,6 @@ Lint/MissingCopEnableDirective:
 
 Style/RegexpLiteral:
   AllowInnerSlashes: true
+
+Style/FloatDivision:
+  Enabled: false

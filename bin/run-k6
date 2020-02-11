@@ -16,7 +16,7 @@ require 'tmpdir'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_version = '1.1.0'
+gpt_version = '1.1.1'
 puts Rainbow("GitLab Performance Tool (GPT) v#{gpt_version} - Performance test runner for GitLab environments based on k6").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -91,6 +91,7 @@ rescue StandardError => e
   warn Rainbow("Test failed: #{e.message}").red
   aggregated_success = false
 end
+aggregated_score = RunK6.get_results_score(results: aggregated_results, env_vars: env_vars)
 
 if aggregated_results.empty?
   puts "No tests reported any results. Exiting..."
@@ -129,6 +130,7 @@ results_json = {
     "run" => run_time
   },
   "overall_result" => aggregated_success,
+  "overall_result_score" => aggregated_score,
   "test_results" => aggregated_results
 }
 results_json_file = File.join(results_dir, "#{results_file_prefix}_results.json")
@@ -136,7 +138,7 @@ File.write(results_json_file, results_json.to_json)
 
 # STDOUT \ Text
 results_summary = RunK6.generate_results_summary(results_json: results_json)
-puts "\nResults summary:\n\n#{results_summary}\n"
+puts "\nResults summary:\n\n#{results_summary}"
 
 results_table = RunK6.generate_results_table(results_json: results_json)
 puts results_table
