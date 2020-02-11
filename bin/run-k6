@@ -138,7 +138,7 @@ File.write(results_json_file, results_json.to_json)
 
 # STDOUT \ Text
 results_summary = RunK6.generate_results_summary(results_json: results_json)
-puts "\nResults summary:\n\n#{results_summary}"
+puts "\nResults summary:\n\n#{results_summary}\n"
 
 results_table = RunK6.generate_results_table(results_json: results_json)
 puts results_table

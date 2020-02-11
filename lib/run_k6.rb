@@ -66,7 +66,7 @@ module RunK6
 
     env_vars['GIT_ENDPOINT_THROUGHPUT'] ||= '0.1'
     env_vars['WEB_ENDPOINT_THROUGHPUT'] ||= '0.1'
-    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] ||= '0.05'
+    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] ||= '0.01'
 
     env_vars
   end
@@ -194,7 +194,6 @@ module RunK6
       * GPT Version:                v#{results_json['gpt_version']}
 
       █ Overall Results Score: #{results_json['overall_result_score']}%
-
     DOC
   end
 
