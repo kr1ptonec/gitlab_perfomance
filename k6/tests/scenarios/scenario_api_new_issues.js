@@ -15,7 +15,7 @@ if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 export let issueRps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let issueStages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold()
+export let ttfbThreshold = getTtfbThreshold(2500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

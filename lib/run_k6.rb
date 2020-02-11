@@ -59,6 +59,7 @@ module RunK6
     end
     env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
 
+    env_vars['RPS_THRESHOLD_MULTIPLIER'] ||= '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
     env_vars['TTFB_THRESHOLD'] ||= '500'
     env_vars['TTFB_LATENCY'] ||= latency.to_s
@@ -153,9 +154,9 @@ module RunK6
       when /http_reqs/
         matches[:rps_result] = line.match(/(\d+(\.\d+)?)(\/s)/)
       when /Success Rate Threshold/
-        matches[:success_rate_threshold] = line.match(/\d+(\.\d+)?\%/)
+        matches[:success_rate_threshold] = line.match(/(\d+(\.\d+)?)\%/)
       when /successful_requests/
-        matches[:success_rate] = line.match(/\d+(\.\d+)?\%/)
+        matches[:success_rate] = line.match(/(\d+(\.\d+)?)\%/)
       end
     end
 
@@ -168,11 +169,19 @@ module RunK6
     results["ttfb_p90"] = matches[:ttfb_p90][2]
     results["ttfb_p90_threshold"] = matches[:ttfb_threshold][1]
     results["ttfb_p95"] = matches[:ttfb_p95][2]
-    results["success_rate"] = matches[:success_rate][0]
-    results["success_rate_threshold"] = matches[:success_rate_threshold][0]
+    results["success_rate"] = matches[:success_rate][1]
+    results["success_rate_threshold"] = matches[:success_rate_threshold][1]
     results["result"] = status
+    results["score"] = ((matches[:rps_result][1].to_f / matches[:rps_target][1].to_f) * matches[:success_rate][1].to_f).round(2)
 
     results
+  end
+
+  def get_results_score(results:, env_vars:)
+    scores = results.reject { |result| result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
+    return nil if scores.length.zero?
+
+    (scores.sum / scores.length).round(2)
   end
 
   def generate_results_summary(results_json:)
@@ -183,6 +192,9 @@ module RunK6
       * Date:                       #{results_json['date']}
       * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}
+
+      █ Overall Results Score: #{results_json['overall_result_score']}%
+
     DOC
   end
 
@@ -194,7 +206,7 @@ module RunK6
       tp_result["RPS Result"] = "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)"
       tp_result["TTFB Avg"] = "#{test_result['ttfb_avg']}ms"
       tp_result["TTFB P90"] = "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)"
-      tp_result["Req Status"] = "#{test_result['success_rate']} (>#{test_result['success_rate_threshold']})"
+      tp_result["Req Status"] = "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)"
 
       test_result_str = test_result['result'] ? "Passed" : "FAILED"
       test_result_str << '¹' if test_result['known_issue']

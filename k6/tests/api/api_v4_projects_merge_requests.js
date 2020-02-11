@@ -12,7 +12,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProjec
 
 // Endpoint is below target threshold. Custom limits applied until fixed.
 export let rpsThresholds = getRpsThresholds(0.8)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let ttfbThreshold = getTtfbThreshold(2000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
