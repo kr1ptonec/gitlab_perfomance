@@ -48,7 +48,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/blob/master/README.md?format=json&viewer=rich`, null, {tags: {endpoint: 'README.md', controller: 'Projects::BlobController', action: 'show'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }

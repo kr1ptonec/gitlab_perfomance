@@ -48,7 +48,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/groups/${project['group']}/-/children.json`, null, {tags: {endpoint: '/children.json', controller: 'Groups::ChildrenController', action: 'index'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }

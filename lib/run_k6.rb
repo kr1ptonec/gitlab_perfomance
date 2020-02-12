@@ -134,51 +134,39 @@ module RunK6
   end
 
   def parse_k6_results(status:, output:)
-    matches = {}
-    matches[:success] = status
+    results = {}
 
     output.each do |line|
       case line
       when /^\s*script: /
-        matches[:name] = line.match(/([a-z0-9_]*).js/)
+        results["name"] = line.match(/([a-z0-9_]*).js/)[1]
       when /http_req_waiting/
-        matches[:ttfb_avg] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)
-        matches[:ttfb_p90] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)
-        matches[:ttfb_p95] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)
+        results["ttfb_avg"] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)[2]
+        results["ttfb_p90"] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)[2]
+        results["ttfb_p95"] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[2]
       when /vus_max/
-        matches[:rps_target] = line.match(/max=(\d+)/)
+        results["rps_target"] = line.match(/max=(\d+)/)[1]
       when /RPS Threshold:/
-        matches[:rps_threshold] = line.match(/(\d+\.\d+)\/s/)
+        results["rps_threshold"] = line.match(/(\d+\.\d+)\/s/)[1]
       when /TTFB P90 Threshold:/
-        matches[:ttfb_threshold] = line.match(/(\d+)ms/)
+        results["ttfb_p90_threshold"] = line.match(/(\d+)ms/)[1]
       when /http_reqs/
-        matches[:rps_result] = line.match(/(\d+(\.\d+)?)(\/s)/)
+        results["rps_result"] = line.match(/(\d+(\.\d+)?)(\/s)/)[1].to_f.round(2).to_s
       when /Success Rate Threshold/
-        matches[:success_rate_threshold] = line.match(/(\d+(\.\d+)?)\%/)
+        results["success_rate_threshold"] = line.match(/(\d+(\.\d+)?)\%/)[1]
       when /successful_requests/
-        matches[:success_rate] = line.match(/(\d+(\.\d+)?)\%/)
+        results["success_rate"] = line.match(/(\d+(\.\d+)?)\%/)[1]
       end
     end
 
-    results = {}
-    results["name"] = matches[:name][1]
-    results["rps_target"] = matches[:rps_target][1]
-    results["rps_result"] = matches[:rps_result][1].to_f.round(2).to_s
-    results["rps_threshold"] = matches[:rps_threshold][1]
-    results["ttfb_avg"] = matches[:ttfb_avg][2]
-    results["ttfb_p90"] = matches[:ttfb_p90][2]
-    results["ttfb_p90_threshold"] = matches[:ttfb_threshold][1]
-    results["ttfb_p95"] = matches[:ttfb_p95][2]
-    results["success_rate"] = matches[:success_rate][1]
-    results["success_rate_threshold"] = matches[:success_rate_threshold][1]
     results["result"] = status
-    results["score"] = ((matches[:rps_result][1].to_f / matches[:rps_target][1].to_f) * matches[:success_rate][1].to_f).round(2)
+    results["score"] = ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) if [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?)
 
     results
   end
 
   def get_results_score(results:, env_vars:)
-    scores = results.reject { |result| result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
+    scores = results.reject { |result| result['score'].nil? || result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
     return nil if scores.length.zero?
 
     (scores.sum / scores.length).round(2)
@@ -200,12 +188,13 @@ module RunK6
   def generate_results_table(results_json:)
     tp_results = results_json['test_results'].map do |test_result|
       tp_result = {}
-      tp_result["Name"] = test_result['name']
-      tp_result["RPS"] = "#{test_result['rps_target']}/s"
-      tp_result["RPS Result"] = "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)"
-      tp_result["TTFB Avg"] = "#{test_result['ttfb_avg']}ms"
-      tp_result["TTFB P90"] = "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)"
-      tp_result["Req Status"] = "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)"
+
+      tp_result["Name"] = test_result['name'] || '-'
+      tp_result["RPS"] = test_result['rps_target'] ? "#{test_result['rps_target']}/s" : '-'
+      tp_result["RPS Result"] = [test_result['rps_target'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
+      tp_result["TTFB Avg"] = test_result['ttfb_avg'] ? "#{test_result['ttfb_avg']}ms" : '-'
+      tp_result["TTFB P90"] = [test_result['ttfb_p90'], test_result['ttfb_p90_threshold']].none?(&:nil?) ? "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)" : '-'
+      tp_result["Req Status"] = [test_result['success_rate'], test_result['success_rate_threshold']].none?(&:nil?) ? "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)" : '-'
 
       test_result_str = test_result['result'] ? "Passed" : "FAILED"
       test_result_str << '¹' if test_result['known_issue']

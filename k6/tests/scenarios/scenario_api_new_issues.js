@@ -44,7 +44,7 @@ export default function (data) {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let formdata = { title: `issue-${__VU}-${__ITER}` };
     let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/issues`, formdata, params);
-    /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+    /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
 

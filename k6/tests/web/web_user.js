@@ -48,7 +48,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/users/${project['user']}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }

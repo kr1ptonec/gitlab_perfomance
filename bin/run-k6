@@ -87,6 +87,9 @@ rescue Interrupt
 rescue ArgumentError => e
   warn Rainbow(e.message).yellow
   next
+rescue NoMethodError
+  warn Rainbow("Test failed and output couldn't be parsed").yellow
+  next
 rescue StandardError => e
   warn Rainbow("Test failed: #{e.message}").red
   aggregated_success = false

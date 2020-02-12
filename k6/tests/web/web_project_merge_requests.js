@@ -48,7 +48,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests?state=all`, null, {tags: {endpoint: 'merge_requests?state=all', controller: 'Projects::MergeRequestsController', action: 'index'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }

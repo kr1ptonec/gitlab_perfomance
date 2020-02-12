@@ -52,7 +52,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }

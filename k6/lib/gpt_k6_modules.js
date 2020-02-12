@@ -6,7 +6,8 @@ export function logError(res) {
 
   let error;
   try {
-    error = JSON.parse(res.body)['message']
+    let message = JSON.parse(res.body)['message']
+    error = typeof message === 'object' ? JSON.stringify(message) : message
   } catch (e) {
     error = res.body
   }

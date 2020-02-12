@@ -49,7 +49,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/branches/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::MergeRequestsController', action: 'show'}}]
     ]);
     responses.forEach(function(res) {
-      /20(0|1)/.test(res.status) ? successRate.add(true) : successRate.add(false) && logError(res);
+      /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
   });
 }
