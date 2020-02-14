@@ -8,7 +8,7 @@ import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, CreateProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
@@ -34,7 +34,7 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   let groupId = createGroup("group-api-v4-new-issues");
-  let projectId = CreateProject(groupId)
+  let projectId = createProject(groupId);
   let data = { groupId, projectId };
   return data;
 }
