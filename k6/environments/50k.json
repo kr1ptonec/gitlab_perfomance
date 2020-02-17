@@ -41,7 +41,7 @@
       "user": "root"
     },
     {
-      "name": "gitlabhq5",
+      "name": "gitlabhq4",
       "group": "qa-perf-testing",
       "commit_sha": "0a99e022",
       "commit_sha_signed": "6526e91f",
