@@ -35,7 +35,7 @@ export function setup() {
 }
 
 export default function() {
-  group("Git - Refs List", function() {
+  group("Git - Get Refs List", function() {
     let project = selectProject(projects);
 
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}.git/info/refs?service=git-upload-pack`);

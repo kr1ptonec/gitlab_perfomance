@@ -4,6 +4,7 @@ require 'chronic_duration'
 require 'test_info'
 require 'down/http'
 require 'fileutils'
+require 'git_test'
 require 'gpt_common'
 require 'json'
 require 'open3'
@@ -77,7 +78,7 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-')
+  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-', env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -102,6 +103,8 @@ module RunK6
 
     tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
     tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
+
+    GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
 
     tests
   end
