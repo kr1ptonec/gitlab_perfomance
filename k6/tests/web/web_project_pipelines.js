@@ -10,10 +10,10 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 2
-export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1000)
+export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6)
+export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(4000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

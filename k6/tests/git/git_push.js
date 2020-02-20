@@ -12,9 +12,9 @@ import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THRESHOLD);
-export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THRESHOLD);
-export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THRESHOLD);
+export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let ttfbThreshold = getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests");
 export let options = {
