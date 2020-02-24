@@ -14,7 +14,7 @@ if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
 export let rpsThresholds = getRpsThresholds(0.2)
-export let ttfbThreshold = getTtfbThreshold(4000)
+export let ttfbThreshold = getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
