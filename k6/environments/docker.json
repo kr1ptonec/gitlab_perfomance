@@ -7,18 +7,25 @@
     {
       "name": "gitlabhq",
       "group": "qa-perf-testing",
+      "branch": "10-0-stable",
       "commit_sha": "0a99e022",
       "commit_sha_signed": "6526e91f",
       "compare_commits_sha": ["aec887ab", "5bfb7558"],
-      "git_push_data": {
-        "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
-        "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
-        "branch_name": "12-1-auto-deploy-20190714"
-      },
-      "branch": "10-0-stable",
       "file_path": "qa%2fqa%2erb",
+      "git_push_data": {
+        "branch_current_head_sha": "efc9f72c9ffaa76f966b8c162a9d184d7aa1ff18",
+        "branch_new_head_sha": "b028afaede664580e04cddf0dd98faeff28ffbef",
+        "branch_name": "12-1-auto-deploy-0011201"
+      },
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958",
+      "search_global": {
+        "projects": "gitlab",
+        "issues": "broken",
+        "merge_requests": "update",
+        "milestones": "2.6",
+        "users": "root"
+      },
       "user": "root"
     }
   ]

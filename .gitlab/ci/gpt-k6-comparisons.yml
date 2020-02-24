@@ -48,7 +48,7 @@ k6-11-compare:
 k6-12-compare:
   extends: .k6-compare-base
   # Increase this number every month by the 23rd to cover the new 12.x release
-  parallel: 8
+  parallel: 9
   variables:
     MAJOR_VERSION: 12
     MINOR_VERSION_START: 0
