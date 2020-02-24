@@ -115,6 +115,6 @@ export function prepareGitPushData(projects) {
 export function updateProjectPipelinesSetting(project, state) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata = { builds_access_level: state };
-  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/rojects/${project['group']}%2F${project['name']}`, formdata, params);
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`, formdata, params);
   /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting was ${state}`) : (logError(res), fail(`Error with Project Pipelines setting update.`));
 }
