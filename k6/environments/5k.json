@@ -19,13 +19,6 @@
       },
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958",
-      "search_global": {
-        "projects": "gitlab",
-        "issues": "broken",
-        "merge_requests": "update",
-        "milestones": "2.6",
-        "users": "root"
-      },
       "user": "root"
     },
     {
@@ -43,13 +36,6 @@
       },
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958",
-      "search_global": {
-        "projects": "gitlab",
-        "issues": "broken",
-        "merge_requests": "update",
-        "milestones": "2.6",
-        "users": "root"
-      },
       "user": "root"
     }
   ]
