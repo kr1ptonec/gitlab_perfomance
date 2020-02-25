@@ -17,7 +17,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.26.0'
+    k6_version = ENV['K6_VERSION'] || '0.26.1'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
@@ -176,16 +176,16 @@ module RunK6
   end
 
   def generate_results_summary(results_json:)
-    <<~DOC
+    results_summary = <<~DOC
       * Environment:                #{results_json['name'].capitalize}
       * Environment Version:        #{results_json['version']} `#{results_json['revision']}`
       * Option:                     #{results_json['option']}
       * Date:                       #{results_json['date']}
       * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}
-
-      █ Overall Results Score: #{results_json['overall_result_score']}%
     DOC
+    results_summary += "\n█ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
+    results_summary
   end
 
   def generate_results_table(results_json:)
