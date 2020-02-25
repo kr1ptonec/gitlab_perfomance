@@ -8,7 +8,7 @@ import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData } from "../../lib/gpt_git_functions.js";
+import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting } from "../../lib/gpt_git_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
@@ -24,7 +24,8 @@ export let options = {
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   },
   rps: gitProtoRps,
-  stages: gitProtoStages
+  stages: gitProtoStages,
+  teardownTimeout: '30s'
 };
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
@@ -39,9 +40,11 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD) * 100}%`)
 
   // Test should only run if specified commits exist in the project
+  // Also disable Pipelines for the project during the test to prevent them being triggered en masse.
   projects.forEach(project => {
     checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
     checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
+    updateProjectPipelinesSetting(project, "disabled");
   });
 }
 
@@ -69,8 +72,8 @@ export default function () {
 }
 
 export function teardown() {
-  // Ensure that all branches were restored to the original `branch_current_head_sha` 
   projects.forEach(project => {
+    // Ensure that all branches were restored to the original `branch_current_head_sha` 
     let params = {
       headers: {
         "Accept": "application/x-git-receive-pack-result",
@@ -78,5 +81,7 @@ export function teardown() {
       }
     };
     http.post(`${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
+    // Reenable Pipelines in the Project
+    updateProjectPipelinesSetting(project, "enabled");
   });
 }
