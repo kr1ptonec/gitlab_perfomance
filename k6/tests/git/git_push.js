@@ -40,7 +40,7 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD) * 100}%`)
 
   // Test should only run if specified commits exist in the project
-  // and if Project Pipelines are disabled. Otherwise git push will trigger pipelines en masse.
+  // Also disable Pipelines for the project during the test to prevent them being triggered en masse.
   projects.forEach(project => {
     checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
     checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
