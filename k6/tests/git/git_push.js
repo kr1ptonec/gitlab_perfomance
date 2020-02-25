@@ -81,7 +81,7 @@ export function teardown() {
       }
     };
     http.post(`${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
-    // Enable Pipelines in the Project
+    // Reenable Pipelines in the Project
     updateProjectPipelinesSetting(project, "enabled");
   });
 }
