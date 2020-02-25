@@ -138,7 +138,6 @@ To intercept git requests and learn more about the objects set up this configura
 * `ERROR: Git push data files not found: 'GoError: stat /k6/tests/git/push_data/data/set_old_head-gitlabhq-8606c89683c913641243fc667edeb90600fe1a0e.bundle: no such file or directory'`
 
   - No git push binary data files found, please ensure data was generated in [`data`](data) folder for commits that you specified for the environment.
+* `Error with Project Pipelines setting update.`
 
-  * `Error with Project Pipelines setting update.`
-
-  - Ensure that Access Token grants the permission to update projects settings. Before git push test, Projects Pipeline setting should be disabled, otherwise git push will trigger pipelines en masse.
+  - Ensure that Access Token grants the permission to update projects settings. The `git_push` test requires this as it will turn off pipelines during it's run (and back on after) to prevent any being triggered en masse.
