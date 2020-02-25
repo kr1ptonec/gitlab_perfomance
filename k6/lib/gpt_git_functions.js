@@ -111,7 +111,6 @@ export function prepareGitPushData(projects) {
   return projects;
 }
 
-// Project Pipelines should be disabled before git push. Otherwise git push will trigger pipelines en masse.
 export function updateProjectPipelinesSetting(project, state) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata = { builds_access_level: state };
