@@ -46,14 +46,17 @@ export function adjustStageVUs(modifier=1.0) {
   return stages;
 }
 
+export function checkProjectKeys(project, keys) {
+  return keys.every(key => Object.prototype.hasOwnProperty.call(project, key));
+}
+
 // Returns projects that contain all keys (if passed) or exits if none found
 export function getProjects(keys=[]) {
   let projects = JSON.parse(__ENV.ENVIRONMENT_PROJECTS);
-  let check_project_key = (project, keys) => keys.every(key => Object.prototype.hasOwnProperty.call(project, key));
 
   let projects_with_keys = {};
   if (Array.isArray(keys) && keys.length > 0) {
-    projects_with_keys = projects.filter(project => check_project_key(project, keys));
+    projects_with_keys = projects.filter(project => checkProjectKeys(project, keys));
   }
 
   if (projects_with_keys.length == 0) fail('No projects found with required keys for test. Exiting...');

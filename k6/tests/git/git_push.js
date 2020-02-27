@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting } from "../../lib/gpt_git_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
@@ -42,6 +42,7 @@ export function setup() {
   // Test should only run if specified commits exist in the project
   // Also disable Pipelines for the project during the test to prevent them being triggered en masse.
   projects.forEach(project => {
+    checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]);
     checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
     checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
     updateProjectPipelinesSetting(project, "disabled");
