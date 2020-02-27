@@ -80,10 +80,7 @@ module RunK6
 
   def prepare_tests(tests:, env_vars:)
     # Prepare specific test data
-    git_push_prepare = GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
-    tests.reject! { |test| test.include? 'git_push' } unless git_push_prepare
-
-    tests
+    GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
   def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-', env_vars: {})
@@ -112,7 +109,7 @@ module RunK6
     tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
     tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
 
-    prepare_tests(tests: tests, env_vars: env_vars)
+    tests
   end
 
   def run_k6(k6_path:, env_vars:, options_file:, test_file:, gpt_version:)

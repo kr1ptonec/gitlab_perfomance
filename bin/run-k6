@@ -60,6 +60,7 @@ env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], read_only: opts[:read_only], env_version: env_version['version'], env_vars: env_vars)
+RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
 results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
 results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_version['version'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_version['version'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
