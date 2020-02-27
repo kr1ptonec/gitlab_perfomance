@@ -3,7 +3,7 @@ import http from "k6/http";
 import { fail } from "k6";
 import { logError } from "./gpt_k6_modules.js";
 
-export function createGroup(groupName) {
+export function createGroup(groupName, parentGroupId = 0) {
   let groupId = searchForGroup(groupName);
   if (groupId) { deleteGroup(groupId) }
 
@@ -13,6 +13,11 @@ export function createGroup(groupName) {
     path: `${groupName}-${Date.now()}`,
     visibility: "public"
   };
+
+  if (Math.abs(parentGroupId) > 0) {
+    formdata['parent_id'] = parentGroupId;
+  }
+
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/groups`, formdata, params);
   groupId = JSON.parse(res.body)['id'];
   /20(0|1)/.test(res.status) ? console.log(`Group #${groupId} was created`) : (logError(res), fail("Group was not created"));
@@ -42,7 +47,7 @@ export function searchForGroup(groupName) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
   let foundGroup = JSON.parse(res.body)[0];
-  let groupId = foundGroup && foundGroup.id;  
+  let groupId = foundGroup && foundGroup.id;
   groupId ? console.log(`Group contaning '${groupName}' name already exists with id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
   return groupId;
 }
