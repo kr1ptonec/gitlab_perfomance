@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting } from "../../lib/gpt_git_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
@@ -30,6 +30,10 @@ export let options = {
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
 export let projects = getProjects(['name', 'group', 'git_push_data']);
+
+projects = projects.filter(project => checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]));
+if (projects.length == 0) fail('No projects found with required keys for test. Exiting...');
+
 projects = prepareGitPushData(projects)
 
 export function setup() {

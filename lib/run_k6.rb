@@ -78,6 +78,11 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
+  def prepare_tests(tests:, env_vars:)
+    # Prepare specific test data
+    GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
+  end
+
   def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-', env_vars: {})
     tests = []
     test_paths.each do |test_path|
@@ -103,8 +108,6 @@ module RunK6
 
     tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
     tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
-
-    GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
 
     tests
   end

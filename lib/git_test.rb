@@ -12,6 +12,8 @@ module GitTest
   def prepare_git_push_data(env_vars:)
     projects = JSON.parse(env_vars["ENVIRONMENT_PROJECTS"])
     projects.each do |project|
+      return false if project.dig(:git_push_data).nil? || %w[branch_current_head_sha","branch_new_head_sha","branch_name"].all? { |subkey| project["git_push_data"].key?(subkey) }
+
       branch_current_head = project["git_push_data"]["branch_current_head_sha"]
       branch_new_head = project["git_push_data"]["branch_new_head_sha"]
       branch_name =  project["git_push_data"]["branch_name"]
