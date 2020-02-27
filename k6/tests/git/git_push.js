@@ -30,6 +30,10 @@ export let options = {
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
 export let projects = getProjects(['name', 'group', 'git_push_data']);
+
+projects = projects.filter(project => checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]));
+if (projects.length == 0) fail('No projects found with required keys for test. Exiting...');
+
 projects = prepareGitPushData(projects)
 
 export function setup() {
@@ -42,7 +46,6 @@ export function setup() {
   // Test should only run if specified commits exist in the project
   // Also disable Pipelines for the project during the test to prevent them being triggered en masse.
   projects.forEach(project => {
-    checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]);
     checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
     checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
     updateProjectPipelinesSetting(project, "disabled");
