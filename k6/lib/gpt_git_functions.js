@@ -104,7 +104,7 @@ export function prepareGitPushData(projects) {
         branch_set_new_head: open(`./push_data/data/set_new_head-${project['name']}-${project['git_push_data']['branch_new_head_sha']}.bundle`, "b")
       }
     } catch (error) {
-      console.error(`⚠️ ERROR: Git push data files not found: '${error}'`);
+      console.error(`⚠️ ERROR: Git push data files not found. This is likely due to a data generation issue. Contact GitLab quality team for further support.`);
       project.data = false
     }
   });
