@@ -8,7 +8,7 @@ module TestInfo
   # Get
 
   def get_known_issues(k6_dir)
-    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, read_only: false)
+    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
 
     aggregated_issues = []
     tests.each do |test|
@@ -64,16 +64,16 @@ module TestInfo
 
   # Check
 
-  def test_is_read_only?(test_file)
-    read_only = true
+  def test_has_unsafe_requests?(test_file)
     write_methods = %w[post put del patch]
     File.open(test_file, "r") do |test_file_content|
       test_file_content.each_line do |line|
         line_has_write_method = write_methods.any? { |write_method| line.include?("http.#{write_method}") }
-        read_only = false if line_has_write_method
+        return true if line_has_write_method
       end
     end
-    read_only
+
+    false
   end
 
   def test_supported_by_version?(test_file, gitlab_version_string)

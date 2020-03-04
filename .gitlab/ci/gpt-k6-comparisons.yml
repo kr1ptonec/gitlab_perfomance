@@ -20,7 +20,7 @@
     - echo "registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
     - bin/run-gitlab-docker --image registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0
     - sleep $(( 30 * CI_NODE_INDEX ))
-    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q")
+    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -u $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules

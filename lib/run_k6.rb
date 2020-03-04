@@ -83,7 +83,7 @@ module RunK6
     GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, read_only:, env_version: '-', env_vars: {})
+  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, unsafe:, env_version: '-', env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -106,7 +106,7 @@ module RunK6
       tests.reject! { |test| test.include? exclude }
     end
 
-    tests.select! { |test| TestInfo.test_is_read_only?(test) } if read_only
+    tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
     tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
 
     tests
