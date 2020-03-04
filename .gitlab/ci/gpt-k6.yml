@@ -51,7 +51,7 @@ k6:
   stage: test
   extends: .k6-base
   script:
-    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json $([ -n "$QUARANTINED" ] && echo "-q")
+    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -u $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules

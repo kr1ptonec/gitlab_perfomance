@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 import http from "k6/http";
-import { fail } from "k6";
+import { fail, sleep } from "k6";
 import { logError } from "./gpt_k6_modules.js";
 
 //------------------- Git Pull-------------------//
@@ -116,4 +116,19 @@ export function updateProjectPipelinesSetting(project, state) {
   let formdata = { builds_access_level: state };
   let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`, formdata, params);
   /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting was ${state}`) : (logError(res), fail(`Error with Project Pipelines setting update.`));
+}
+
+export function waitForGitSidekiqQueue() {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res, queueSize;
+
+  console.log('Waiting for all Sidekiq enqueued jobs to finish before proceeding...')
+
+  do {
+    sleep(5);
+    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/sidekiq/job_stats`, params);
+    queueSize = JSON.parse(res.body)['jobs']['enqueued'];
+    queueSize > 0 ? console.log(`Sidekiq enqueue is currently ${queueSize}. Waiting...`) : console.log(`Sidekiq enqueue is ${queueSize}. Proceeding...`)
+  }
+  while (queueSize > 0);
 }

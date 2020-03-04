@@ -16,7 +16,7 @@ require 'tmpdir'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_version = '1.2.0'
+gpt_version = '1.2.1'
 puts Rainbow("GitLab Performance Tool (GPT) v#{gpt_version} - Performance test runner for GitLab environments based on k6").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -32,7 +32,7 @@ opts = Optimist.options do
   opt :latency, "Specify a network latency time in MS to increase applicable test thresholds by. Only typically used in slow network environments.", type: :integer, default: 0
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings, default: []
-  opt :read_only, "Enable read-only mode to run tests with only GET requests", type: :flag, default: false
+  opt :unsafe, "Include any tests that perform unsafe requests (POST, PUT, DELETE, PATCH)", type: :flag, default: false
   banner "\nEnvironment Variable(s):"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API, read_repository, and write_repository permissions. (Default: nil)"
   banner "\nExamples:"
@@ -59,7 +59,7 @@ env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file, 
 env_version = RunK6.get_env_version(env_vars: env_vars)
 start_time = Time.now
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], read_only: opts[:read_only], env_version: env_version['version'], env_vars: env_vars)
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], env_version: env_version['version'], env_vars: env_vars)
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
 results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"

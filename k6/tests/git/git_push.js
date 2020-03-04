@@ -8,7 +8,7 @@ import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting } from "../../lib/gpt_git_functions.js";
+import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting, waitForGitSidekiqQueue } from "../../lib/gpt_git_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
@@ -25,7 +25,7 @@ export let options = {
   },
   rps: gitProtoRps,
   stages: gitProtoStages,
-  teardownTimeout: '30s'
+  teardownTimeout: '600s'
 };
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
@@ -60,7 +60,7 @@ export default function () {
       let refsListResponse = getRefsListGitPush(authEnvUrl, project);
       /20(0|1)/.test(refsListResponse.status) ? successRate.add(true) : (successRate.add(false), logError(refsListResponse));
     });
-    
+
     if (project.data) {
       group("Git - Git Push Data", function () {
         let pushResponses = pushRefsData(authEnvUrl, project);
@@ -76,6 +76,7 @@ export default function () {
 }
 
 export function teardown() {
+  waitForGitSidekiqQueue();
   projects.forEach(project => {
     // Ensure that all branches were restored to the original `branch_current_head_sha` 
     let params = {
