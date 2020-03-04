@@ -63,6 +63,10 @@ export function getProjects(keys=[]) {
   return projects_with_keys
 }
 
+export function getGitPushData() {
+  return JSON.parse(__ENV.GIT_PUSH_DATA);
+}
+
 export function selectProject(projects) {
   return projects.length == 1 ? projects[0] : projects[projects.length * Math.random() << 0];
 }

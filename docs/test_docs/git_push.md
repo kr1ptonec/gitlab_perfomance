@@ -47,7 +47,7 @@ The POST request includes the send-pack output and the packfile as its payload. 
 
 ## Git Push test
 
-Specify `branch_current_head_sha`, `branch_new_head_sha` and `branch_name` in the Environment file to automatically generate binary data for git push test. The size of the commits should be tuned to your environment's requirements.
+Before the test a new project will be [created](https://docs.gitlab.com/ee/api/projects.html#create-project) using `import_url` repository to import the initial project data. Specify `branch_current_head_sha`, `branch_new_head_sha` and `branch_name` in the Environment file to automatically generate binary data for git push test. The size of the commits should be tuned to your environment's requirements.
 
 Git push test can load in two modes:
 1. [Git push commits to the existing branch](#git-push-commits-to-the-existing-branch):

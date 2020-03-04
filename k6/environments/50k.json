@@ -72,6 +72,12 @@
       "mr_discussions_iid": "6958",
       "user": "root"
     }
-  ]
+  ],
+  "git_push_data": {
+    "import_url": "https://gitlab.com/gpt-bot/performance.git",
+    "branch_current_head_sha": "1ff9883ebc8c0f0be01f919b5f45924dec456ed0",
+    "branch_new_head_sha": "85a0dbc410185db5a051a08caf74239fafe59aaa",
+    "branch_name": "gy-nfs-update"
+  }
 }
   

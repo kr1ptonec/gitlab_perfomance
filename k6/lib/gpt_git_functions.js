@@ -63,7 +63,7 @@ export function getLargeBranchName(project) {
 
 // https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols#_uploading_data
 // The client initiates a `send-pack` process that connects to a `receive-pack`
-export function getRefsListGitPush(authEnvUrl, project) {
+export function getRefsListGitPush(authEnvUrl, projectPathWithNamespace) {
   let params = {
     headers: {
       "Accept": "*/*",
@@ -71,12 +71,12 @@ export function getRefsListGitPush(authEnvUrl, project) {
       "Pragma": "no-cache"
     }
   };
-  let response = http.get(`${authEnvUrl}/${project['group']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
+  let response = http.get(`${authEnvUrl}/${projectPathWithNamespace}.git/info/refs?service=git-receive-pack`, params);
   return response;
 }
 
 // Post request to push objects that `receive-pack` process needs 
-export function pushRefsData(authEnvUrl, project) {
+export function pushRefsData(authEnvUrl, projectPathWithNamespace, gitPushData) {
   let params = {
     headers: {
       "Accept": "application/x-git-receive-pack-result",
@@ -84,51 +84,51 @@ export function pushRefsData(authEnvUrl, project) {
     }
   };
   let responses = http.batch([
-    ["POST", `${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_new_head, params],
-    ["POST", `${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params]
+    ["POST", `${authEnvUrl}/${projectPathWithNamespace}.git/git-receive-pack`, gitPushData.data.branch_set_new_head, params],
+    ["POST", `${authEnvUrl}/${projectPathWithNamespace}.git/git-receive-pack`, gitPushData.data.branch_set_old_head, params]
   ]);
   return responses;
 }
 
-export function checkCommitExists(project, commit_sha) {
+export function checkCommitExists(projectId, commit_sha) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/commits/${commit_sha}`, params);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/commits/${commit_sha}`, params);
   /20(0|1)/.test(res.status) ? console.log(`Commit #${commit_sha} exists`) : (logError(res), fail(`Commit #${commit_sha} does not exist or user doesn't have developer access to the project. Failing the git push test. ⚠️ Please refer to documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md`));
 }
 
-export function prepareGitPushData(projects) {
-  projects.forEach(project => {
-    try {
-      project.data = {
-        branch_set_old_head: open(`./push_data/data/set_old_head-${project['name']}-${project['git_push_data']['branch_current_head_sha']}.bundle`, "b"),
-        branch_set_new_head: open(`./push_data/data/set_new_head-${project['name']}-${project['git_push_data']['branch_new_head_sha']}.bundle`, "b")
-      }
-    } catch (error) {
-      console.error(`⚠️ ERROR: Git push data files not found. This is likely due to a data generation issue. Contact GitLab quality team for further support.`);
-      project.data = false
+export function prepareGitPushData(gitPushData) {
+  try {
+    gitPushData.data = {
+      branch_set_old_head: open(`./push_data/data/set_old_head-${gitPushData['branch_current_head_sha']}.bundle`, "b"),
+      branch_set_new_head: open(`./push_data/data/set_new_head-${gitPushData['branch_new_head_sha']}.bundle`, "b")
     }
-  });
-  return projects;
+  } catch (error) {
+    console.error(`⚠️ ERROR: Git push data files not found. This is likely due to a data generation issue. Contact GitLab quality team for further support.`);
+    gitPushData.data = false
+  }
+  return gitPushData;
 }
 
-export function updateProjectPipelinesSetting(project, state) {
+export function getProjectPathWithNamespace(projectId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let formdata = { builds_access_level: state };
-  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`, formdata, params);
-  /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting was ${state}`) : (logError(res), fail(`Error with Project Pipelines setting update.`));
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, params);
+  let projectPathWithNamespace = JSON.parse(res.body)['path_with_namespace'];
+  /20(0|1)/.test(res.status) ? console.log(`Project pathhname is ${projectPathWithNamespace}`) : logError(res);
+  return projectPathWithNamespace;
 }
 
-export function waitForGitSidekiqQueue() {
+export function waitForProjectImport(projectId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res, queueSize;
+  let res, import_status;
 
-  console.log('Waiting for all Sidekiq enqueued jobs to finish before proceeding...')
+  console.log('Waiting for project import...')
 
   do {
     sleep(5);
-    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/sidekiq/job_stats`, params);
-    queueSize = JSON.parse(res.body)['jobs']['enqueued'];
-    queueSize > 0 ? console.log(`Sidekiq enqueue is currently ${queueSize}. Waiting...`) : console.log(`Sidekiq enqueue is ${queueSize}. Proceeding...`)
+    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/import`, params);
+    import_status = JSON.parse(res.body)['import_status'];
+    import_status === "finished" ? console.log(`Project import status is ${import_status}. Proceeding...`) : console.log(`Project import status is ${import_status}. Waiting...`)
   }
-  while (queueSize > 0);
+  while (import_status != "finished");
+  // sleep(10);
 }

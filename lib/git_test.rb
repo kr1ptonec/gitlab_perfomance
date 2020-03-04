@@ -10,32 +10,31 @@ module GitTest
   # It combines existing commits and branch with hardcoded binary data
   # More information: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md#how-does-it-work
   def prepare_git_push_data(env_vars:)
-    projects = JSON.parse(env_vars["ENVIRONMENT_PROJECTS"])
-    projects.each do |project|
-      return false if project.dig('git_push_data').nil? || %w[branch_current_head_sha","branch_new_head_sha","branch_name"].all? { |subkey| project["git_push_data"].key?(subkey) }
+    push_data = JSON.parse(env_vars["GIT_PUSH_DATA"])
 
-      branch_current_head = project["git_push_data"]["branch_current_head_sha"]
-      branch_new_head = project["git_push_data"]["branch_new_head_sha"]
-      branch_name =  project["git_push_data"]["branch_name"]
+    return false unless %w[branch_current_head_sha branch_new_head_sha branch_name].all? { |subkey| push_data.key?(subkey) }
 
-      git_data_dir = Pathname.new(File.expand_path('../k6/tests/git/push_data', __dir__)).relative_path_from(Dir.pwd)
-      set_new_head = "#{branch_current_head} #{branch_new_head} refs/heads/#{branch_name}"
-      set_old_head = "#{branch_new_head} #{branch_current_head} refs/heads/#{branch_name}"
-      binary_data = File.read("#{git_data_dir}/binary_data.bundle")
+    branch_current_head = push_data["branch_current_head_sha"]
+    branch_new_head = push_data["branch_new_head_sha"]
+    branch_name = push_data["branch_name"]
 
-      client_capabilities = binary_data.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').match(/(.*)0000PACK/)[1]
-      offset = 4 # 4 symbols of pkt-line length
-      pkt_line_length = "00#{(set_new_head.size + client_capabilities.size + offset).to_s(16)}"
+    git_data_dir = Pathname.new(File.expand_path('../k6/tests/git/push_data', __dir__)).relative_path_from(Dir.pwd)
+    set_new_head = "#{branch_current_head} #{branch_new_head} refs/heads/#{branch_name}"
+    set_old_head = "#{branch_new_head} #{branch_current_head} refs/heads/#{branch_name}"
+    binary_data = File.read("#{git_data_dir}/binary_data.bundle")
 
-      set_new_head_data = "#{pkt_line_length}#{set_new_head}#{binary_data}"
-      set_old_head_data = "#{pkt_line_length}#{set_old_head}#{binary_data}"
+    client_capabilities = binary_data.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '').match(/(.*)0000PACK/)[1]
+    offset = 4 # 4 symbols of pkt-line length
+    pkt_line_length = "00#{(set_new_head.size + client_capabilities.size + offset).to_s(16)}"
 
-      data_path = FileUtils.mkdir_p("#{git_data_dir}/data")[0]
-      set_new_head_data_path = "#{data_path}/set_new_head-#{project['name']}-#{branch_new_head}.bundle"
-      File.write(set_new_head_data_path, set_new_head_data, mode: 'w+')
+    set_new_head_data = "#{pkt_line_length}#{set_new_head}#{binary_data}"
+    set_old_head_data = "#{pkt_line_length}#{set_old_head}#{binary_data}"
 
-      set_old_head_data_path = "#{data_path}/set_old_head-#{project['name']}-#{branch_current_head}.bundle"
-      File.write(set_old_head_data_path, set_old_head_data, mode: 'w+')
-    end
+    data_path = FileUtils.mkdir_p("#{git_data_dir}/data")[0]
+    set_new_head_data_path = "#{data_path}/set_new_head-#{branch_new_head}.bundle"
+    File.write(set_new_head_data_path, set_new_head_data, mode: 'w+')
+
+    set_old_head_data_path = "#{data_path}/set_old_head-#{branch_current_head}.bundle"
+    File.write(set_old_head_data_path, set_old_head_data, mode: 'w+')
   end
 end

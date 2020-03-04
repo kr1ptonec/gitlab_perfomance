@@ -51,6 +51,7 @@ module RunK6
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
     env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
+    env_vars['GIT_PUSH_DATA'] = env_file_vars['git_push_data'].to_json
 
     options_file_vars = JSON.parse(File.read(options_file))
     env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
