@@ -50,8 +50,8 @@ module RunK6
 
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
-    env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment']['config']['latency']
-    env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment']['config']['repo_storage']
+    env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
+    env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment'].dig('config', 'repo_storage')
     env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
 
     options_file_vars = JSON.parse(File.read(options_file))
