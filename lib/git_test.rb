@@ -12,7 +12,7 @@ module GitTest
   def prepare_git_push_data(env_vars:)
     push_data = JSON.parse(env_vars["GIT_PUSH_DATA"])
 
-    return false unless %w[branch_current_head_sha branch_new_head_sha branch_name].all? { |subkey| push_data.key?(subkey) }
+    return false if push_data.nil? || %w[branch_current_head_sha branch_new_head_sha branch_name].none? { |subkey| push_data.key?(subkey) }
 
     branch_current_head = push_data["branch_current_head_sha"]
     branch_new_head = push_data["branch_new_head_sha"]

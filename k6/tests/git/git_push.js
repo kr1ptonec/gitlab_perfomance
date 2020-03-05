@@ -31,6 +31,7 @@ export let options = {
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`);
 export let gitPushData = getGitPushData();
+if (!gitPushData) fail('Git push data not found. Please specify `git_push_data` in Environment file. Skipping...');
 gitPushData = prepareGitPushData(gitPushData);
 
 export let exportFile = prepareExportFile(gitPushData.export_file_path);
