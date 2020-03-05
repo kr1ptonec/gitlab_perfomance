@@ -59,7 +59,7 @@ export function getProjects(keys=[]) {
     projects_with_keys = projects.filter(project => checkProjectKeys(project, keys));
   }
 
-  if (projects_with_keys.length == 0) fail('No projects found with required keys for test. Exiting...');
+  if (projects_with_keys.length == 0) fail(`No projects found with required keys '${keys}' for test in the Environment file. Exiting...`);
   return projects_with_keys
 }
 
