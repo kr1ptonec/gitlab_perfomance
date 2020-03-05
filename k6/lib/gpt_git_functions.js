@@ -109,6 +109,17 @@ export function prepareGitPushData(gitPushData) {
   return gitPushData;
 }
 
+export function prepareExportFile(exportFilePath) {
+  let exportFile;
+  try {
+    exportFile = open(exportFilePath, "b");
+  } catch (error) {
+    console.error(`⚠️ ERROR: Project export file not found in ${exportFilePath}.`);
+    exportFile = false
+  }
+  return exportFile;
+}
+
 export function getProjectPathWithNamespace(projectId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, params);

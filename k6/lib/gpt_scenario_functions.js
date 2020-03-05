@@ -19,7 +19,7 @@ export function createGroup(groupName) {
   return groupId;
 }
 
-export function createProject(groupId, import_url = false) {
+export function createProject(groupId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata = {
     name: `project-api-v4-new-scenario`,
@@ -27,10 +27,24 @@ export function createProject(groupId, import_url = false) {
     visibility: "public",
     builds_access_level: "disabled"
   };
-  if (import_url) { formdata.import_url = import_url }
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
   let projectId = JSON.parse(res.body)['id'];
   /20(0|1)/.test(res.status) ? console.log(`Project #${projectId} was created`) : (logError(res), fail("Project was not created"));
+  return projectId;
+}
+
+export function importProject(groupId, exportFile) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let formdata = {
+    path: `project-api-v4-new-scenario`,
+    namespace: groupId,
+    file: http.file(exportFile, "project_export.tar.gz"),
+    "override_params[builds_access_level]": "disabled",
+    "override_params[visibility]": "public"
+  };
+  let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/import`, formdata, params);
+  let projectId = JSON.parse(res.body)['id'];
+  /20(0|1)/.test(res.status) ? console.log(`Project #${projectId} started import process`) : (logError(res), fail("Project was not imported"));
   return projectId;
 }
 

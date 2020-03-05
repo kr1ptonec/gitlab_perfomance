@@ -47,7 +47,9 @@ The POST request includes the send-pack output and the packfile as its payload. 
 
 ## Git Push test
 
-Before the test a new project will be [created](https://docs.gitlab.com/ee/api/projects.html#create-project) using `import_url` repository to import the initial project data. Specify `branch_current_head_sha`, `branch_new_head_sha` and `branch_name` in the Environment file to automatically generate binary data for git push test. The size of the commits should be tuned to your environment's requirements.
+Before the test a new project will be [imported](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) using `export_file_path` repository to import the initial project data. The project will have pipelines disabled to prevent any jobs being triggered en masse. Currently, we are using our [GitLab Performance Tool](https://gitlab.com/gpt-bot/performance) repository as a benchmark. To use a custom project to import, please update `export_file_path` with the absolute path to your project export file.
+
+Specify `branch_current_head_sha`, `branch_new_head_sha` and `branch_name` in the Environment file to automatically generate binary data for git push test. The size of the commits should be tuned to your environment's requirements.
 
 Git push test can load in two modes:
 1. [Git push commits to the existing branch](#git-push-commits-to-the-existing-branch):
@@ -138,6 +140,7 @@ To intercept git requests and learn more about the objects set up this configura
 * `ERROR: Git push data files not found: 'GoError: stat /k6/tests/git/push_data/data/set_old_head-gitlabhq-8606c89683c913641243fc667edeb90600fe1a0e.bundle: no such file or directory'`
 
   - No git push binary data files found, please ensure data was generated in [`data`](data) folder for commits that you specified for the environment.
-* `Error with Project Pipelines setting update.`
 
-  - Ensure that Access Token grants the permission to update projects settings. The `git_push` test requires this as it will turn off pipelines during it's run (and back on after) to prevent any being triggered en masse.
+* `Project export file not found.`
+
+  - Ensure that [absolute path](https://en.wikipedia.org/wiki/Path_(computing)#Absolute_and_relative_paths) to the project export file is correct.

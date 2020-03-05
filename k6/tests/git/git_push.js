@@ -7,8 +7,8 @@
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, checkProjectKeys, adjustRps, adjustStageVUs, getGitPushData } from "../../lib/gpt_k6_modules.js";
-import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, waitForProjectImport, getProjectPathWithNamespace } from "../../lib/gpt_git_functions.js";
-import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, waitForProjectImport, getProjectPathWithNamespace, prepareExportFile } from "../../lib/gpt_git_functions.js";
+import { createGroup, importProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
@@ -29,8 +29,9 @@ export let options = {
   teardownTimeout: '60s'
 };
 
-export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
+export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`);
 export let gitPushData = getGitPushData();
+export let exportFile = prepareExportFile(gitPushData.export_file_path);
 gitPushData = prepareGitPushData(gitPushData);
 
 if (!checkProjectKeys(gitPushData, ["branch_current_head_sha","branch_new_head_sha","branch_name"])) fail('No projects found with required keys for test. Exiting...');
@@ -42,9 +43,9 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD) * 100}%`)
 
-  // Create project and import it. `http.post` is used - this comment flags the test as unsafe
+  // Create a group and import new project. `http.post` is used - this comment flags the test as unsafe.
   let groupId = createGroup("group-api-v4-git-push");
-  let projectId = createProject(groupId, gitPushData.import_url);
+  let projectId = importProject(groupId, exportFile);
   waitForProjectImport(projectId);
   let projectPathWithNamespace = getProjectPathWithNamespace(projectId);
   let projectData = { groupId, projectId, projectPathWithNamespace };
