@@ -1,7 +1,11 @@
 {
   "environment": {
     "name": "50k",
-    "url": "http://50k.testbed.gitlab.net"
+    "url": "http://50k.testbed.gitlab.net",
+    "config": {
+      "latency": "0",
+      "repo_storage": "gitaly"
+    }
   },
   "projects": [
     {

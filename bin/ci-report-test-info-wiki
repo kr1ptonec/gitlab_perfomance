@@ -10,6 +10,7 @@ require 'table_print'
 
 # Get parent folder(`k6`) path from the current file
 k6_dir = File.expand_path('../k6', __dir__)
+tp.set(:max_width, 800)
 
 @opts = Optimist.options do
   banner "Usage: ci-report-test-info-wiki [options]"
@@ -26,14 +27,9 @@ raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See 
 
 puts "Collecting test info..."
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
-aggregated_tests = []
-tests.each do |test|
-  aggregated_tests << TestInfo.parse_test_docs_for_info(test)
-end
-test_types = aggregated_tests.map { |test| test[:type] }.uniq
-
-puts "Collecting known issues..."
-aggregated_issues = TestInfo.get_known_issues(k6_dir)
+tests_info = TestInfo.get_tests_info(tests)
+test_types = tests_info.map { |test_info| test_info[:type] }.uniq
+tests_with_issues = tests_info.select { |test_info| !test_info['issues'].nil? }
 
 wiki_report_contents = <<~DOC
   GitLab Performance Tool provides several different types of tests:
@@ -45,16 +41,15 @@ wiki_report_contents = <<~DOC
 
   **Note:** Some endpoints have [known issues](#known-issues). These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed.
 DOC
-tp.set(:max_width, 800)
 
 test_types.each do |type|
   wiki_report_contents << "\n## #{type.match?(/api/) ? type.upcase : type.capitalize}\n"
-  aggregated_tests_by_type = aggregated_tests.select { |test| test[:type] == type }
-  wiki_report_contents << TablePrint::Printer.table_print(aggregated_tests_by_type)
+  tests_info_by_type = tests_info.select { |test| test[:type] == type }
+  wiki_report_contents << TablePrint::Printer.table_print(tests_info_by_type, [{ link_md: { display_name: "Tests" } }, :endpoint, :description])
 end
 
 wiki_report_contents << "\n## Known Issues\n"
-wiki_report_contents << TablePrint::Printer.table_print(aggregated_issues)
+wiki_report_contents << TablePrint::Printer.table_print(tests_with_issues, [:name, :issues])
 
 puts "Posting test info to Wiki page..."
 headers = {

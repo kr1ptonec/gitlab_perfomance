@@ -30,7 +30,7 @@ export function getRpsThresholds(modifier=1.0, endpoints=1) {
 }
 
 export function getTtfbThreshold(ttfbBase=__ENV.TTFB_THRESHOLD) {
-  return parseInt(ttfbBase) + parseInt(__ENV.TTFB_LATENCY);
+  return parseInt(ttfbBase) + parseInt(__ENV.ENVIRONMENT_LATENCY);
 }
 
 export function adjustRps(modifier=1.0) {

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group`
 @description: Web - Group Page. <br>Controllers: `GroupsController#show`, `Groups::ChildrenController#index`</br>
+@issue: TBC
 */
 
 import http from "k6/http";
@@ -10,10 +11,10 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 2
-export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
+export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT )
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT* 0.7, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

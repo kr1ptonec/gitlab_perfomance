@@ -1,7 +1,11 @@
 {
   "environment": {
     "name": "localhost",
-    "url": "http://localhost:3000"
+    "url": "http://localhost:3000",
+    "config": {
+      "latency": "0",
+      "repo_storage": "gitaly"
+    }
   },
   "projects": [
     {

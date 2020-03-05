@@ -1,7 +1,11 @@
 {
   "environment": {
     "name": "2k",
-    "url": "http://2k.testbed.gitlab.net"
+    "url": "http://2k.testbed.gitlab.net",
+    "config": {
+      "latency": "0",
+      "repo_storage": "gitaly"
+    }
   },
   "projects": [
     {
