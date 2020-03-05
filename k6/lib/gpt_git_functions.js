@@ -141,5 +141,4 @@ export function waitForProjectImport(projectId) {
     import_status === "finished" ? console.log(`Project import status is ${import_status}. Proceeding...`) : console.log(`Project import status is ${import_status}. Waiting...`)
   }
   while (import_status != "finished");
-  // sleep(10);
 }

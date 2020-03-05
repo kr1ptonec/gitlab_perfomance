@@ -45,7 +45,7 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD) * 100}%`)
 
-  // Create a group and import new project. `http.post` is used - this comment flags the test as unsafe.
+  // Create a group and import a new project. `http.post` is used - this comment flags the test as unsafe.
   let groupId = createGroup("group-api-v4-git-push");
   let projectId = importProject(groupId, exportFile);
   waitForProjectImport(projectId);
