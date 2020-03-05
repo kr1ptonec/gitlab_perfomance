@@ -31,8 +31,10 @@ export let options = {
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`);
 export let gitPushData = getGitPushData();
-export let exportFile = prepareExportFile(gitPushData.export_file_path);
 gitPushData = prepareGitPushData(gitPushData);
+
+export let exportFile = prepareExportFile(gitPushData.export_file_path);
+if (!exportFile) fail('Project export file not found. Skipping...');
 
 if (!checkProjectKeys(gitPushData, ["branch_current_head_sha","branch_new_head_sha","branch_name"])) fail('No projects found with required keys for test. Exiting...');
 
