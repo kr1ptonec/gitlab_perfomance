@@ -5,61 +5,42 @@ require 'semantic'
 module TestInfo
   extend self
 
+  # Utility
+  def get_test_tag_value(test_file, tag)
+    File.open(test_file, "r") do |test_file_content|
+      test_file_content.each_line do |line|
+        return line.match(/@#{tag}: (.*)\n/)[1] if line.match?(/@#{tag}:/)
+      end
+    end
+
+    nil
+  end
+
   # Get
 
-  def get_known_issues(k6_dir)
-    tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
+  def get_tests_info(test_files)
+    test_files = test_files.split(',') if test_files.instance_of?(String)
+    info_list = []
 
-    aggregated_issues = []
-    tests.each do |test|
-      parsed_test = parse_test_docs_for_issues(test)
-      aggregated_issues << parsed_test unless parsed_test.empty?
+    test_files.each do |test_file|
+      info = {}
+      info.default = nil
+
+      info[:name] = File.basename(test_file, '.js')
+      info[:type] = test_file.split("/")[-2]
+      info[:link] = "https://gitlab.com/gitlab-org/quality/performance/blob/master/k6/tests/#{info[:type]}/#{info[:name]}.js"
+      info[:link_md] = "[#{info[:name]}](#{info[:link]})"
+
+      info[:description] = get_test_tag_value(test_file, 'description')
+      info[:endpoint] = get_test_tag_value(test_file, 'endpoint') || 'No documentaion'
+      info[:issues] = get_test_tag_value(test_file, 'issue')
+      info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
+      info[:flags] = get_test_tag_value(test_file, 'flags')
+
+      info_list << info
     end
 
-    aggregated_issues
-  end
-
-  # Parse
-
-  def parse_test_docs_for_issues(test_file)
-    docs = {}
-    test_filename = File.basename(test_file)
-
-    File.open(test_file, "r") do |test_file_content|
-      test_file_content.each_line do |line|
-        case line
-        when /@issue/
-          match = line.match(/@issue: (.*)\n/)
-          docs[:test] = File.basename(test_filename, '.js')
-          docs[:issue] = match[1]
-        end
-      end
-    end
-    docs
-  end
-
-  def parse_test_docs_for_info(test_file)
-    docs = {}
-    test_filename = File.basename(test_file)
-    test_type = test_file.split("/")[-2] # folder name is type
-    test_repo_url = "https://gitlab.com/gitlab-org/quality/performance/blob/master/k6/tests/#{test_type}/#{test_filename}"
-    docs[:test] = "[#{test_filename}](#{test_repo_url})"
-
-    File.open(test_file, "r") do |test_file_content|
-      test_file_content.each_line do |line|
-        case line
-        when /@endpoint/
-          match = line.match(/@endpoint: (.*)\n/)
-          docs[:endpoint] = match[1].tr('`', '_')
-        when /@description/
-          match = line.match(/@description: (.*)\n/)
-          docs[:description] = match[1]
-        end
-      end
-    end
-    docs[:endpoint] = 'No documentaion' if docs[:endpoint].nil?
-    docs[:type] = test_type
-    docs
+    info_list
   end
 
   # Check

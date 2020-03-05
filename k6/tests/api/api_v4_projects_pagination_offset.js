@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects?order_by=id&sort=asc`
 @description: [Get a list of all visible projects across GitLab for the authenticated user](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
+@issue: https://gitlab.com/gitlab-org/gitlab/issues/30181
 */
 
 import http from "k6/http";
@@ -9,8 +10,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(0.2)
+export let ttfbThreshold = getTtfbThreshold(6000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

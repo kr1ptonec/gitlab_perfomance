@@ -3,6 +3,7 @@
 @endpoint: `GET /projects/:id/repository/branches`
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
 @issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
+@flags: repo_storage
 */
 
 import http from "k6/http";
