@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/compare?from=commit_sha1&to=commit_sha2`
 @description: [Compare commits](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
+@flags: repo_storage
 */
 
 import http from "k6/http";
@@ -11,8 +12,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProjec
 
 if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold(600)
+export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(0.5) : getRpsThresholds()
+export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(2500) : getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

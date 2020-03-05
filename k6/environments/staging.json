@@ -1,7 +1,11 @@
 {
   "environment": {
     "name": "staging",
-    "url": "https://staging.gitlab.com"
+    "url": "https://staging.gitlab.com",
+    "config": {
+      "latency": "2000",
+      "repo_storage": "gitaly"
+    }
   },
   "projects": [
     {

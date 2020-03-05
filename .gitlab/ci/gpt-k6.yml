@@ -7,7 +7,7 @@ check:k6:
   stage: check
   extends: .k6-base
   script:
-    - ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN bin/run-k6 -e staging.json -t api_v4_user.js -l 2000
+    - ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN bin/run-k6 -e staging.json -t api_v4_user.js
   except:
     - schedules
     - tags
@@ -105,10 +105,9 @@ report-k6-results-wiki:
     variables:
       - $TEST_TYPE == "k6"
 
-report-k6-tests-wiki:
+report-k6-test-info-wiki:
   extends: .k6-base
   script:
     - bin/ci-report-test-info-wiki -p "Current Test Details"
-  except:
-    variables:
-      - $CI_TEST_DOCS_WIKI_REPORT != "true"
+  only:
+    - tags

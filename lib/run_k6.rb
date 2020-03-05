@@ -44,12 +44,14 @@ module RunK6
     File.join(File.dirname(k6_archive.path), 'k6')
   end
 
-  def setup_env_vars(env_file:, options_file:, latency:)
+  def setup_env_vars(env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
+    env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment']['config']['latency']
+    env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment']['config']['repo_storage']
     env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
 
     options_file_vars = JSON.parse(File.read(options_file))
@@ -63,7 +65,6 @@ module RunK6
     env_vars['RPS_THRESHOLD_MULTIPLIER'] ||= '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
     env_vars['TTFB_THRESHOLD'] ||= '500'
-    env_vars['TTFB_LATENCY'] ||= latency.to_s
 
     env_vars['GIT_ENDPOINT_THROUGHPUT'] ||= '0.1'
     env_vars['WEB_ENDPOINT_THROUGHPUT'] ||= '0.1'
@@ -139,7 +140,7 @@ module RunK6
     [status.success?, output]
   end
 
-  def parse_k6_results(status:, output:)
+  def get_test_results(test_file:, status:, output:)
     results = {}
 
     output.each do |line|
@@ -168,6 +169,9 @@ module RunK6
     results["result"] = status
     results["score"] = ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) if [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?)
 
+    results["issues"] = TestInfo.get_test_tag_value(test_file, 'issues')
+    results["flags"] = TestInfo.get_test_tag_value(test_file, 'flags')
+
     results
   end
 
@@ -187,7 +191,7 @@ module RunK6
       * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}
     DOC
-    results_summary += "\n█ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
+    results_summary += "\n➤ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
     results_summary
   end
 
@@ -203,8 +207,9 @@ module RunK6
       tp_result["Req Status"] = [test_result['success_rate'], test_result['success_rate_threshold']].none?(&:nil?) ? "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)" : '-'
 
       test_result_str = test_result['result'] ? "Passed" : "FAILED"
-      test_result_str << '¹' if test_result['known_issue']
-      test_result_str << '²' unless test_result['result']
+      test_result_str << '¹' unless test_result['issues'].nil?
+      test_result_str << '²' if test_result['flags']&.include?('repo_storage') && !test_result['result']
+      test_result_str << '³' unless test_result['result']
       tp_result["Result"] = test_result['result'] ? Rainbow(test_result_str).green : Rainbow(test_result_str).red
 
       tp_result
@@ -216,8 +221,9 @@ module RunK6
 
   def generate_results_footer(results_json:)
     footer = ''
-    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate." if results_json['test_results'].any? { |test_result| test_result['known_issue'] }
-    footer << "\n² Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
+    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate." if results_json['test_results'].any? { |test_result| test_result['issues'] }
+    footer << "\n² Result covers endpoint(s) that may be slower if the environment is using NFS for Repository data. Refer to docs on how to configure your Environment's repo_storage setting and rerun." if results_json['test_results'].any? { |test_result| test_result['flags']&.include?('repo_storage') && !test_result['result'] }
+    footer << "\n³ Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
     footer
   end
 end

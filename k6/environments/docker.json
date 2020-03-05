@@ -1,7 +1,11 @@
 {
   "environment": {
     "name": "docker",
-    "url": "http://docker"
+    "url": "http://docker",
+    "config": {
+      "latency": "0",
+      "repo_storage": "gitaly"
+    }
   },
   "projects": [
     {
