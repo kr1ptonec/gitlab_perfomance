@@ -29,11 +29,9 @@ export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV['SUCCESS_RATE_THRESHOLD']}`],
-    "http_req_waiting{endpoint:user}": [`p(90)<${ttfbThreshold}`],
-    "http_req_waiting{endpoint:calendar.json}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{endpoint:notifications}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:user}": [`count>=${rpsThresholds['count_per_endpoint']}`],
-    "http_reqs{endpoint:calendar.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
+    "http_reqs{endpoint:notifications}": [`count>=${rpsThresholds['count_per_endpoint']}`],
   },
   rps: webProtoRps,
   stages: webProtoStages
