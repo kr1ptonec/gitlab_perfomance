@@ -80,7 +80,8 @@ results_list.each do |results|
   results_footer = RunK6.generate_results_footer(results_json: results)
 
   results_comparision_contents << "\n## #{results['name'].capitalize} - #{results['version']}\n" unless results_list.length == 1
-  results_comparision_contents << "#{results_summary}\n\n#{results_table}\n\n#{results_footer}\n"
+  results_comparision_contents << "#{results_summary}\n\n#{results_table}\n"
+  results_comparision_contents << "\n#{results_footer}\n" unless results_footer.empty?
   # Remove any terminal ANSI codes
   results_comparision_contents.gsub!(/\e\[([;\d]+)?m/, '')
 end

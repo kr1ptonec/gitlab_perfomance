@@ -103,7 +103,7 @@ module RunK6
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
     tests = tests.uniq.sort_by { |path| File.basename(path, '.js') }
-    test_excludes.each do |exclude|
+    test_excludes&.each do |exclude|
       tests.reject! { |test| test.include? exclude }
     end
 
@@ -113,7 +113,7 @@ module RunK6
     tests
   end
 
-  def run_k6(k6_path:, env_vars:, options_file:, test_file:, gpt_version:)
+  def run_k6(k6_path:, opts:, env_vars:, options_file:, test_file:, gpt_version:)
     test_name = File.basename(test_file, '.js')
     puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
@@ -121,6 +121,7 @@ module RunK6
     cmd += ['--config', options_file] if options_file
     cmd += ['--summary-time-unit', 'ms']
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
+    cmd += ['--out', "influxdb=#{opts[:influxdb_url]}"] if opts[:influxdb_url]
     cmd += [test_file]
 
     status = nil
@@ -128,7 +129,7 @@ module RunK6
     Open3.popen2e(env_vars, *cmd) do |stdin, stdout_stderr, wait_thr|
       stdin.close
       stdout_stderr.each do |line|
-        raise ArgumentError, "Test '#{test_name}' requires environment variable ACCESS_TOKEN to be set. Skipping...\n" if line.match?(/(GoError:).*(ACCESS_TOKEN)/)
+        raise ArgumentError, line.match(/msg="GoError: (.*)"/)[1] if line.match?(/Missing Project Config Data:|Missing Environment Variable:/)
         raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line.match?(/No data generated/)
 
         output << line

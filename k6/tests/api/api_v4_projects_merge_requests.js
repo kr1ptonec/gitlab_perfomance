@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests`
 @description: [Get all merge requests for this project](https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests)
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/33150, https://gitlab.com/gitlab-org/gitlab/issues/30180
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209780
 */
 
 import http from "k6/http";
