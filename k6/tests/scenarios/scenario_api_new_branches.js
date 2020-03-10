@@ -3,15 +3,16 @@
 @endpoint: `POST /projects/:id/repository/branches`
 @description: [Create a new branch in the repository](https://docs.gitlab.com/ee/api/branches.html#create-repository-branch)
 @issue: https://gitlab.com/gitlab-org/gitlab/issues/196788
+@flags: unsafe
 */
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
+checkAccessToken();
 
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)

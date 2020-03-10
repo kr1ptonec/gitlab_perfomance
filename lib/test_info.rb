@@ -46,6 +46,8 @@ module TestInfo
   # Check
 
   def test_has_unsafe_requests?(test_file)
+    return true if get_test_tag_value(test_file, 'flags')&.include?('unsafe')
+
     write_methods = %w[post put del patch]
     File.open(test_file, "r") do |test_file_content|
       test_file_content.each_line do |line|

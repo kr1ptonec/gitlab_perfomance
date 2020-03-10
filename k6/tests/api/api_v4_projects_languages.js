@@ -5,13 +5,13 @@
 */
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
 // Token not typically required for this endpoint but it was in 11.10 \ 11.11 due to a bug
 // https://gitlab.com/gitlab-org/gitlab-foss/issues/60425
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
+checkAccessToken();
 
 export let rpsThresholds = getRpsThresholds()
 export let ttfbThreshold = getTtfbThreshold()

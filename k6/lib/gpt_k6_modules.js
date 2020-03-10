@@ -18,6 +18,10 @@ export function logError(res) {
   }
 }
 
+export function checkAccessToken() {
+  if (!__ENV.ACCESS_TOKEN) fail('Missing Environment Variable: Test required enviroment variable ACCESS_TOKEN has not been set. Refer to docs for more info. Skipping...')
+}
+
 export function getRpsThresholds(modifier=1.0, endpoints=1) {
   let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
   let thresholds = {
@@ -60,7 +64,7 @@ export function getProjects(keys=[]) {
     projects_with_keys = projects.filter(project => checkProjectKeys(project, keys));
   }
 
-  if (projects_with_keys.length == 0) fail('No projects found with required keys for test. Exiting...');
+  if (projects_with_keys.length == 0) fail(`Missing Project Config Data: No projects in Environment config were found with the following required data - ${keys.join(', ')}. Update your Environment config to have this data and rerun. Refer to docs for more info. Exiting...`);
   return projects_with_keys
 }
 

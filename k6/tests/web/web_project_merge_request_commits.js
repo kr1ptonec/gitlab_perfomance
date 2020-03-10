@@ -2,7 +2,8 @@
 /*
 @endpoint: `GET /:group/:project/-/merge_requests/:merge_request_iid/commits`
 @description: Web - Project Merge Request Commits Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequestsController#commits.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30507
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209912
+@flags: repo_storage
 */
 
 import http from "k6/http";
@@ -13,8 +14,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount) : getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, endpointCount)
+export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(3000) : getTtfbThreshold(1000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

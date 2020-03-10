@@ -5,21 +5,13 @@
 
 Before running any of the tests they require that the GitLab environment is prepared. This involves seeding the environment with one or more representative [Projects](https://docs.gitlab.com/ee/user/project/) along with setting up an [Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) for authentication.
 
-* [Test Project(s) Setup](#test-projects-setup)
-  * [Importing via UI](#importing-via-ui)
-  * [Importing via the `import-project` script](#importing-via-the-import-project-script)
-  * [Importing via GitHub](#importing-via-github)
-* [Advanced Setup](#advanced-setup)
-  * [One or more Gitaly nodes](#one-or-more-gitaly-nodes)
-* [Troubleshooting](#troubleshooting)
-  * [Gitaly calls error when importing](#gitaly-calls-error-when-importing)
-* [Access Token Setup](#access-token-setup)
+[[_TOC_]]
 
 ## Test Project(s) Setup
 
 The tests require that there's representative data in the environment. This is done with one or more [Projects](https://docs.gitlab.com/ee/user/project/) that would be representative of typically larger projects that the environment is expected to contain.
 
-At GitLab, the default setup for the tests is importing our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case) under a group named `qa-perf-testing`. Project tarballs that we use for performance testing can be found over on the [performance-data](https://gitlab.com/gitlab-org/quality/performance-data) project. A different project can be used if required but will need to be configured accordingly for the tool to use it as per the [k6 Test Configuration section](./k6.md#test-configuration).
+At GitLab, the default setup for the tests is importing our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case) under a group named `qa-perf-testing`. Project tarballs that we use for performance testing can be found over on the [performance-data](https://gitlab.com/gitlab-org/quality/performance-data) project. A different project can be used if required but will need to be configured accordingly for the tool to use it as per the [k6 Test Configuration section](./k6.md#test-configuration). **Note that in all cases the GPT expects all projects to be Public else some tests will fail**.
 
 There's several options for importing the project into your GitLab environment. They are detailed as follows with the assumption that the recommended group `qa-perf-testing` and project `gitlabhq` are being set up:
 
