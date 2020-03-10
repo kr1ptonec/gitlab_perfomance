@@ -2,15 +2,16 @@
 /*
 @endpoint: `GET /:group/:project.git/info/refs?service=git-receive-pack` <br> `POST /:group/:project.git/git-receive-pack` </br>
 @description: Git push commit(s) via HTTPS. <br> Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md`
+@flags: unsafe
 */
 
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, checkProjectKeys, adjustRps, adjustStageVUs, getGitPushData } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, checkAccessToken, checkProjectKeys, adjustRps, adjustStageVUs, getGitPushData } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, waitForProjectImport, getProjectPathWithNamespace, prepareExportFile } from "../../lib/gpt_git_functions.js";
 import { createGroup, importProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
+checkAccessToken();
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)

@@ -2,15 +2,16 @@
 /*
 @endpoint: `POST /projects/:id/issues`
 @description: Setup stage: Create group and project <br>Test: [Creates a new project issue](https://docs.gitlab.com/ee/api/issues.html#new-issue) <br>Teardown stage: Delete group
+@flags: unsafe
 */
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
-if (!__ENV.ACCESS_TOKEN) fail('ACCESS_TOKEN has not been set. Skipping...')
+checkAccessToken();
 
 export let issueRps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let issueStages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)

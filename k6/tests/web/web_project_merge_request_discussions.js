@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/-/merge_requests/:merge_request_iid`
 @description: Web - Project Merge Request Discussions Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::ContentController#widget.json`, `Projects::MergeRequestsController#discussions.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30507
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209786
 */
 
 import http from "k6/http";
