@@ -109,7 +109,7 @@ run_time = (end_time - start_time).round(2)
 puts Rainbow("All k6 tests have finished after #{run_time}s!").green
 
 # Output known issues
-tests_with_issues = TestInfo.get_tests_info(tests).select { |test_info| !test_info['issues'].nil? }
+tests_with_issues = TestInfo.get_tests_info(tests).select { |test_info| !test_info[:issues].nil? }
 unless tests_with_issues.empty? || ENV['GPT_SKIP_KNOWN_ISSUES'] == 'true'
   puts "\n█ Known issues\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n\n"
   tp.set(:max_width, 100)

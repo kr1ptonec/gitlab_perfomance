@@ -29,7 +29,7 @@ puts "Collecting test info..."
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
 tests_info = TestInfo.get_tests_info(tests)
 test_types = tests_info.map { |test_info| test_info[:type] }.uniq
-tests_with_issues = tests_info.select { |test_info| !test_info['issues'].nil? }
+tests_with_issues = tests_info.select { |test_info| !test_info[:issues].nil? }
 
 wiki_report_contents = <<~DOC
   GitLab Performance Tool provides several different types of tests:
