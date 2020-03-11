@@ -20,7 +20,7 @@ There's several options for importing the project into your GitLab environment. 
 The first option is to simply [import the Project tarball file via the GitLab UI](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project):
 
 1. Create the [Group](https://docs.gitlab.com/ee/user/group/#create-a-new-group) `qa-perf-testing`
-2. Import the [GitLab FOSS Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz) into the Group.
+2. Import the [GitLab FOSS Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz) into the Group.
 
 It should take up to 15 minutes for the project to import fully. You can head to the project's main page for the current status.
 
@@ -44,7 +44,7 @@ Defaults to importing the gitlabhq project from a remote filestore to the specif
 Options:
   --environment-url=<s>    Full URL for the environment to import to.
   --project-tarball=<s>    Location of project tarball to import. Can be local or remote. (Default:
-                           https://gitlab.com/gitlab-org/quality/performance-data/raw/master/gitlabhq_export.tar.gz)
+                           https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz)
   --namespace=<s>          The ID or path of the namespace that the project will be imported to, such as a Group.
   --project-name=<s>       Name for project. Can be also be a combined path and name if required.
   --storage-name=<s>       Name for target repository storage (Gitaly). (Default: default)
