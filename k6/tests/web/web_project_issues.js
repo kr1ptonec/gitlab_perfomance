@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/merge_requests`
-@description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
+@endpoint: `GET /:group/:project/issues`
+@description: Web - Project Issues Page. <br>Controllers: `Projects::IssuesController#index`</br>
 */
 
 import http from "k6/http";
@@ -34,10 +34,10 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Project Merge Requests Page", function() {
+  group("Web - Project Issues Page", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/issues`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

@@ -1,43 +1,43 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/merge_requests`
-@description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
+@endpoint: `GET /projects/:id/issues`
+@description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
+@issue: TBC
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
-export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
+checkAccessToken();
+
+export let rpsThresholds = getRpsThresholds(0.9)
 export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`],
-  },
-  rps: webProtoRps,
-  stages: webProtoStages
+    "http_req_waiting": [`p(90)<${ttfbThreshold}`],
+    "http_reqs": [`count>=${rpsThresholds['count']}`]
+  }
 };
 
 export let projects = getProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
-  console.log(`Web Protocol RPS: ${webProtoRps}`)
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
 
 export default function() {
-  group("Web - Project Merge Requests Page", function() {
+  group("API - Issues List", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests`);
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/issues`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
