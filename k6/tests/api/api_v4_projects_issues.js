@@ -13,7 +13,7 @@ import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProj
 checkAccessToken();
 
 export let rpsThresholds = getRpsThresholds(0.9)
-export let ttfbThreshold = getTtfbThreshold()
+export let ttfbThreshold = getTtfbThreshold(2000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
