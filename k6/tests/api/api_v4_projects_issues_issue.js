@@ -2,7 +2,6 @@
 /*
 @endpoint: `GET /projects/:id/issues/:issue_iid`
 @description: [Get a single project issue](https://docs.gitlab.com/ee/api/issues.html#single-issue)
-@issue: TBC
 */
 
 import http from "k6/http";
@@ -12,8 +11,8 @@ import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProj
 
 checkAccessToken();
 
-export let rpsThresholds = getRpsThresholds(0.05)
-export let ttfbThreshold = getTtfbThreshold(20000)
+export let rpsThresholds = getRpsThresholds()
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
