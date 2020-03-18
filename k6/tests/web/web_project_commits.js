@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/commits/:branch`
 @description: Web - Project Commits Page. <br>Controllers: `CommitsController#show`</br>
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211709
 @flags: repo_storage
 */
 
