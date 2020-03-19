@@ -14,8 +14,8 @@ import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProj
 checkAccessToken();
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.05)
-export let ttfbThreshold = getTtfbThreshold(20000)
+export let rpsThresholds = getRpsThresholds(0.2)
+export let ttfbThreshold = getTtfbThreshold(7500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

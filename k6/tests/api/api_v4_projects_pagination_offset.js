@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /projects?order_by=id&sort=asc`
 @description: [Get a list of all visible projects across GitLab for the authenticated user](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30181
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
 */
 
 import http from "k6/http";

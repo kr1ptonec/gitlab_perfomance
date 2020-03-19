@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /projects?pagination=keyset&order_by=id&sort=asc`
 @description: [Get a list of all visible projects across GitLab for the authenticated user using keyset-pagination](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30181
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
 @gitlab_version: 12.7.0
 */
 
