@@ -2,7 +2,7 @@
 /*
 @endpoint: `POST /projects/:id/repository/branches`
 @description: [Create a new branch in the repository](https://docs.gitlab.com/ee/api/branches.html#create-repository-branch)
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/196788
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/196788
 @flags: unsafe
 */
 

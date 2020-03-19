@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /groups/:id`
 @description: [Get all details of a group](https://docs.gitlab.com/ee/api/groups.html#details-of-a-group)
-@issue: TBC
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211504
 */
 
 import http from "k6/http";

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /groups/:id/projects`
 @description: [Get a list of projects in this group](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-projects)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211498
 */
 
 import http from "k6/http";
