@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/-/branches`
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#show`, `Projects::BranchesController#diverging_commit_counts`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/issues/30536
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211710
 */
 
 import http from "k6/http";
