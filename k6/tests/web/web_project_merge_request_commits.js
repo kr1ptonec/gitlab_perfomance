@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/-/merge_requests/:merge_request_iid/commits`
+@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/commits`
 @description: Web - Project Merge Request Commits Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequestsController#commits.json`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209912
 @flags: repo_storage
@@ -46,8 +46,8 @@ export default function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'commits', controller: 'Projects::MergeRequestsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'commits', controller: 'Projects::MergeRequestsController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

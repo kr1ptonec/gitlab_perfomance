@@ -1,8 +1,9 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/-/merge_requests/:merge_request_iid/diffs`
+@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs`
 @description: Web - Project Merge Request Changes Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::DiffsController#diffs_metadata.json`, `Projects::MergeRequests::DiffsController#diffs_batch.json`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209784
+@gitlab_version: 12.7.0
 */
 
 import http from "k6/http";
@@ -47,18 +48,18 @@ export default function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/diffs`, null, {tags: {endpoint: 'diffs', controller: 'Projects::MergeRequestsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/diffs_metadata.json?`, null, {tags: {endpoint: 'diffs_metadata.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_metadata.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=1`, null, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs`, null, {tags: {endpoint: 'diffs', controller: 'Projects::MergeRequestsController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs_metadata.json?`, null, {tags: {endpoint: 'diffs_metadata.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_metadata.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=1`, null, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}}],
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
 
-    let pageRes = null
+    let seqDiffRes = null
     for (let i = 2; i <= 5; i++) {
-      pageRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=${i}`, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}});
-      /20(0|1)/.test(pageRes.status) ? successRate.add(true) : (successRate.add(false), logError(pageRes));
+      seqDiffRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=${i}`, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}});
+      /20(0|1)/.test(seqDiffRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiffRes));
     }
   });
 }

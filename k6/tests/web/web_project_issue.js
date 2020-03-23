@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/-/issues/:issue_iid`
+@endpoint: `GET /:group/:project/issues/:issue_iid`
 @description: Web - Project Issue Page. <br>Controllers: `Projects::IssuesController#show`, `Projects::IssuesController#discussions`, `Projects::IssuesController#related_branches`, `Projects::IssuesController#can_create_branch` </br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211377
 */
@@ -51,8 +51,8 @@ export default function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/issues/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/issues/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::IssuesController', action: 'discussions.json'}}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/related_branches`, null, {tags: {endpoint: 'related_branches', controller: 'Projects::IssuesController', action: 'related_branches'}, headers: { 'Accept': 'application/json' }}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/can_create_branch`, null, {tags: {endpoint: 'can_create_branch', controller: 'Projects::IssuesController', action: 'can_create_branch'}, headers: { 'Accept': 'application/json' }}]

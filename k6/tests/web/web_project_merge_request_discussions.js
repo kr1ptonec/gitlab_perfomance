@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/-/merge_requests/:merge_request_iid`
+@endpoint: `GET /:group/:project/merge_requests/:merge_request_iid`
 @description: Web - Project Merge Request Discussions Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::ContentController#widget.json`, `Projects::MergeRequestsController#discussions.json`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209786
 */
@@ -47,9 +47,9 @@ export default function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'merge_request', controller: 'Projects::MergeRequestsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_discussions_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::MergeRequestsController', action: 'discussions.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'merge_request', controller: 'Projects::MergeRequestsController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_discussions_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::MergeRequestsController', action: 'discussions.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

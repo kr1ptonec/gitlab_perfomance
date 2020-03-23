@@ -37,7 +37,7 @@ export default function() {
   group("Web - Project Merge Requests Page", function() {
     let project = selectProject(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/merge_requests`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/merge_requests`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
