@@ -59,18 +59,21 @@ module TestInfo
     false
   end
 
-  def test_supported_by_version?(test_file, gitlab_version_string)
-    test_version = nil
-    gitlab_version = Semantic::Version.new(gitlab_version_string.match(/\d+\.\d+\.\d+/)[0])
+  def test_supported_by_version?(test_file, gitlab_version)
+    test_supported_version = get_test_tag_value(test_file, 'gitlab_version')
+    return true if test_supported_version.nil?
 
-    File.open(test_file, "r") do |test_file_content|
-      test_file_content.each_line do |line|
-        test_version = Semantic::Version.new(line.match(/@gitlab_version: (\d+\.\d+\.\d+)/)[1]) if line.match?(/@gitlab_version: (\d+\.\d+\.\d+)/)
-      end
+    if test_supported_version && gitlab_version == '-'
+      warn Rainbow("GitLab version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GitLab version '#{test_supported_version}' and up. Check that the environment is accessible and the ACCESS_TOKEN provided is correct then try again. Skipping out of caution...").yellow
+      return false
     end
-    test_supported_by_version = true unless test_version && gitlab_version < test_version
 
-    warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by GitLab version '#{gitlab_version}'. Requires '#{test_version}' and up. Skipping...").yellow unless test_supported_by_version
-    test_supported_by_version
+    gitlab_version = Semantic::Version.new(gitlab_version.match(/\d+\.\d+\.\d+/)[0])
+    if test_supported_version && gitlab_version < Semantic::Version.new(test_supported_version)
+      warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by GitLab version '#{gitlab_version}'. Requires '#{test_supported_version}' and up. Skipping...").yellow
+      return false
+    end
+
+    true
   end
 end

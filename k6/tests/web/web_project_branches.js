@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/-/branches`
+@endpoint: `GET /:group/:project/branches`
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#show`, `Projects::BranchesController#diverging_commit_counts`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211710
 */
@@ -45,8 +45,8 @@ export default function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/branches`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/-/branches/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::MergeRequestsController', action: 'show'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/branches`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/branches/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::MergeRequestsController', action: 'show'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

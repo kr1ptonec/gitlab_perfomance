@@ -5,6 +5,5 @@
     { "duration": "5s", "target": 0 }
   ],
   "rps": 200,
-  "batchPerHost": 0,
-  "maxRedirects": 0
+  "batchPerHost": 0
 }

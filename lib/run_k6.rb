@@ -108,7 +108,7 @@ module RunK6
     end
 
     tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
-    tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) } unless env_version == '-'
+    tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) }
 
     tests
   end
