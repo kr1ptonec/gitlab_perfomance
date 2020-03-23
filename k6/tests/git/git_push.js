@@ -49,7 +49,7 @@ export function setup() {
   projects.forEach(project => {
     checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
     checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
-    updateProjectPipelinesSetting(project, "disabled");
+    updateProjectPipelinesSetting(project, false);
   });
 }
 
@@ -88,6 +88,6 @@ export function teardown() {
     };
     http.post(`${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
     // Reenable Pipelines in the Project
-    updateProjectPipelinesSetting(project, "enabled");
+    updateProjectPipelinesSetting(project, true);
   });
 }
