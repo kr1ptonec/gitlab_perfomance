@@ -113,9 +113,18 @@ export function prepareGitPushData(projects) {
 
 export function updateProjectPipelinesSetting(project, state) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let formdata = { builds_access_level: state };
+  let formdata;
+
+  let ver_regex = /([0-9]+)/g;
+  let version = __ENV.ENVIRONMENT_VERSION.match(ver_regex);
+  if (parseInt(version[0]) > 12 || parseInt(version[0]) == 12 && parseInt(version[1]) >= 1) {
+    formdata = { builds_access_level: state ? "enabled" : "disabled" }
+  } else {
+    formdata = { jobs_enabled: state }
+  }
+
   let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`, formdata, params);
-  /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting was ${state}`) : (logError(res), fail(`Error with Project Pipelines setting update.`));
+  /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting changed to ${state}`) : (logError(res), fail(`Error occured when attempting to change Project Pipelines setting.`));
 }
 
 export function waitForGitSidekiqQueue() {

@@ -44,6 +44,12 @@ module RunK6
     File.join(File.dirname(k6_archive.path), 'k6')
   end
 
+  def get_env_version(env_url:)
+    headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
+    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: headers, fail_on_error: false)
+    res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
+  end
+
   def setup_env_vars(env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
@@ -53,6 +59,10 @@ module RunK6
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
     env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment'].dig('config', 'repo_storage')
     env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
+
+    env_version = get_env_version(env_url: env_vars['ENVIRONMENT_URL'])
+    env_vars['ENVIRONMENT_VERSION'] = env_version['version']
+    env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
 
     options_file_vars = JSON.parse(File.read(options_file))
     env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
@@ -71,12 +81,6 @@ module RunK6
     env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] ||= '0.01'
 
     env_vars
-  end
-
-  def get_env_version(env_vars:)
-    headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
-    res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/version", headers: headers, fail_on_error: false)
-    res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
   def prepare_tests(tests:, env_vars:)
