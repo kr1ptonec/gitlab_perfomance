@@ -3,12 +3,14 @@
 @endpoint: `GET /:group/:project/issues/:issue_iid`
 @description: Web - Project Issue Page. <br>Controllers: `Projects::IssuesController#show`, `Projects::IssuesController#discussions`, `Projects::IssuesController#related_branches`, `Projects::IssuesController#can_create_branch` </br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211377
+@flags: dash_url
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { checkProjEndpointPath } from "../../lib/gpt_web_functions.js";
 
 export let endpointCount = 5
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -44,18 +46,24 @@ export function setup() {
   console.log(`RPS Threshold per Endpoint: ${rpsThresholds['mean_per_endpoint']}/s (${rpsThresholds['count_per_endpoint']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+
+  // Check if endpoint path has a dash \ redirect
+  let checkProject = selectProject(projects)
+  let endpointPath = checkProjEndpointPath(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'issues')
+  console.log(`Endpoint path is '${endpointPath}'`)
+  return { endpointPath };
 }
 
-export default function() {
+export default function(data) {
   group("Web - Project Issue Page", function() {
     let project = selectProject(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::IssuesController', action: 'discussions.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/related_branches`, null, {tags: {endpoint: 'related_branches', controller: 'Projects::IssuesController', action: 'related_branches'}, headers: { 'Accept': 'application/json' }}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/issues/${project['issue_iid']}/can_create_branch`, null, {tags: {endpoint: 'can_create_branch', controller: 'Projects::IssuesController', action: 'can_create_branch'}, headers: { 'Accept': 'application/json' }}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::IssuesController', action: 'discussions.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/related_branches`, null, {tags: {endpoint: 'related_branches', controller: 'Projects::IssuesController', action: 'related_branches'}, headers: { 'Accept': 'application/json' }}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/can_create_branch`, null, {tags: {endpoint: 'can_create_branch', controller: 'Projects::IssuesController', action: 'can_create_branch'}, headers: { 'Accept': 'application/json' }}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
