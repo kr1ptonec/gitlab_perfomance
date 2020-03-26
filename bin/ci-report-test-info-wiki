@@ -45,7 +45,7 @@ DOC
 test_types.each do |type|
   wiki_report_contents << "\n## #{type.match?(/api/) ? type.upcase : type.capitalize}\n"
   tests_info_by_type = tests_info.select { |test| test[:type] == type }
-  wiki_report_contents << TablePrint::Printer.table_print(tests_info_by_type, [{ link_md: { display_name: "Tests" } }, :endpoint, :description])
+  wiki_report_contents << TablePrint::Printer.table_print(tests_info_by_type, [{ tests: ->(test) { "#{test[:link_md]}<br><br>#{test[:endpoint]}" } }, :description])
 end
 
 wiki_report_contents << "\n## Known Issues\n"
