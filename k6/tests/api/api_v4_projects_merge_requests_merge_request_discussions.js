@@ -2,7 +2,6 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/discussions`
 @description: [Gets a list of all discussion items for a single merge request](https://docs.gitlab.com/ee/api/discussions.html#list-project-merge-request-discussion-items)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/32455
 */
 
 import http from "k6/http";
@@ -12,9 +11,8 @@ import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProj
 
 checkAccessToken();
 
-// Endpoint is below target threshold. Custom lower limit applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.2)
-export let ttfbThreshold = getTtfbThreshold(5000)
+export let rpsThresholds = getRpsThresholds()
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
