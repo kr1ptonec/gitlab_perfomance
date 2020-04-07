@@ -11,6 +11,9 @@ check:k6:
   only:
     - master
     - merge_requests
+  except:
+    - schedules
+    - tags
 
 ########################
 ##  Environment Jobs  ##

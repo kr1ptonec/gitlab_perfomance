@@ -24,6 +24,9 @@ check:gpt-docker:
     - master
     - merge_requests
     - tags
+  except:
+    - schedules
+    - tags
 
 ##########################
 ##   GPT Docker Build   ##

@@ -12,6 +12,9 @@ check:rubocop:
   only:
     - master
     - merge_requests
+  except:
+    - schedules
+    - tags
 
 check:yamllint:
   stage: check
@@ -22,7 +25,10 @@ check:yamllint:
   only:
     - master
     - merge_requests
-
+  except:
+    - schedules
+    - tags
+  
 check:eslint:
   stage: check
   image: node:alpine
@@ -32,3 +38,6 @@ check:eslint:
   only:
     - master
     - merge_requests
+  except:
+    - schedules
+    - tags
