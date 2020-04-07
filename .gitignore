@@ -11,3 +11,4 @@ tmp/
 .idea
 package-lock.json
 .DS_Store
+.gitlab/ci/gpt-k6-compare-jobs.yml

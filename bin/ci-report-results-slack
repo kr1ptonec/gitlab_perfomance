@@ -7,11 +7,12 @@ require 'gpt_common'
 require 'http'
 require 'json'
 require 'optimist'
+require 'pathname'
 require 'run_k6'
 require 'time'
 
 # Get parent folder(`k6`) path from the current file
-k6_dir = File.expand_path('../k6', __dir__)
+k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
 @opts = Optimist.options do
   banner "Usage: ci-report-results-slack [options]"
@@ -19,13 +20,19 @@ k6_dir = File.expand_path('../k6', __dir__)
   banner "\nOptions:"
   opt :help, 'Show help message'
   opt :results_path, "Path of k6 test results files to report on. Can be a directory that will be searched recursively or a direct filepath.", type: :string, default: "#{k6_dir}/results"
-  opt :test_name, "Name of test that's being reported on", type: :string, default: ENV['TEST_TYPE']
-  opt :channel, "Slack channel to post results to", type: :string, default: "qa-performance"
+  opt :test_name, "Name of test that's being reported on.", type: :string, required: true
+  opt :test_result, "The result of the test. Must be either 'passed' or 'failed'.", type: :string, required: true
+  opt :channel, "Slack channel to post results to.", type: :string, default: "qa-performance"
   banner "\nEnvironment Variable(s):"
-  banner "  SLACK_BOT_TOKEN   A valid Slack Token that belongs to a Bot that has permissions for the intended Slack instance. (Default: nil)"
+  banner "  ENVIRONMENT_NAME                    Name of environment. (Default: nil)"
+  banner "  ENVIRONMENT_GRAFANA_DASHBOARD_URL   URL to environment's Grafana dashboard to show in Slack message. (Default: nil)"
+  banner "  GPT_RESULTS_URL                     URL of Wiki page that also shows tests results to show in Slack message. (Default: nil)"
+  banner "  GPT_KNOWN_ISSUES_URL                URL of known GitLab performance issues list. (Default: nil)"
+  banner "  SLACK_BOT_TOKEN                     A valid Slack Token that belongs to a Bot that has permissions for the intended Slack instance. (Default: nil)"
 end
 
 raise 'Environment Variable SLACK_BOT_TOKEN must be set to proceed. See command help for more info' unless ENV['SLACK_BOT_TOKEN']
+raise 'Test Result must be either \'passed\' or \'failed\'. Exiting...' unless @opts[:test_result].match?(/passed|failed/)
 
 def post_slack_message(message)
   url = "https://slack.com/api/chat.postMessage"
@@ -67,10 +74,10 @@ results_files = @opts[:results_path].include?(".json") ? Dir.glob(@opts[:results
 results_file = results_files.length == 1 ? results_files.first : nil
 
 if results_file && File.extname(results_file) == '.json'
-  puts "Posting result summary and uploading results to Slack:\n#{results_file}"
+  puts "Posting #{@opts[:test_result]} test result summary and uploading results to Slack:\n#{results_file}"
 
   results_json = JSON.parse(File.read(results_file))
-  result = ENV['SUCCESS_TEST_RUN'] == "true" || results_json['overall_result']
+  result = @opts[:test_result] == "passed" || results_json['overall_result']
   message = prepare_message_text(result, results_json)
 
   results_summary = RunK6.generate_results_summary(results_json: results_json)
@@ -85,7 +92,7 @@ if results_file && File.extname(results_file) == '.json'
 else
   puts "Posting result summary to Slack\n"
 
-  result = ENV['SUCCESS_TEST_RUN'] == "true"
+  result = @opts[:test_result] == "passed"
   message = prepare_message_text(result)
   post_slack_message(message)
 end

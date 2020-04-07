@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+$stdout.sync = true
 
 require 'gpt_common'
 require 'open3'
@@ -15,6 +16,7 @@ require 'tty-spinner'
   opt :image, "Image to use for Gitlab Docker Container", short: :none, type: :string, required: true
   opt :name, "Name to use for Gitlab Docker Container", short: :none, type: :string, default: "gitlab"
   opt :hostname, "Address to use that resolves to Gitlab Docker Container", short: :none, type: :string, default: "docker"
+  opt :project_id, "ID or URL-encoded path of a project on the GitLab image to perform checks.", short: :none, type: :string, default: "qa-perf-testing%2Fgitlabhq"
   opt :help, 'Show help message'
 end
 
@@ -23,7 +25,7 @@ raise "Docker not installed. Exiting..." unless Open3.capture2e("docker version"
 start_time = Time.now
 spinner = TTY::Spinner.new("[:spinner] Starting GitLab Docker")
 spinner.auto_spin
-gd_out, gd_status = Open3.capture2e("docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['initial_root_password'] = 'password'; gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
+gd_out, gd_status = Open3.capture2e("docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
 raise "docker issue:\n#{gd_out}" unless gd_status.success?
 
 spinner.success
@@ -31,20 +33,25 @@ spinner.success
 spinner = TTY::Spinner.new("[:spinner] Waiting for GitLab Container to be ready")
 spinner.auto_spin
 120.times do
-  docker_healthcheck = Open3.capture2e("docker inspect -f {{.State.Health.Status}} gitlab")[0].strip == 'healthy'
+  sleep 5
+
+  docker_healthcheck = Open3.capture2e("docker inspect -f {{.State.Health.Status}} #{@opts[:name]}")[0].strip == 'healthy'
+  next unless docker_healthcheck
+
   gitlab_healthcheck = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/-/liveness", fail_on_error: false).status.success?
+  next unless gitlab_healthcheck
 
   homepage = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}", fail_on_error: false)
   homepage_healthcheck = !homepage.body.to_s.include?("Deploy in progress") && homepage.status.success?
+  next unless homepage_healthcheck
 
   api_healthcheck = true
-  100.times do
+  25.times do
     api_healthcheck &&= GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/api/v4/groups", fail_on_error: false).status.success?
   end
+  next unless api_healthcheck
 
-  break if docker_healthcheck && gitlab_healthcheck && homepage_healthcheck && api_healthcheck
-
-  sleep 5
+  break
 rescue HTTP::ConnectionError
   sleep 5
   next
@@ -52,6 +59,14 @@ rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping and removing Docker container.").yellow
   Open3.capture2e("docker rm -f #{@opts[:name]}")
   exit
+end
+spinner.success
+
+spinner = TTY::Spinner.new("[:spinner] Performing GitLab Docker warmup")
+spinner.auto_spin
+%W[api/v4/projects api/v4/projects/#{@opts[:project_id]}/merge_requests api/v4/projects/#{@opts[:project_id]}/issues
+   api/v4/projects/#{@opts[:project_id]}/repository/branches api/v4/projects/#{@opts[:project_id]}/repository/commits].each do |warmup_path|
+  GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/#{warmup_path}", fail_on_error: false)
 end
 spinner.success
 

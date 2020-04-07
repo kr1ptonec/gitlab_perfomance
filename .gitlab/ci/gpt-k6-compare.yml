@@ -1,0 +1,40 @@
+# Depends: .gpt-k6-base.yml, .gpt-k6-compare-base.yml
+
+##########################################
+##   k6 Load Tests - Compare Versions   ##
+##########################################
+k6-compare-config:
+  stage: build
+  extends: .k6-base
+  script:
+    - bin/ci-generate-compare-config
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "k6 comparison"
+  artifacts:
+    paths:
+      - .gitlab/ci/gpt-k6-compare-jobs.yml
+
+k6-compare:
+  stage: test
+  trigger:
+    include:
+      - local: .gitlab/ci/.gpt-k6-base.yml
+      - artifact: .gitlab/ci/gpt-k6-compare-jobs.yml
+        job: k6-compare-config
+    strategy: depend
+  variables:  # We need to pass variables from Pipeline Schedule downstream
+    ACCESS_TOKEN: $ACCESS_TOKEN
+    CI_SLACK_CHANNEL: $CI_SLACK_CHANNEL
+    ENVIRONMENT_NAME: $ENVIRONMENT_NAME
+    GPT_IGNORE_RESULT: $GPT_IGNORE_RESULT
+    GPT_RESULTS_URL: $GPT_RESULTS_URL
+    TEST_TYPE: $TEST_TYPE
+    GPT_CP_DOCKER_IMAGE: $GPT_CP_DOCKER_IMAGE
+  only:
+    refs:
+      - schedules
+    variables:
+      - $TEST_TYPE == "k6 comparison"

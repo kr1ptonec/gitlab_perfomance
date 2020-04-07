@@ -9,6 +9,7 @@ the test and maintain the numbers. */
 export function checkProjEndpointPath(projectPath, endpointPath) {
   let res = http.get(`${projectPath}/${endpointPath}`);
   if (!/20(0|1)/.test(res.status)) fail(`Failed to check if Project Endpoint path '${projectPath}/${endpointPath}' is correct - ${res.body}`);
+  console.log(`Endpoint full URL is ${res.url}`)
 
   let pathRegex = new RegExp(`${projectPath}/(.*)`);
   let actualPath = res.url.match(pathRegex)[1];

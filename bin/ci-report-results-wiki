@@ -20,19 +20,20 @@ k6_dir = File.expand_path('../k6', __dir__)
   banner "\nOptions:"
   opt :help, 'Show help message'
   opt :results_path, "Path of k6 test results files to report on. Can be a directory that will be searched recursively or a direct filepath.", type: :string, default: "#{k6_dir}/results"
-  opt :page_title, "Title to use for wiki page", type: :string, required: true
+  opt :page_title, "Title to use for wiki page", type: :string
   opt :api_url, "GitLab wiki API URL", type: :string, default: "https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis"
+  opt :dry_run, "Only generate Wiki page locally and don't post for testing purposes.", type: :flag
   banner "\nEnvironment Variable(s):"
   banner "  CI_PROJECT_ACCESS_TOKEN   A valid GitLab Personal Access Token that has access to the intended project where the wiki page will be posted. The token should come from a User that has admin access for the project(s) and have API permissions. (Default: nil)"
 end
 
-raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN']
+raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN'] || @opts[:dry_run]
+raise 'Page Title must be specified' unless @opts[:page_title] || @opts[:dry_run]
 
-def generate_comparision_table(results)
-  return nil if results.length <= 1
-
+def get_comparision_data(results)
   results_comparision_data = {}
   results_comparision_versions = []
+  ttfb_overall_target = ENV['GPT_TARGET_TTFB']&.dup.to_f || 500.0
 
   results.each do |result|
     results_comparision_versions |= [result["version"].tr('.', '-')]
@@ -41,23 +42,29 @@ def generate_comparision_table(results)
   results.each_with_index do |result, result_num|
     result['test_results'].each do |test_result|
       results_comparision_data[test_result["name"]] ||= Hash[results_comparision_versions.collect { |version| [version, "-"] }]
+      results_comparision_data[test_result["name"]]['target'] ||= "#{test_result['ttfb_p90_threshold']}ms"
 
+      test_result_score = ((test_result['ttfb_p90'].to_f / ttfb_overall_target) * 100)
       last_test_result = results[result_num - 1]['test_results'].find { |res| res['name'] == test_result["name"] } unless result_num.zero?
       if last_test_result&.dig('ttfb_p90')
-        last_test_difference = test_result['ttfb_p90'].to_f - last_test_result['ttfb_p90'].to_f
-        last_test_diff_perc = (last_test_difference * 100 / last_test_result['ttfb_p90'].to_f).round(2)
-        last_test_difference_str = last_test_difference.positive? ? "_+#{last_test_diff_perc}%_" : "**#{last_test_diff_perc}%**"
+        last_test_result_score = ((last_test_result['ttfb_p90'].to_f / ttfb_overall_target) * 100)
+        last_test_result_score_diff = (test_result_score - last_test_result_score).round(2)
+        last_test_result_score_diff_str = last_test_result_score_diff.positive? ? "_+#{last_test_result_score_diff}%_" : "**#{last_test_result_score_diff}%**"
 
-        results_comparision_data[test_result["name"]][result["version"].tr('.', '-')] = "#{test_result['ttfb_p90']}ms (#{last_test_difference_str})"
+        results_comparision_data[test_result["name"]][result["version"].tr('.', '-')] = "#{test_result['ttfb_p90']}ms (#{last_test_result_score_diff_str})"
       else
         results_comparision_data[test_result["name"]][result["version"].tr('.', '-')] = test_result['ttfb_p90'] ? "#{test_result['ttfb_p90']}ms (-)" : '-'
       end
     end
   end
 
+  results_comparision_data
+end
+
+def generate_comparision_table(results_comparision_data)
   results_comparision_table = []
   results_comparision_data.sort.each do |name, results|
-    results_comparision_table << { 'name' => name }.merge(results)
+    results_comparision_table << { 'name' => name, 'target' => results['target'] }.merge(results)
   end
 
   tp.set(:max_width, 60)
@@ -69,10 +76,11 @@ results_unsorted = results_files.map { |results_file| JSON.parse(File.read(resul
 results_list = Naturally.sort_by(results_unsorted) { |results| results['version'] }
 raise "\nNo results found in specified path(s):\n#{@opts[:results_path]}\nExiting..." if results_list.empty?
 
-results_comparision_data = generate_comparision_table(results_list)
+results_comparision_data = get_comparision_data(results_list)
+results_comparision_table = generate_comparision_table(results_comparision_data)
 
 results_comparision_contents = results_list.length > 1 ? "[[_TOC_]]\n" : ""
-results_comparision_contents << "## Comparisions\n#{results_comparision_data}\n" if results_comparision_data
+results_comparision_contents << "## Comparisions\n#{results_comparision_table}\n\nPercentages shown above are [percentage point changes](https://en.wikipedia.org/wiki/Percentage_point) calculated against the ideal target of 500ms unless specified otherwise.\n" if results_comparision_table
 
 results_list.each do |results|
   results_summary = RunK6.generate_results_summary(results_json: results)
@@ -87,10 +95,12 @@ results_list.each do |results|
 end
 
 results_comparision_file = File.join(@opts[:results_path], "results_comparision.txt")
-puts "\nSaving results to #{results_comparision_file}"
+puts "Saving results to #{results_comparision_file}"
 File.write(results_comparision_file, results_comparision_contents)
 
-puts "\nPosting results to Wiki page"
+exit if @opts[:dry_run]
+
+puts "\nPosting results to Wiki page '#{@opts[:page_title]}'"
 headers = {
   'Authorization': "Bearer #{ENV['CI_PROJECT_ACCESS_TOKEN']}"
 }

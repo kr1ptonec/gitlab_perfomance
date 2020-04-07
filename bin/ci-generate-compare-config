@@ -1,0 +1,113 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+
+require 'gpt_common'
+require 'http'
+require 'json'
+require 'optimist'
+require 'pathname'
+require 'rainbow'
+require 'semantic'
+require 'yaml'
+
+ci_dir = Pathname.new(File.expand_path('../.gitlab/ci', __dir__)).relative_path_from(Dir.pwd)
+
+@opts = Optimist.options do
+  banner "Usage: ci-generate-compare-config [options]"
+  banner "\nGenerates config for GitLab Performance Test Comparision pipeline against custom docker images"
+  banner "\nOptions:"
+  opt :help, 'Show help message'
+  opt :target_docker_image, 'Latest GitLab version to target and test against. Defaults to latest release version', type: :string, default: ENV['GPT_CP_DOCKER_IMAGE'] || 'registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance'
+  opt :target_version, 'Latest GitLab docker version to target and test against. Defaults to latest release version', type: :string
+  opt :target_number, 'Number of previous GitLab docker versions to test and compare against target', type: :int, default: 5
+  opt :target_base_version, 'Base version that GitLab docker images were built from. This shouldn\'t be changed unless specifically required.', type: :string, default: ENV['GPT_CP_TARGET_BASE_VERSION'] || '12.5.0'
+  opt :extends, 'CI config key to extend from in generated jobs', type: :string, default: '.k6-compare-base'
+  opt :conf_file, 'Path where generated CI config file will be saved', type: :string, default: "#{ci_dir}/gpt-k6-compare-jobs.yml"
+  banner "\nEnvironment Variable(s):"
+  banner "  CI_SLACK_REPORT             Set jobs to report results to Slack (Default: nil)"
+  banner "  CI_WIKI_REPORT              Set jobs to report results to Wiki (Default: nil)"
+end
+
+def get_latest_gitlab_version(search_str: nil)
+  url = "https://gitlab.com/api/v4/projects/13083/repository/tags" + (search_str ? "?search=#{search_str}" : '')
+  res = GPTCommon.make_http_request(method: 'get', url: url)
+  latest_vers_list = JSON.parse(res.body.to_s).reject { |item| item['name'].match(/pre|rc/) }
+  raise "No GitLab versions found online" + (" with search string '#{search_str}'" if search_str) + '. ' + 'Exiting...' if latest_vers_list.empty?
+
+  latest_major_minor_ver = latest_vers_list.map { |ver| Semantic::Version.new(ver['name'].match(/v(\d+\.\d+\.\d+)/)[1]) }.uniq.max
+  latest_major_minor_ver.patch = 0
+  latest_major_minor_ver
+end
+
+def get_last_versions(target_ver:, target_base_version:, target_num:)
+  puts "Getting last #{target_num} versions from #{target_ver}...\n\n"
+  last_versions = []
+
+  target_num.times do |prev_ver_count|
+    ver_to_add = target_ver.dup
+    if ver_to_add.minor - prev_ver_count >= 0
+      ver_to_add.minor -= prev_ver_count
+      raise ArgumentError, Rainbow("Version to test, '#{ver_to_add}', is older than the minimum allowed version of '#{target_base_version}'. All versions to be tested must be higher than '#{target_base_version}'. Exiting...").red if ver_to_add < target_base_version
+
+      last_versions.prepend(ver_to_add)
+    elsif (ver_to_add.major - 1).positive?
+      prev_ver_to_add = get_latest_gitlab_version(search_str: "v#{ver_to_add.major - 1}")
+      last_versions += get_last_versions(target_ver: prev_ver_to_add, target_base_version: target_base_version, target_num: target_num - prev_ver_count)
+      break
+    end
+  end
+
+  last_versions.sort
+end
+
+def get_startup_delay(test_ver:, target_base_version:)
+  min_minor_ver = test_ver.major == target_base_version.major ? target_base_version.minor : 0
+  30 * (test_ver.minor - min_minor_ver)
+end
+
+target_base_version = Semantic::Version.new(@opts[:target_base_version])
+target_ver = @opts[:target_version] ? Semantic::Version.new(@opts[:target_version]) : get_latest_gitlab_version
+last_vers = get_last_versions(target_ver: target_ver, target_base_version: target_base_version, target_num: @opts[:target_number])
+gpt_compare_conf = {}
+
+last_vers.each do |ver|
+  gpt_compare_test_name = "gpt-#{ver.major}-#{ver.minor}-compare"
+  gpt_compare_conf[gpt_compare_test_name] = {}
+  gpt_compare_conf[gpt_compare_test_name]['extends'] = @opts[:extends] if @opts[:extends]
+  gpt_compare_conf[gpt_compare_test_name]['variables'] = {
+    'MAJOR_VERSION' => ver.major,
+    'MINOR_VERSION' => ver.minor,
+    'STARTUP_DELAY' => get_startup_delay(test_ver: ver, target_base_version: target_base_version)
+  }
+end
+
+if ENV['CI_SLACK_REPORT'] == 'true'
+  gpt_compare_conf['report-gpt-compare-success-slack'] = {
+    'extends' => '.report-k6-slack-base',
+    'variables' => {
+      'TEST_RESULT' => 'passed'
+    },
+    'when' => 'on_success'
+  }
+  gpt_compare_conf['report-gpt-compare-failure-slack'] = {
+    'extends' => '.report-k6-slack-base',
+    'variables' => {
+      'TEST_RESULT' => 'failed'
+    },
+    'when' => 'on_failure'
+  }
+end
+
+if ENV['CI_WIKI_REPORT'] == 'true'
+  gpt_compare_conf['report-gpt-compare-wiki'] = {
+    'extends' => '.report-k6-wiki-base',
+    'variables' => {
+      'WIKI_PAGE' => 'Benchmarks/GitLab Versions'
+    }
+  }
+end
+
+puts "Generated config:\n#{gpt_compare_conf.to_yaml}\n"
+File.write(@opts[:conf_file], gpt_compare_conf.to_yaml)
+puts "Saved GPT Comparsion CI config to #{@opts[:conf_file]}\n"
