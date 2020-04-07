@@ -17,7 +17,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.26.1'
+    k6_version = ENV['K6_VERSION'] || '0.26.2'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
@@ -197,7 +197,7 @@ module RunK6
       * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}
     DOC
-    results_summary += "\n➤ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
+    results_summary += "\n❯ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
     results_summary
   end
 

@@ -1,16 +1,16 @@
 # Depends: .gpt-k6-base.yml
 
-###########################
-##     Commit Checks     ##
-###########################
+#####################
+##  Commit Checks  ##
+#####################
 check:k6:
   stage: check
   extends: .k6-base
   script:
     - ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN bin/run-k6 -e staging.json -t api_v4_user.js
-  except:
-    - schedules
-    - tags
+  only:
+    - master
+    - merge_requests
 
 ########################
 ##  Environment Jobs  ##
@@ -78,8 +78,8 @@ k6:
 ###############################
 report-k6-success-slack:
   extends: .report-k6-slack-base
-  script:
-    - SUCCESS_TEST_RUN="true" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
+  variables:
+    TEST_RESULT: "passed"
   only:
     variables:
       - $TEST_TYPE == "k6"
@@ -87,8 +87,8 @@ report-k6-success-slack:
 
 report-k6-failure-slack:
   extends: .report-k6-slack-base
-  script:
-    - SUCCESS_TEST_RUN="false" bin/ci-report-results-slack -c $CI_SLACK_CHANNEL
+  variables:
+    TEST_RESULT: "failed"
   only:
     variables:
       - $TEST_TYPE == "k6"
@@ -99,8 +99,8 @@ report-k6-failure-slack:
 ##############################
 report-k6-results-wiki:
   extends: .report-k6-wiki-base
-  script:
-    - bin/ci-report-results-wiki -p "Benchmarks/Latest/$ENVIRONMENT_NAME"
+  variables:
+    WIKI_PAGE: "Benchmarks/Latest/$ENVIRONMENT_NAME"
   only:
     variables:
       - $TEST_TYPE == "k6"

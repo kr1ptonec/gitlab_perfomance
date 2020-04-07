@@ -9,9 +9,9 @@ check:rubocop:
     - gem install bundler && bundle config without run && bundle install
   script:
     - rubocop --parallel
-  except:
-    - schedules
-    - tags
+  only:
+    - master
+    - merge_requests
 
 check:yamllint:
   stage: check
@@ -19,9 +19,9 @@ check:yamllint:
   image: pipelinecomponents/yamllint
   script:
     - yamllint .gitlab-ci.yml .gitlab/ci/
-  except:
-    - schedules
-    - tags
+  only:
+    - master
+    - merge_requests
 
 check:eslint:
   stage: check
@@ -29,6 +29,6 @@ check:eslint:
   script:
     - npm install eslint --global
     - eslint './**/*.js'
-  except:
-    - schedules
-    - tags
+  only:
+    - master
+    - merge_requests
