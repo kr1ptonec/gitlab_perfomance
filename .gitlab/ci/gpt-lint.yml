@@ -28,7 +28,7 @@ check:yamllint:
   except:
     - schedules
     - tags
-  
+
 check:eslint:
   stage: check
   image: node:alpine
