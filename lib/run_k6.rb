@@ -126,6 +126,7 @@ module RunK6
     cmd += ['--summary-time-unit', 'ms']
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += ['--insecure-skip-tls-verify']
+    cmd += ['--http-debug'] if ENV['GPT_DEBUG']
     cmd += ['--out', "influxdb=#{opts[:influxdb_url]}"] if opts[:influxdb_url]
     cmd += [test_file]
 
