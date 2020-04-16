@@ -16,6 +16,7 @@
       "commit_sha_signed": "6526e91f",
       "compare_commits_sha": ["aec887ab", "5bfb7558"],
       "file_path": "qa%2fqa%2erb",
+      "dir_path": "app%2Fassets%2Fimages%2Femoji",
       "git_push_data": {
         "branch_current_head_sha": "efc9f72c9ffaa76f966b8c162a9d184d7aa1ff18",
         "branch_new_head_sha": "b028afaede664580e04cddf0dd98faeff28ffbef",
