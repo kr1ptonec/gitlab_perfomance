@@ -6,6 +6,7 @@ $stdout.sync = true
 require 'chronic_duration'
 require 'test_info'
 require 'fileutils'
+require 'influxdb'
 require 'optimist'
 require 'rainbow'
 require 'run_k6'
@@ -32,7 +33,7 @@ opts = Optimist.options do
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings
   opt :unsafe, "Include any tests that perform unsafe requests (POST, PUT, DELETE, PATCH)", type: :flag, default: false
-  opt :influxdb_url, "URL of an Influx DB server where GPT can optionally upload test run statistics.", type: :string
+  opt :influxdb_url, "URL of an Influx DB server where GPT can optionally upload test run statistics.", type: :string, default: ENV['GPT_INFLUXDB_URL'] || nil
   banner "\nEnvironment Variable(s):"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API, read_repository, and write_repository permissions. (Default: nil)"
   banner "\nExamples:"
@@ -154,5 +155,10 @@ results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
 File.write(results_txt_file, "#{results_summary}\n#{results_table}\n#{results_footer}".gsub(/\e\[([;\d]+)?m/, ''))
 
 puts "\n█ Results files\n\n#{results_output_file}\n#{results_json_file}\n#{results_txt_file}"
+
+if opts[:influxdb_url]
+  influxdb_report, message = InfluxDB.write_data(opts[:influxdb_url], results_json)
+  warn Rainbow("\nFailed to upload test run statistics to InfluxDB URL #{opts[:influxdb_url]} - #{message}.").red unless influxdb_report
+end
 
 abort("\n" + Rainbow("One or more tests have failed...").red) unless aggregated_success || ENV['GPT_IGNORE_RESULT'] == 'true'
