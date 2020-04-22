@@ -2,7 +2,8 @@
 /*
 @endpoint: `GET /projects/:id/search?scope=blobs&search=:query`
 @description: [Search throught the code within the specified project](https://docs.gitlab.com/ee/api/search.html#scope-blobs)
-@flags: repo_storage
+@flags: search
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/214830
 */
 
 import http from "k6/http";
@@ -10,8 +11,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(0.5) : getRpsThresholds()
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(3000) : getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(0.1)
+export let ttfbThreshold = getTtfbThreshold(15000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

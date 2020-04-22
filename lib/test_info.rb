@@ -36,6 +36,7 @@ module TestInfo
       info[:issues] = get_test_tag_value(test_file, 'issue')
       info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
       info[:flags] = get_test_tag_value(test_file, 'flags')
+      info[:gitlab_settings] = get_test_tag_value(test_file, 'gitlab_settings')
 
       info_list << info
     end
@@ -59,7 +60,7 @@ module TestInfo
     false
   end
 
-  def test_supported_by_version?(test_file, gitlab_version)
+  def test_supported_by_gitlab_version?(test_file, gitlab_version)
     test_supported_version = get_test_tag_value(test_file, 'gitlab_version')
     return true if test_supported_version.nil?
 
@@ -70,8 +71,22 @@ module TestInfo
 
     gitlab_version = Semantic::Version.new(gitlab_version.match(/\d+\.\d+\.\d+/)[0])
     if test_supported_version && gitlab_version < Semantic::Version.new(test_supported_version)
-      warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by GitLab version '#{gitlab_version}'. Requires '#{test_supported_version}' and up. Skipping...").yellow
+      warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by target GitLab environment version '#{gitlab_version}'. Requires '#{test_supported_version}' and up. Skipping...").yellow
       return false
+    end
+
+    true
+  end
+
+  def test_supported_by_gitlab_settings?(test_file, gitlab_settings)
+    test_required_settings = get_test_tag_value(test_file, 'gitlab_settings')
+    return true if test_required_settings.nil? || gitlab_settings.empty?
+
+    JSON.parse(test_required_settings).each do |setting, value|
+      if gitlab_settings[setting] != value
+        warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by target GitLab environment due to required environment setting '#{setting}' not being set to '#{value}'. Skipping...").yellow
+        return false
+      end
     end
 
     true

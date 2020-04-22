@@ -24,6 +24,15 @@
       },
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958",
+      "search": {
+        "projects": "gitlab",
+        "issues": "broken",
+        "commits": "fix",
+        "merge_requests": "fix",
+        "milestones": "2.6",
+        "blobs": "test",
+        "users": "root"
+      },
       "issue_iid": "4218",
       "user": "root"
     },
@@ -43,6 +52,15 @@
       },
       "mr_commits_iid": "10495",
       "mr_discussions_iid": "6958",
+      "search": {
+        "projects": "gitlab",
+        "issues": "broken",
+        "commits": "fix",
+        "merge_requests": "fix",
+        "milestones": "2.6",
+        "blobs": "test",
+        "users": "root"
+      },
       "issue_iid": "4218",
       "user": "root"
     }

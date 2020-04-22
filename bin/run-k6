@@ -59,7 +59,7 @@ raise "Options config file '#{opts[:options]}' not found as given or in default 
 env_vars = RunK6.setup_env_vars(env_file: env_file, options_file: options_file)
 start_time = Time.now
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], env_version: env_vars['ENVIRONMENT_VERSION'], env_vars: env_vars)
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], env_vars: env_vars)
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
 results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
@@ -82,6 +82,8 @@ tests.each do |test_file|
 
   aggregated_results << RunK6.get_test_results(test_file: test_file, status: status, output: output)
   aggregated_success &&= status
+
+  sleep ENV['GPT_SLEEP_BETWEEN'].to_i if ENV['GPT_SLEEP_BETWEEN']
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping.").yellow
   exit
@@ -89,7 +91,7 @@ rescue ArgumentError => e
   warn Rainbow(e).yellow
   next
 rescue NoMethodError
-  warn Rainbow("Test failed and output couldn't be parsed - \n#{e}").yellow
+  warn Rainbow("Test failed and output couldn't be parsed: \n#{e}").yellow
   next
 rescue StandardError => e
   warn Rainbow("Test failed: #{e}").red

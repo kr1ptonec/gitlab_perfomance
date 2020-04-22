@@ -11,7 +11,7 @@ export function logError(res) {
   } catch (e) {
     error = res.body
   }
-  
+
   if (logError.last != error) {
     logError.last = error;
     console.warn(`Error detected: '${logError.last}'`);

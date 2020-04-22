@@ -6,12 +6,12 @@ When this is the case some will redirect if that dash is missing, which inflates
 as they count redirects twice.
 This function can be used to check if an endpoint path does redirect and pass that back into
 the test and maintain the numbers. */
-export function checkProjEndpointPath(projectPath, endpointPath) {
-  let res = http.get(`${projectPath}/${endpointPath}`);
-  if (!/20(0|1)/.test(res.status)) fail(`Failed to check if Project Endpoint path '${projectPath}/${endpointPath}' is correct - ${res.body}`);
+export function checkProjEndpointPath(projectUrl, endpointPath) {
+  let res = http.get(`${projectUrl}/${endpointPath}`);
+  if (!/20(0|1)/.test(res.status)) fail(`Failed to check if Project Endpoint path '${projectUrl}/${endpointPath}' is correct - ${res.body}`);
   console.log(`Endpoint full URL is ${res.url}`)
 
-  let pathRegex = new RegExp(`${projectPath}/(.*)`);
+  let pathRegex = new RegExp(`${projectUrl}/(.*)`);
   let actualPath = res.url.match(pathRegex)[1];
 
   return actualPath
