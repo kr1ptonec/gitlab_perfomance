@@ -50,6 +50,28 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
+  def get_env_settings(env_url:)
+    return false unless ENV['ACCESS_TOKEN']
+
+    headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
+    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/application/settings", headers: headers)
+    res.status.success? ? JSON.parse(res.body.to_s) : {}
+  end
+
+  def get_options_env_vars(options_file:)
+    options_env_vars = {}
+    options_file_vars = JSON.parse(File.read(options_file))
+
+    options_env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
+    options_env_vars['OPTION_RPS_COUNT'] = begin
+      duration = options_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
+      (duration * options_file_vars['rps'].to_f).to_i.to_s
+    end
+    options_env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
+
+    options_env_vars
+  end
+
   def setup_env_vars(env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
@@ -60,25 +82,23 @@ module RunK6
     env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment'].dig('config', 'repo_storage')
     env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
 
+    env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
+    env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.95'
+    env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '500'
+
+    env_vars['GIT_ENDPOINT_THROUGHPUT'] = ENV['GIT_ENDPOINT_THROUGHPUT'].dup || '0.1'
+    env_vars['WEB_ENDPOINT_THROUGHPUT'] = ENV['WEB_ENDPOINT_THROUGHPUT'].dup || '0.1'
+    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.01'
+
+    env_vars['K6_SETUP_TIMEOUT'] = ENV['K6_SETUP_TIMEOUT'].dup || '60s'
+    env_vars['K6_TEARDOWN_TIMEOUT'] = ENV['K6_TEARDOWN_TIMEOUT'].dup || '60s'
+
     env_version = get_env_version(env_url: env_vars['ENVIRONMENT_URL'])
     env_vars['ENVIRONMENT_VERSION'] = env_version['version']
     env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
 
-    options_file_vars = JSON.parse(File.read(options_file))
-    env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
-    env_vars['OPTION_RPS_COUNT'] ||= begin
-      duration = options_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
-      (duration * options_file_vars['rps'].to_f).to_i.to_s
-    end
-    env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
-
-    env_vars['RPS_THRESHOLD_MULTIPLIER'] ||= '0.8'
-    env_vars['SUCCESS_RATE_THRESHOLD'] ||= '0.95'
-    env_vars['TTFB_THRESHOLD'] ||= '500'
-
-    env_vars['GIT_ENDPOINT_THROUGHPUT'] ||= '0.1'
-    env_vars['WEB_ENDPOINT_THROUGHPUT'] ||= '0.1'
-    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] ||= '0.01'
+    options_env_vars = get_options_env_vars(options_file: options_file)
+    env_vars.merge!(options_env_vars)
 
     env_vars
   end
@@ -88,7 +108,7 @@ module RunK6
     GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, unsafe:, env_version: '-', env_vars: {})
+  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, unsafe:, env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -106,13 +126,16 @@ module RunK6
     end
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
-    tests = tests.uniq.sort_by { |path| File.basename(path, '.js') }
+    tests = tests.uniq { |path| File.basename(path, '.js') }.sort_by { |path| File.basename(path, '.js') }
     test_excludes&.each do |exclude|
       tests.reject! { |test| test.include? exclude }
     end
 
     tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
-    tests.select! { |test| TestInfo.test_supported_by_version?(test, env_version) }
+    tests.select! { |test| TestInfo.test_supported_by_gitlab_version?(test, env_vars['ENVIRONMENT_VERSION']) }
+
+    gitlab_settings = get_env_settings(env_url: env_vars['ENVIRONMENT_URL'])
+    tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
     tests
   end
@@ -135,7 +158,7 @@ module RunK6
     Open3.popen2e(env_vars, *cmd) do |stdin, stdout_stderr, wait_thr|
       stdin.close
       stdout_stderr.each do |line|
-        raise ArgumentError, line.match(/msg="GoError: (.*)"/)[1] if line.match?(/Missing Project Config Data:|Missing Environment Variable:/)
+        raise ArgumentError, line.match(/GoError: (.*)"/)[1] if line.match?(/Missing Project Config Data:|Missing Environment Variable:/)
         raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line.match?(/No data generated/)
 
         output << line
