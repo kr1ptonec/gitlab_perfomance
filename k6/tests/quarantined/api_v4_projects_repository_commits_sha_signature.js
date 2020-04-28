@@ -4,6 +4,7 @@
 @description: [Get GPG signature of a commit](https://docs.gitlab.com/ee/api/commits.html#get-gpg-signature-of-a-commit)
 @gitlab_version: 11.9.0
 @flags: repo_storage
+@issue: https://gitlab.com/gitlab-org/quality/performance/-/issues/233
 */
 
 import http from "k6/http";
