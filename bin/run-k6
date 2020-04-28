@@ -83,7 +83,7 @@ tests.each do |test_file|
   aggregated_results << RunK6.get_test_results(test_file: test_file, status: status, output: output)
   aggregated_success &&= status
 
-  sleep ENV['GPT_SLEEP_BETWEEN'].to_i if ENV['GPT_SLEEP_BETWEEN']
+  sleep ENV['GPT_SLEEP_BETWEEN'].to_i if ENV['GPT_SLEEP_BETWEEN'] && !test_file.equal?(tests.last)
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping.").yellow
   exit

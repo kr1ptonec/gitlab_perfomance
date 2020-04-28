@@ -6,13 +6,22 @@ When this is the case some will redirect if that dash is missing, which inflates
 as they count redirects twice.
 This function can be used to check if an endpoint path does redirect and pass that back into
 the test and maintain the numbers. */
-export function checkProjEndpointPath(projectUrl, endpointPath) {
-  let res = http.get(`${projectUrl}/${endpointPath}`);
-  if (!/20(0|1)/.test(res.status)) fail(`Failed to check if Project Endpoint path '${projectUrl}/${endpointPath}' is correct - ${res.body}`);
-  console.log(`Endpoint full URL is ${res.url}`)
+export function checkProjEndpointDash(projectUrl, endpointPath) {
+  console.log(`Check if Endpoint URL '${projectUrl}/${endpointPath}' uses dash on GitLab Environment...`)
+  let res = http.get(`${projectUrl}/-/${endpointPath}`);
+  if (/20(0|1)/.test(res.status)) return `-/${endpointPath}`
 
-  let pathRegex = new RegExp(`${projectUrl}/(.*)`);
-  let actualPath = res.url.match(pathRegex)[1];
+  res = http.get(`${projectUrl}/${endpointPath}`);
+  if (/20(0|1)/.test(res.status)) return endpointPath
+  if (/30[0-9]/.test(res.status)) {
+    try {
+      let pathRegex = new RegExp(`${projectUrl}/(.*)`);
+      let actualPath = res.url.match(pathRegex)[1];
+      return actualPath
+    } catch (e) {
+      fail(`Failed to extract path from redirected URL '${res.url}' - ${e}. Exiting...`);
+    }
+  }
 
-  return actualPath
+  fail(`Failed to determine if Endpoint URL '${projectUrl}/${endpointPath}' is correct or uses a dash on GitLab Environment. Exiting...`);
 }

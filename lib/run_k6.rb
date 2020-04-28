@@ -123,6 +123,7 @@ module RunK6
       tests += Dir.glob("#{File.dirname(test_path)}/#{File.basename(test_path, File.extname(test_path))}.js")
       # Add any tests given by name directly in default folder with or with extension
       tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
+      tests += Dir.glob("#{ENV['GPT_DOCKER_TESTS_DIR']}/*/#{File.basename(test_path, File.extname(test_path))}.js") if ENV['GPT_DOCKER_TESTS_DIR']
     end
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
@@ -159,7 +160,6 @@ module RunK6
       stdin.close
       stdout_stderr.each do |line|
         raise ArgumentError, line.match(/GoError: (.*)"/)[1] if line.match?(/Missing Project Config Data:|Missing Environment Variable:/)
-        raise "No requests completed in time by the end of the test. This is likely due to no responses being received from the server.\n" if line.match?(/No data generated/)
 
         output << line
         puts line

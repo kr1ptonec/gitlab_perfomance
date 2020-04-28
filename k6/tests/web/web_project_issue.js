@@ -10,7 +10,7 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-import { checkProjEndpointPath } from "../../lib/gpt_web_functions.js";
+import { checkProjEndpointDash } from "../../lib/gpt_web_functions.js";
 
 export let endpointCount = 5
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -49,7 +49,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectProject(projects)
-  let endpointPath = checkProjEndpointPath(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'issues')
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'issues')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
