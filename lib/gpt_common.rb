@@ -7,7 +7,10 @@ module GPTCommon
   def make_http_request(method: 'get', url: nil, params: {}, headers: {}, body: "", show_response: false, fail_on_error: true)
     raise "URL not defined for making request. Exiting..." unless url
 
-    res = body.empty? ? HTTP.follow.method(method).call(url, form: params, headers: headers) : HTTP.follow.method(method).call(url, body: body, headers: headers)
+    ctx = OpenSSL::SSL::SSLContext.new
+    ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    res = body.empty? ? HTTP.follow.method(method).call(url, form: params, headers: headers, ssl_context: ctx) : HTTP.follow.method(method).call(url, body: body, headers: headers, ssl_context: ctx)
 
     if show_response
       if res.content_type.mime_type == "application/json"

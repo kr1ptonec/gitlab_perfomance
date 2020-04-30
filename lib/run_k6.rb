@@ -163,11 +163,13 @@ module RunK6
 
         output << line
         puts line
+
+        status = false if line.match?(/No data generated/)
       end
-      status = wait_thr.value
+      status = wait_thr.value.success? if status.nil?
     end
 
-    [status.success?, output]
+    [status, output]
   end
 
   def get_test_results(test_file:, status:, output:)
@@ -231,7 +233,7 @@ module RunK6
 
       tp_result["Name"] = test_result['name'] || '-'
       tp_result["RPS"] = test_result['rps_target'] ? "#{test_result['rps_target']}/s" : '-'
-      tp_result["RPS Result"] = [test_result['rps_target'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
+      tp_result["RPS Result"] = [test_result['rps_result'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
       tp_result["TTFB Avg"] = test_result['ttfb_avg'] ? "#{test_result['ttfb_avg']}ms" : '-'
       tp_result["TTFB P90"] = [test_result['ttfb_p90'], test_result['ttfb_p90_threshold']].none?(&:nil?) ? "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)" : '-'
       tp_result["Req Status"] = [test_result['success_rate'], test_result['success_rate_threshold']].none?(&:nil?) ? "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)" : '-'

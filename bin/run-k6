@@ -4,14 +4,14 @@ $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 $stdout.sync = true
 
 require 'chronic_duration'
-require 'test_info'
 require 'fileutils'
 require 'influxdb'
 require 'optimist'
+require 'pathname'
 require 'rainbow'
 require 'run_k6'
-require 'pathname'
 require 'table_print'
+require 'test_info'
 require 'time'
 require 'tmpdir'
 
@@ -90,7 +90,7 @@ rescue Interrupt
 rescue ArgumentError => e
   warn Rainbow(e).yellow
   next
-rescue NoMethodError
+rescue NoMethodError => e
   warn Rainbow("Test failed and output couldn't be parsed: \n#{e}").yellow
   next
 rescue StandardError => e
@@ -114,7 +114,7 @@ puts Rainbow("All k6 tests have finished after #{run_time}s!").green
 tests_with_issues = TestInfo.get_tests_info(tests).select { |test_info| !test_info[:issues].nil? }
 unless tests_with_issues.empty? || ENV['GPT_SKIP_KNOWN_ISSUES'] == 'true'
   puts "\n█ Known issues\n\nNote that the following endpoints below have known issues. These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed:\n\n"
-  tp.set(:max_width, 100)
+  tp.set(:max_width, 150)
   tp(tests_with_issues, :name, :issues)
   puts "\nFull list of issues found both past and present can be found here: https://gitlab.com/gitlab-org/gitlab/-/issues?label_name%5B%5D=Quality%3Aperformance-issues\n"
 end
