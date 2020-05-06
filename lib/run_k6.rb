@@ -132,11 +132,13 @@ module RunK6
       tests.reject! { |test| test.include? exclude }
     end
 
-    tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
-    tests.select! { |test| TestInfo.test_supported_by_gitlab_version?(test, env_vars['ENVIRONMENT_VERSION']) }
+    unless env_vars.empty?
+      tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
+      tests.select! { |test| TestInfo.test_supported_by_gitlab_version?(test, env_vars['ENVIRONMENT_VERSION']) }
 
-    gitlab_settings = get_env_settings(env_url: env_vars['ENVIRONMENT_URL'])
-    tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
+      gitlab_settings = get_env_settings(env_url: env_vars['ENVIRONMENT_URL'])
+      tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
+    end
 
     tests
   end
