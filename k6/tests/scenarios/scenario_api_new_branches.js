@@ -17,7 +17,7 @@ checkAccessToken();
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(1250)
+export let ttfbThreshold = getTtfbThreshold(1500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

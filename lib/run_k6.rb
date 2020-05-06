@@ -54,7 +54,7 @@ module RunK6
     return false unless ENV['ACCESS_TOKEN']
 
     headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
-    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/application/settings", headers: headers)
+    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/application/settings", headers: headers, fail_on_error: false)
     res.status.success? ? JSON.parse(res.body.to_s) : {}
   end
 
@@ -201,7 +201,7 @@ module RunK6
     end
 
     results["result"] = status
-    results["score"] = ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) if [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?)
+    results["score"] = [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?) ? ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) : 0.0
 
     results["issues"] = TestInfo.get_test_tag_value(test_file, 'issues')
     results["flags"] = TestInfo.get_test_tag_value(test_file, 'flags')
