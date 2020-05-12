@@ -33,7 +33,7 @@ check:eslint:
   stage: check
   image: node:alpine
   script:
-    - npm install eslint --global
+    - npm install eslint@^7.0.0 --global
     - eslint './**/*.js'
   only:
     - master
