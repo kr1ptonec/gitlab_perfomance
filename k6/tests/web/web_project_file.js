@@ -3,6 +3,7 @@
 @endpoint: `GET /:group/:project/blob/master/:file_path`
 @description: Web - Project Blob File. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @flags: repo_storage
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217580
 */
 
 import http from "k6/http";
@@ -13,8 +14,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount) : getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(1000) : getTtfbThreshold()
+export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, endpointCount) : getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, endpointCount)
+export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(5000) : getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
