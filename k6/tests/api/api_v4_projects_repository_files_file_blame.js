@@ -14,7 +14,7 @@ import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProj
 checkAccessToken();
 
 export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(0.01) : getRpsThresholds(0.01)
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(30000) : getTtfbThreshold(30000)
+export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(35000) : getTtfbThreshold(35000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
