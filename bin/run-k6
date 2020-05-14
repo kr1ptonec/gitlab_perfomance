@@ -25,7 +25,6 @@ opts = Optimist.options do
   banner "\nDocumentation: https://gitlab.com/gitlab-org/quality/performance/blob/master/docs/README.md"
   banner "\nUsage: run-k6 [options]"
   banner "Options:"
-  opt :help, 'Show this help message'
   opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
   opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
   opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs.", type: :strings, default: ["tests"]
@@ -34,8 +33,11 @@ opts = Optimist.options do
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings
   opt :unsafe, "Include any tests that perform unsafe requests (POST, PUT, DELETE, PATCH)", type: :flag, default: false
   opt :influxdb_url, "URL of an Influx DB server where GPT can optionally upload test run statistics.", type: :string, default: ENV['GPT_INFLUXDB_URL'] || nil
+  opt :help, 'Show this help message'
+  opt :version, 'Print version and exit'
   banner "\nEnvironment Variable(s):"
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment that's required by various tests. The token should come from a User that has admin access for the project(s) to be tested and have API, read_repository, and write_repository permissions. (Default: nil)"
+  banner "  GPT_DEBUG                Shows debug output when set to true. (Default: nil)"
   banner "\nExamples:"
   banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
   banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
