@@ -27,7 +27,7 @@ stages:
     - echo "$GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
     - bin/run-gitlab-docker --image $GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0
     - sleep $STARTUP_DELAY
-    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -x api_v4_projects_repository_commits_sha_signature
+    - bin/run-k6 -s -u -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -x api_v4_projects_repository_commits_sha_signature
   artifacts:
     when: always
     paths:
