@@ -51,7 +51,7 @@ module RunK6
   end
 
   def get_env_settings(env_url:)
-    return false unless ENV['ACCESS_TOKEN']
+    return nil unless ENV['ACCESS_TOKEN']
 
     headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/application/settings", headers: headers, fail_on_error: false)

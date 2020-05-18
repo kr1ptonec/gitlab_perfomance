@@ -80,7 +80,8 @@ module TestInfo
 
   def test_supported_by_gitlab_settings?(test_file, gitlab_settings)
     test_required_settings = get_test_tag_value(test_file, 'gitlab_settings')
-    return true if test_required_settings.nil? || gitlab_settings.empty?
+    return true if test_required_settings.nil?
+    return false if gitlab_settings.nil?
 
     JSON.parse(test_required_settings).each do |setting, value|
       if gitlab_settings[setting] != value
