@@ -25,36 +25,39 @@ raise "Docker not installed. Exiting..." unless Open3.capture2e("docker version"
 start_time = Time.now
 spinner = TTY::Spinner.new("[:spinner] Starting GitLab Docker")
 spinner.auto_spin
-gd_out, gd_status = Open3.capture2e("docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
+gd_out, gd_status = Open3.capture2e("docker pull #{@opts[:image]} && docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
 raise "docker issue:\n#{gd_out}" unless gd_status.success?
 
 spinner.success
 
 spinner = TTY::Spinner.new("[:spinner] Waiting for GitLab Container to be ready")
 spinner.auto_spin
-120.times do
+begin
+  retries ||= 0
   sleep 5
 
   docker_healthcheck = Open3.capture2e("docker inspect -f {{.State.Health.Status}} #{@opts[:name]}")[0].strip == 'healthy'
-  next unless docker_healthcheck
 
   gitlab_healthcheck = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/-/liveness", fail_on_error: false).status.success?
-  next unless gitlab_healthcheck
 
   homepage = GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}", fail_on_error: false)
   homepage_healthcheck = !homepage.body.to_s.include?("Deploy in progress") && homepage.status.success?
-  next unless homepage_healthcheck
 
   api_healthcheck = true
   25.times do
     api_healthcheck &&= GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/api/v4/groups", fail_on_error: false).status.success?
   end
-  next unless api_healthcheck
 
-  break
-rescue HTTP::ConnectionError
+  raise "One or more healthchecks failed (Docker: #{docker_healthcheck}, GitLab: #{gitlab_healthcheck}, Homepage: #{homepage_healthcheck}, API: #{api_healthcheck})" unless docker_healthcheck && gitlab_healthcheck && homepage_healthcheck && api_healthcheck
+rescue RuntimeError, HTTP::ConnectionError => e
   sleep 5
-  next
+  retries += 1
+  if retries > 120
+    puts Open3.capture2e("docker logs #{@opts[:name]}")[0].strip
+    raise e
+  end
+
+  retry
 rescue Interrupt
   warn Rainbow("Caught the interrupt. Stopping and removing Docker container.").yellow
   Open3.capture2e("docker rm -f #{@opts[:name]}")
