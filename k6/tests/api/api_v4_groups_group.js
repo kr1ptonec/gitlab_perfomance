@@ -8,9 +8,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let ttfbThreshold = getTtfbThreshold(1500)
@@ -23,7 +21,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['group']);
+export let horizDataGroup = getManyGroupsOrProjects(['group']);
 
 export function setup() {
   console.log('')
@@ -34,10 +32,8 @@ export function setup() {
 
 export default function() {
   group("API - Group Details", function() {
-    let project = selectProject(projects);
-
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${horizDataGroup}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

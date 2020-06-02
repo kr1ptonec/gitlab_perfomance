@@ -9,9 +9,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds(0.1)
 export let ttfbThreshold = getTtfbThreshold(15000)
@@ -24,7 +22,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -35,7 +33,7 @@ export function setup() {
 
 export default function() {
   group("API - Search Code within the Project", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { 
       headers: { 

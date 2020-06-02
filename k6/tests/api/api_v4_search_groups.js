@@ -10,9 +10,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 6
 export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
@@ -32,7 +30,7 @@ export let options = {
   thresholds: scopes_thresholds
 };
 
-export let projects = getProjects(['search']);
+export let projects = getLargeProjects(['search']);
 
 export function setup() {
   console.log('')
@@ -44,7 +42,7 @@ export function setup() {
 
 export default function() {
   group("API - Group Search", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let responses = http.batch([

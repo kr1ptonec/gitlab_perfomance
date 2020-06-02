@@ -4,11 +4,11 @@ require 'chronic_duration'
 require 'test_info'
 require 'down/http'
 require 'fileutils'
-require 'git_test'
 require 'gpt_common'
 require 'json'
 require 'open3'
 require 'os'
+require 'gpt_prepare_test_data'
 require 'rainbow'
 require 'table_print'
 require 'tmpdir'
@@ -72,15 +72,16 @@ module RunK6
     options_env_vars
   end
 
-  def setup_env_vars(env_file:, options_file:)
+  def setup_env_vars(k6_dir:, env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
+    env_vars['ENVIRONMENT_USER'] = ENV['ENVIRONMENT_USER'].dup || env_file_vars['environment']['user']
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
-    env_vars['ENVIRONMENT_REPO_STORAGE'] = ENV['ENVIRONMENT_REPO_STORAGE'].dup || env_file_vars['environment'].dig('config', 'repo_storage')
-    env_vars['ENVIRONMENT_PROJECTS'] = env_file_vars['projects'].to_json
+    env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
+    env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.95'
@@ -105,7 +106,7 @@ module RunK6
 
   def prepare_tests(tests:, env_vars:)
     # Prepare specific test data
-    GitTest.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
+    GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
   def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, unsafe:, env_vars: {})
@@ -136,7 +137,7 @@ module RunK6
       tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
       tests.select! { |test| TestInfo.test_supported_by_gitlab_version?(test, env_vars['ENVIRONMENT_VERSION']) }
 
-      gitlab_settings = get_env_settings(env_url: env_vars['ENVIRONMENT_URL'])
+      gitlab_settings = GPTCommon.get_env_settings(env_url: env_vars['ENVIRONMENT_URL'], headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
       tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
     end
 
@@ -242,8 +243,7 @@ module RunK6
 
       test_result_str = test_result['result'] ? "Passed" : "FAILED"
       test_result_str << '¹' unless test_result['issues'].nil?
-      test_result_str << '²' if test_result['flags']&.include?('repo_storage') && !test_result['result']
-      test_result_str << '³' unless test_result['result']
+      test_result_str << '²' unless test_result['result']
       tp_result["Result"] = test_result['result'] ? Rainbow(test_result_str).green : Rainbow(test_result_str).red
 
       tp_result
@@ -256,8 +256,7 @@ module RunK6
   def generate_results_footer(results_json:)
     footer = ''
     footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate." if results_json['test_results'].any? { |test_result| test_result['issues'] }
-    footer << "\n² Result covers endpoint(s) that may be slower if the environment is using NFS for Repository data. Refer to docs on how to configure your Environment's repo_storage setting and rerun." if results_json['test_results'].any? { |test_result| test_result['flags']&.include?('repo_storage') && !test_result['result'] }
-    footer << "\n³ Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
+    footer << "\n² Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
     footer
   end
 end

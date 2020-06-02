@@ -6,7 +6,7 @@
 
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPull, pullRefsData, getRefSHAs } from "../../lib/gpt_git_functions.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
@@ -24,7 +24,7 @@ export let options = {
   stages: gitProtoStages
 };
 
-export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
+export let projects = getLargeProjects(['name', 'group', 'mr_commits_iid']);
 
 export function setup() {
   console.log('')
@@ -39,7 +39,7 @@ export function setup() {
 }
 
 export default function (projects) {
-  let project = selectProject(projects);
+  let project = selectRandom(projects);
 
   group("Git - Git Pull HTTP", function() {
     group("Git - Get Refs List", function () {

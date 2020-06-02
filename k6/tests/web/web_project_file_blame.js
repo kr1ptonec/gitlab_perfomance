@@ -8,7 +8,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_web_functions.js";
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -25,7 +25,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -35,7 +35,7 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   // Check if endpoint path has a dash \ redirect
-  let checkProject = selectProject(projects)
+  let checkProject = selectRandom(projects)
   let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, `blame/master/${checkProject['file_path']}`)
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
@@ -43,7 +43,7 @@ export function setup() {
 
 export default function(data) {
   group("Web - Project File Blame Page", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}`, {tags: {endpoint: 'blame', controller: 'Projects::BlameController', action: 'show'}, responseType: 'none'});
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

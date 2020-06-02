@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects?pagination=keyset&order_by=id&sort=asc`
-@description: [Get a list of all visible projects across GitLab for the authenticated user using keyset-pagination](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
+@description: [Get a list of all projects owned by user using keyset-pagination](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
 @gitlab_version: 12.7.0
 */
@@ -9,9 +9,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds(0.2)
 export let ttfbThreshold = getTtfbThreshold(7500)
@@ -34,7 +32,7 @@ export function setup() {
 export default function() {
   group("API - Projects List", function() {
     let params = { headers: { "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects?order_by=id&sort=asc&pagination=keyset`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects?order_by=id&sort=asc&pagination=keyset&owned=true`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

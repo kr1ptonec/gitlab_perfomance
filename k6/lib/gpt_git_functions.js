@@ -100,8 +100,8 @@ export function prepareGitPushData(projects) {
   projects.forEach(project => {
     try {
       project.data = {
-        branch_set_old_head: open(`./push_data/data/set_old_head-${project['name']}-${project['git_push_data']['branch_current_head_sha']}.bundle`, "b"),
-        branch_set_new_head: open(`./push_data/data/set_new_head-${project['name']}-${project['git_push_data']['branch_new_head_sha']}.bundle`, "b")
+        branch_set_old_head: open(`./push_data/data/set_old_head-${project['git_push_data']['branch_current_head_sha']}.bundle`, "b"),
+        branch_set_new_head: open(`./push_data/data/set_new_head-${project['git_push_data']['branch_new_head_sha']}.bundle`, "b")
       }
     } catch (error) {
       console.error(`⚠️ ERROR: Git push data files not found. This is likely due to a data generation issue. Contact GitLab quality team for further support.`);

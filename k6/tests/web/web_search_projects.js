@@ -10,7 +10,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 export let endpointCount = 10
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -35,7 +35,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['search']);
+export let projects = getLargeProjects(['search']);
 
 export function setup() {
   console.log('')
@@ -54,7 +54,7 @@ export function setup() {
 
 export default function() {
   group("Web - Project Search", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     scopes.forEach(scope => {
       let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&project_id=${project['id']}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}});

@@ -10,7 +10,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_web_functions.js";
 
 export let endpointCount = 3
@@ -34,7 +34,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group_path']);
 
 export function setup() {
   console.log('')
@@ -45,20 +45,20 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   // Check if endpoint path has a dash \ redirect
-  let checkProject = selectProject(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'merge_requests')
+  let checkProject = selectRandom(projects)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path']}/${checkProject['name']}`, 'merge_requests')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
 
 export default function(data) {
   group("Web - Project Merge Request Discussions Page", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'merge_request', controller: 'Projects::MergeRequestsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::MergeRequestsController', action: 'discussions.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'merge_request', controller: 'Projects::MergeRequestsController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::MergeRequestsController', action: 'discussions.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

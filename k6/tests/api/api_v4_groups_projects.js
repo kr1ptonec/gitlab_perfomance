@@ -8,12 +8,10 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-checkAccessToken();
-
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold(2000)
+export let rpsThresholds = getRpsThresholds(0.4)
+export let ttfbThreshold = getTtfbThreshold(3000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -23,7 +21,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['group']);
+export let subgroups = getManyGroupsOrProjects(['subgroups']);
 
 export function setup() {
   console.log('')
@@ -34,10 +32,9 @@ export function setup() {
 
 export default function() {
   group("API - Group Projects List", function() {
-    let project = selectProject(projects);
-
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/projects`, params);
-    /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
+    let subgroup = selectRandom(subgroups);  
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${subgroup}/projects`, params);
+    /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));    
   });
 }

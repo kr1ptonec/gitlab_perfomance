@@ -18,10 +18,6 @@ export function logError(res) {
   }
 }
 
-export function checkAccessToken() {
-  if (!__ENV.ACCESS_TOKEN) fail('Missing Environment Variable: Test required enviroment variable ACCESS_TOKEN has not been set. Refer to docs for more info. Skipping...')
-}
-
 export function getRpsThresholds(modifier=1.0, endpoints=1) {
   let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
   let thresholds = {
@@ -56,18 +52,27 @@ export function checkProjectKeys(project, keys) {
 }
 
 // Returns projects that contain all keys (if passed) or exits if none found
-export function getProjects(keys=[]) {
-  let projects = JSON.parse(__ENV.ENVIRONMENT_PROJECTS);
-
+export function getLargeProjects(keys=[]) {
+  let large_projects = JSON.parse(__ENV.ENVIRONMENT_LARGE_PROJECTS);
+  
   let projects_with_keys = {};
   if (Array.isArray(keys) && keys.length > 0) {
-    projects_with_keys = projects.filter(project => checkProjectKeys(project, keys));
+    projects_with_keys = large_projects.filter(project => checkProjectKeys(project, keys));
   }
 
-  if (projects_with_keys.length == 0) fail(`Missing Project Config Data: No projects in Environment config were found with the following required data - ${keys.join(', ')}. Update your Environment config to have this data and rerun. Refer to docs for more info. Exiting...`);
-  return projects_with_keys
+  if (projects_with_keys.length == 0) fail(`Missing Project Config Data: No projects in Project config were found with the following required data - ${keys.join(', ')}. Update your Project Config file to have all data for the large project and rerun. Refer to docs for more info. Exiting...`);
+  return projects_with_keys;
 }
 
-export function selectProject(projects) {
-  return projects.length == 1 ? projects[0] : projects[projects.length * Math.random() << 0];
+// Returns horizontal data object
+export function getManyGroupsOrProjects(key) {
+  let group_with_projects = JSON.parse(__ENV.ENVIRONMENT_MANY_GROUPS_AND_PROJECTS);
+
+  if (!Object.prototype.hasOwnProperty.call(group_with_projects, key)) fail(`Missing Project Config Data: No options in Environment config were found with the following required data - ${key}. Update your Environment Config file to have all data for 'many_groups_and_projects' setting and rerun. Refer to docs for more info. Exiting...`);
+
+  return group_with_projects[key];
+}
+
+export function selectRandom(entities) {
+  return entities.length == 1 ? entities[0] : entities[entities.length * Math.random() << 0];
 }

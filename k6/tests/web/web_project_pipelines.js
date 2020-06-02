@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -28,7 +28,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group_path']);
 
 export function setup() {
   console.log('')
@@ -41,11 +41,11 @@ export function setup() {
 
 export default function() {
   group("Web - Project Pipelines Page", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/pipelines`, null, {tags: {endpoint: '/pipelines', controller: 'Projects::PipelinesController', action: 'index'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/pipelines.json`, null, {tags: {endpoint: '/pipelines.json', controller: 'Projects::PipelinesController', action: 'index.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/pipelines`, null, {tags: {endpoint: '/pipelines', controller: 'Projects::PipelinesController', action: 'index'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/pipelines.json`, null, {tags: {endpoint: '/pipelines.json', controller: 'Projects::PipelinesController', action: 'index.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

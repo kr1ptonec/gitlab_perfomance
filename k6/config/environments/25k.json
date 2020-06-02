@@ -1,0 +1,22 @@
+{
+  "environment": {
+    "name": "25k",
+    "url": "http://25k.testbed.gitlab.net",
+    "user": "root",
+    "config": {
+      "latency": "0"
+    },
+    "storage_nodes": ["default", "storage2", "storage3"]
+  },
+  "gpt_data": {
+    "large_project": "gitlabhq",
+    "many_groups_and_projects": {
+      "root_group": "gpt",
+      "group": "many_groups_and_projects",
+      "subgroups": 10,
+      "subgroup_prefix": "gpt-subgroup-",
+      "projects": 100,
+      "project_prefix": "gpt-project-"
+    }
+  }
+}

@@ -3,13 +3,19 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
+$stdout.sync = true
 
 require 'chronic_duration'
 require 'down/http'
 require 'gpt_common'
+require 'gpt_logger'
+require 'import_project'
 require 'optimist'
+require 'pathname'
 require 'time'
 require 'uri'
+
+k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
 opts = Optimist.options do
   banner "Usage: import-project [options]"
@@ -33,89 +39,13 @@ end
 
 raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
 
-environment_api_url = URI.join(opts[:environment_url], '/api/v4/')
+# GPT logger setup
+results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
+results_file_prefix = "#{URI(opts[:environment_url]).host}_#{Time.now.strftime('%Y-%m-%d_%H%M%S')}"
+ENV['GPT_LOGGER_PATH'] = "#{results_home}/import-project_#{results_file_prefix}.log"
 
-headers = {
-  'Authorization': "Bearer #{ENV['ACCESS_TOKEN']}"
-}
-
+# Import project
 project_name = opts[:unique_name] ? "#{opts[:project_name]}_#{Time.now.to_i}" : opts[:project_name]
-
-puts "Starting import of Project '#{project_name}' from tarball '#{opts[:project_tarball]}'" + (opts[:namespace] ? " under namespace '#{opts[:namespace]}'" : '') + " to GitLab environment '#{opts[:environment_url]}'\n\n"
-
-# Check that environment can be reached and that token is valid
-puts "Checking that GitLab environment '#{opts[:environment_url]}' is available and that provided Access Token works..."
-check_res = GPTCommon.make_http_request(method: 'get', url: URI.join(environment_api_url, 'version').to_s, headers: headers)
-raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
-
-version = JSON.parse(check_res.body.to_s).values.join(' ')
-puts "Environment and Access Token check was successful - URL: #{opts[:environment_url]}, Version: #{version}\n\n"
-
-# Check that the tarball file is valid
-if opts[:project_tarball].match?(URI.regexp(%w[http https ftp]))
-  puts "Tarball is remote, downloading..."
-  proj_file = Down::Http.download(opts[:project_tarball])
-else
-  proj_file = opts[:project_tarball]
-end
-raise Errno::ENOENT unless File.exist?(proj_file)
-
-# Create Group
-if opts[:namespace] && !GPTCommon.make_http_request(method: 'get', url: URI.join(environment_api_url, "namespaces/#{opts[:namespace]}").to_s, headers: headers, fail_on_error: false).status.success?
-  puts "Creating Namespace #{opts[:namespace]}..."
-  grp_url = URI.join(environment_api_url, 'groups').to_s
-  grp_params = {
-    name: opts[:namespace],
-    path: opts[:namespace],
-    visibility: 'public'
-  }
-  GPTCommon.make_http_request(method: 'post', url: grp_url, params: grp_params, headers: headers)
-end
-
-# Create Project
-begin
-  puts "Importing project #{project_name}..."
-  start_time = Time.now.to_i
-  proj_url = URI.join(environment_api_url, 'projects/import').to_s
-  proj_params = {
-    file: HTTP::FormData::File.new(proj_file),
-    namespace: opts[:namespace],
-    path: project_name,
-    'override_params[repository_storage]': opts[:storage_name]
-  }
-  # we need to enable chunked transfers so Cloudflare won't reject uploads > 100MB
-  upload_headers = {
-    'Transfer-Encoding': 'chunked'
-  }.merge(headers)
-  proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: upload_headers, show_response: true)
-  proj_id = JSON.parse(proj_res.body.to_s)['id']
-
-  puts "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
-  print "Waiting until Project '#{proj_id}' has imported successfully..."
-
-  loop do
-    proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: URI.join(environment_api_url, "projects/#{proj_id}/import").to_s, headers: headers).body.to_s)
-
-    case proj_imp_res['import_status']
-    when 'finished'
-      time_taken = ChronicDuration.output(Time.now.to_i - start_time, format: :long)
-      puts "\nProject has successfully imported in #{time_taken}:\n#{URI.join(opts[:environment_url], proj_imp_res['path_with_namespace'])}"
-      break
-    when 'failed'
-      raise "Project has failed to import. Reason:\n#{proj_imp_res['import_error']}"
-    when 'scheduled', 'started'
-      print '.'
-      sleep 5
-    else
-      sleep 5
-    end
-  end
-ensure
-  # Import cleanup: remove the project
-  if opts[:with_cleanup]
-    puts "Removing previously imported project"
-    project_url = URI.join(environment_api_url, "projects/#{proj_id}").to_s
-    GPTCommon.make_http_request(method: 'delete', url: project_url, headers: headers)
-    puts "The project was removed"
-  end
-end
+import_project = ImportProject.new(env_url: opts[:environment_url], project_tarball: opts[:project_tarball])
+proj_tarball_file = import_project.setup_tarball(project_tarball: opts[:project_tarball])
+import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: project_name, namespace: opts[:namespace], storage_name: opts[:storage_name], with_cleanup: opts[:with_cleanup])
