@@ -3,19 +3,18 @@
 @endpoint: `GET /:group/:project/commits/:branch`
 @description: Web - Project Commits Page. <br>Controllers: `CommitsController#show`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211709
-@flags: repo_storage
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 1
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount) : getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(3000) : getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -28,7 +27,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group', 'branch']);
+export let projects = getLargeProjects(['name', 'group_path', 'branch']);
 
 export function setup() {
   console.log('')
@@ -40,10 +39,10 @@ export function setup() {
 
 export default function() {
   group("Web - Project Commits Page", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/commits/master`, null, {tags: {endpoint: 'commits', controller: 'Projects::CommitsController', action: 'show'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/commits/master`, null, {tags: {endpoint: 'commits', controller: 'Projects::CommitsController', action: 'show'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

@@ -7,9 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
 export let ttfbThreshold = getTtfbThreshold()
@@ -22,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['name', 'group', 'mr_commits_iid']);
+export let projects = getLargeProjects(['name', 'group', 'mr_commits_iid']);
 
 export function setup() {
   console.log('')
@@ -33,7 +31,7 @@ export function setup() {
 
 export default function() {
   group("API - Merge Request Changes", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);

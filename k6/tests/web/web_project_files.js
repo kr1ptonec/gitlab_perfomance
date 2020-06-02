@@ -8,7 +8,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 6
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -29,7 +29,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group', 'dir_path']);
+export let projects = getLargeProjects(['name', 'group_path', 'dir_path']);
 
 export function setup() {
   console.log('')
@@ -42,14 +42,14 @@ export function setup() {
 
 export default function() {
   group("Web - Project Files Tree", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/tree/master/${project['dir_path']}`, {tags: {endpoint: 'tree', controller: 'Projects::TreeController', action: 'show'}});
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/tree/master/${project['dir_path']}`, {tags: {endpoint: 'tree', controller: 'Projects::TreeController', action: 'show'}});
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
 
     let logsTreeRes = null
     for (let i = 0; i <= 100; i+=25) {
-      logsTreeRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}/refs/master/logs_tree/${project['dir_path']}?format=json&offset=${i}`, {tags: {endpoint: 'logs_tree', controller: 'Projects::RefsController', action: 'logs_tree.json'}});
+      logsTreeRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/refs/master/logs_tree/${project['dir_path']}?format=json&offset=${i}`, {tags: {endpoint: 'logs_tree', controller: 'Projects::RefsController', action: 'logs_tree.json'}});
       /20(0|1)/.test(logsTreeRes.status) ? successRate.add(true) : (successRate.add(false), logError(logsTreeRes));
     }
   });

@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -28,8 +28,6 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['user']);
-
 export function setup() {
   console.log('')
   console.log(`Web Protocol RPS: ${webProtoRps}`)
@@ -41,11 +39,9 @@ export function setup() {
 
 export default function() {
   group("Web - User Page", function() {
-    let project = selectProject(projects);
-
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['user']}`, null, {tags: {endpoint: 'user', controller: 'UserController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/users/${project['user']}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${__ENV.ENVIRONMENT_USER}`, null, {tags: {endpoint: 'user', controller: 'UserController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/users/${__ENV.ENVIRONMENT_USER}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

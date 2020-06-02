@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -23,7 +23,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group_path']);
 
 export function setup() {
   console.log('')
@@ -35,9 +35,9 @@ export function setup() {
 
 export default function() {
   group("Web - Project Page", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

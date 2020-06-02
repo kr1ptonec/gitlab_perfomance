@@ -18,7 +18,7 @@ check:gpt-docker:
   extends: .gpt-docker-base
   script:
     - apk add -u --no-cache docker
-    - docker build -t gitlab/gitlab-performance-tool:test .
+    - docker build -f Dockerfile.gpt -t gitlab/gitlab-performance-tool:test .
     - docker run --rm -e ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_user.js
   only:
     - master
@@ -26,19 +26,18 @@ check:gpt-docker:
     - tags
   except:
     - schedules
-    - tags
 
 ##########################
 ##   GPT Docker Build   ##
 ##########################
-gpt-build-docker-tag:
+gpt-build-docker:
   stage: build
   extends: .gpt-docker-base
   script:
     - apk add -u --no-cache docker
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $GPT_DOCKER_HUB_USER -p $GPT_DOCKER_HUB_PASSWORD
-    - docker build -t gitlab/gitlab-performance-tool:$CI_COMMIT_TAG .
+    - docker build -f Dockerfile.gpt -t gitlab/gitlab-performance-tool:$CI_COMMIT_TAG .
     - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG gitlab/gitlab-performance-tool:latest
     - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/gitlab-performance-tool:$CI_COMMIT_TAG
     - docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
@@ -48,3 +47,23 @@ gpt-build-docker-tag:
     - docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
   only:
     - tags
+
+##########################################
+##   GPT Data Generator Docker Build   ##
+#########################################
+gpt-data-generator-build-docker:
+  stage: build
+  extends: .gpt-docker-base
+  script:
+    - apk add -u --no-cache docker
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -f Dockerfile.gpt-data-generator -t gpt-data-generator:$GPT_DATA_GENERATOR_VERSION .
+    - docker tag gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
+    - docker tag gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+    - docker push $CI_REGISTRY_IMAGE/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
+    - docker push $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+  only:
+    refs:
+      - schedules
+    variables:
+      - $GPT_DATA_GENERATOR_VERSION

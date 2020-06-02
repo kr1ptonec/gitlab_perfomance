@@ -3,15 +3,12 @@
 @endpoint: `GET /projects/:id/repository/branches`
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/208738
-@flags: repo_storage
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
-
-checkAccessToken();
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 // Endpoint is below target threshold. Custom lower limit applied until fixed.
 export let rpsThresholds = getRpsThresholds(0.2)
@@ -25,7 +22,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -36,7 +33,7 @@ export function setup() {
 
 export default function() {
   group("API - Project Repository Branches List", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/branches`, params);

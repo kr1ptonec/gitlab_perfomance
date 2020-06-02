@@ -2,18 +2,15 @@
 /*
 @endpoint: `GET /projects/:id/repository/compare?from=commit_sha1&to=commit_sha2`
 @description: [Compare commits](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
-@flags: repo_storage
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-checkAccessToken();
-
-export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(0.5) : getRpsThresholds()
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(8000) : getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds()
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -23,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['name', 'group', 'compare_commits_sha']);
+export let projects = getLargeProjects(['name', 'group', 'compare_commits_sha']);
 
 export function setup() {
   console.log('')
@@ -33,7 +30,7 @@ export function setup() {
 }
 export default function() {
   group("API - Project Repository Compare Commits", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/compare?from=${project['compare_commits_sha'][0]}&to=${project['compare_commits_sha'][1]}`, params);

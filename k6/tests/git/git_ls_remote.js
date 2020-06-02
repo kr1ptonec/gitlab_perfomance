@@ -7,7 +7,7 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getProjects, selectProject, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
@@ -24,7 +24,7 @@ export let options = {
   stages: gitProtoStages
 };
 
-export let projects = getProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group']);
 
 export function setup() {
   console.log('')
@@ -36,7 +36,7 @@ export function setup() {
 
 export default function() {
   group("Git - Get Refs List", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}.git/info/refs?service=git-upload-pack`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

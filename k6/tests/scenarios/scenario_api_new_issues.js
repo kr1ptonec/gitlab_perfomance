@@ -8,10 +8,8 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
-
-checkAccessToken();
 
 export let issueRps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let issueStages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)

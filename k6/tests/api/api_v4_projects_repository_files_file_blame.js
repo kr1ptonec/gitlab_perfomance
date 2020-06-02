@@ -2,19 +2,16 @@
 /*
 @endpoint: `GET /projects/:id/repository/files/:file_path/blame`
 @description: [Get blame information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-blame-from-repository)
-@flags: repo_storage
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217570
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, checkAccessToken, getRpsThresholds, getTtfbThreshold, getProjects, selectProject } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-checkAccessToken();
-
-export let rpsThresholds = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getRpsThresholds(0.01) : getRpsThresholds(0.01)
-export let ttfbThreshold = __ENV.ENVIRONMENT_REPO_STORAGE == "nfs" ? getTtfbThreshold(35000) : getTtfbThreshold(35000)
+export let rpsThresholds = getRpsThresholds(0.01)
+export let ttfbThreshold = getTtfbThreshold(35000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -24,7 +21,7 @@ export let options = {
   }
 };
 
-export let projects = getProjects(['name', 'group', 'file_path']);
+export let projects = getLargeProjects(['name', 'group', 'file_path']);
 
 export function setup() {
   console.log('')
@@ -35,7 +32,7 @@ export function setup() {
 
 export default function() {
   group("API - Project Repository File Blame", function() {
-    let project = selectProject(projects);
+    let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, responseType: 'none' };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/files/${project['file_path']}/blame?ref=master`, params);
