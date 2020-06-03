@@ -127,7 +127,7 @@ class GPTTestData
   end
 
   def recreate_group(group:, parent_group:)
-    disable_soft_delete # Will disable soft delete only for the first time
+    disable_soft_delete unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
     delete_group(group)
     create_group(group_name: group['name'], parent_group: parent_group)
   end
@@ -176,7 +176,7 @@ class GPTTestData
   # Horiztonal \ Vertical
 
   def create_horizontal_test_data(parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
-    configure_repo_storage(storage: @storage_nodes)
+    configure_repo_storage(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
     existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{parent_group['id']}/subgroups", headers: @headers).headers.to_hash["X-Total"].to_i
     parent_group = recreate_group(group: parent_group, parent_group: @root_group) if existing_subgroups_count > subgroups_count
@@ -207,7 +207,7 @@ class GPTTestData
 
       # Import only if either the project doesn't exist or if its version number doesn't match config in the project's description
       if existing_project.nil?
-        configure_repo_storage(storage: gitaly_node) # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
+        configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
         proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
         import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
       elsif existing_project['description'].match?(/^Version: #{project_version}/)
@@ -217,9 +217,9 @@ class GPTTestData
         existing_project_version = existing_project['description'].match(/Version: (.*)/)
         version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{existing_project_version[1]} > #{project_version})."
         GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
-        disable_soft_delete
+        disable_soft_delete unless ENV['SKIP_CHANGING_ENV_SETTINGS']
         delete_project(existing_project)
-        configure_repo_storage(storage: gitaly_node) # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
+        configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
         proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
 
         begin

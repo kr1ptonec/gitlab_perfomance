@@ -4,14 +4,19 @@ module GPTPrepareTestData
   extend self
 
   def prepare_vertical_json_data(k6_dir:, env_file_vars:)
-    large_project_file_name = env_file_vars['gpt_data']['large_project']
+    large_projects_group = "#{env_file_vars['gpt_data']['root_group']}%2F#{env_file_vars['gpt_data']['large_projects']['group']}"
+    large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
     large_projects_data_file = Dir.glob(["#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name, "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json"])[0]
     raise "Project Config file '#{large_project_file_name}' not found as given or in default folder. Exiting..." if large_projects_data_file.nil?
 
     large_projects_data = JSON.parse(File.read(large_projects_data_file))
     large_projects_count = env_file_vars['environment']['storage_nodes'].size
     Array.new(large_projects_count) do |i|
-      project = { 'name' => "#{large_projects_data['name']}#{i + 1}", 'group_path' => CGI.unescape(large_projects_data['group']) }
+      project = {
+        'name' => "#{large_projects_data['name']}#{i + 1}",
+        'group' => large_projects_group,
+        'group_path' => CGI.unescape(large_projects_group)
+      }
       large_projects_data.merge(project)
     end.to_json
   end

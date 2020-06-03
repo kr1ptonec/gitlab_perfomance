@@ -87,9 +87,12 @@ Typically all that's needed to be done for this file is to copy one of the exist
     "storage_nodes": ["default", "storage2"]
   },
   "gpt_data": {
-    "large_project": "gitlabhq.json",
+    "root_group": "gpt",
+    "large_projects": {
+      "group": "large_projects",
+      "project": "gitlabhq"
+    },
     "many_groups_and_projects": {
-      "root_group": "gpt",
       "group": "many_groups_and_projects",
       "subgroups": 10,
       "subgroup_prefix": "gpt-subgroup-",
@@ -110,9 +113,11 @@ Details for each of the settings are as follows. Some are also available to be c
     * `latency` - The network latency (in ms) between where the Tool will be running and the environment. (Environment variable: `ENVIRONMENT_LATENCY`)
   * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Node](https://docs.gitlab.com/ee/administration/gitaly/). If you have multiple nodes, you should list them in full to ensure that the test data is spread across all storage nodes evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
 * The test data for the GitLab Performance Tool(`gpt_data`). You should aim to have each of these details present here and in the target environment otherwise the specific tests that require them will be skipped automatically:
-  * `large_project` -  Name of the Project Config file. This file contains information about the large project that will be imported by GPT Data Generator and tested by GPT ("vertical" data). For most users this can be left as the [default](environment_prep.md#setting-up-test-data-with-the-gpt-data-generator) (`gitlabhq`). To perform additional tests with custom large projects please refer to [Advanced Setup with Custom Large Projects](environment_prep.md#advanced-setup-with-custom-large-projects).
+  * `root_group` - The name of the Root Group for all the GitLab Performance Tool test data. (Default: `gpt`).
+  * `large_projects` - Contains information about the "vertical" data.
+    * `group` - The name of the Group that will contain the "vertical" data. (Default: `large_projects`).
+    * `project` -  Name of the Project Config file. This file contains information about the large project that will be imported by GPT Data Generator and tested by GPT ("vertical" data). For most users this can be left as the [default](environment_prep.md#setting-up-test-data-with-the-gpt-data-generator) (`gitlabhq`). To perform additional tests with custom large projects please refer to [Advanced Setup with Custom Large Projects](environment_prep.md#advanced-setup-with-custom-large-projects).
   * `many_groups_and_projects` - Contains information about the "horizontal" data.
-    * `root_group` - The name of the Root Group for all the GitLab Performance Tool test data. (Default: `gpt`).
     * `group` - The name of the Group that will contain the "horizontal" data. (Default: `many_groups_and_projects`).
     * `subgroups` - Number of subgroups that `group` have. The number of the subgroups should be tuned to your environment's requirements.
     * `subgroup_prefix` - Prefix that the subgroups use. (Default: `gpt-subgroup-`).
@@ -360,7 +365,6 @@ First you will need to create the [Project Config File](..k6/config/projects). T
 {
   "name": "gitlabhq",
   "version": 1,
-  "group": "gpt%2Flarge_projects",
   "branch": "10-0-stable",
   "commit_sha": "0a99e022",
   "commit_sha_signed": "6526e91f",
@@ -391,7 +395,6 @@ Details for each of the settings are as follows. You should aim to have each of 
 
 * `name` - Name of the Project that the GPT and Generator will use for the large project names.
 * `version` - Version of the Project Data that the GPT Data Generator will use. Each large project description will store this value to track Vertical data version. Version should be bumped when the large project export file was updated with the new data and you want to reimport this data.
-* `group` - The name of the Group that contains the intended Project.
 * `branch` - The name of a large branch available in the project. The size of the branch should be tuned to your environment's requirements.
 * `commit_sha` - The SHA reference of a large commit available in the project. The size of the commit should be tuned to your environment's requirements.
 * `commit_sha_signed` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
