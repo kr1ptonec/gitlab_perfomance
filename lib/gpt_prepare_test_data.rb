@@ -23,12 +23,13 @@ module GPTPrepareTestData
 
   def prepare_horizontal_json_data(env_file_vars:)
     many_gr_and_proj = env_file_vars['gpt_data']['many_groups_and_projects']
-    required_keys = %w[root_group group subgroups subgroup_prefix projects project_prefix]
+    many_gr_and_proj_group = "#{env_file_vars['gpt_data']['root_group']}%2F#{many_gr_and_proj['group']}"
+    required_keys = %w[group subgroups subgroup_prefix projects project_prefix]
 
     return {}.to_json unless required_keys.all? { |required_key| many_gr_and_proj.key?(required_key) }
 
     subgroups = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj['root_group']}%2F#{many_gr_and_proj['group']}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
+      "#{many_gr_and_proj_group}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
     end
 
     # N projects in each subgroup
@@ -37,7 +38,7 @@ module GPTPrepareTestData
     end
 
     {
-      'group' => "#{many_gr_and_proj['root_group']}%2F#{many_gr_and_proj['group']}",
+      'group' => many_gr_and_proj_group,
       'subgroups' => subgroups,
       'projects' => projects
     }.to_json
