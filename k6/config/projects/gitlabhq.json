@@ -1,7 +1,6 @@
 { 
   "name": "gitlabhq",
   "version": 1,
-  "group": "gpt%2Flarge_projects",
   "branch": "10-0-stable",
   "commit_sha": "0a99e022",
   "commit_sha_signed": "6526e91f",

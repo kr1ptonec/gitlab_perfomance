@@ -25,15 +25,15 @@ opts = Optimist.options do
   banner "\nOptions:"
   opt :environment, "Name of Environment Config file in environments directory that will be used for test data generation. Alternative filepath can also be given.", type: :string
   opt :environment_url, "Full URL for the environment to import to.", short: :none, type: :string, default: ENV['ENVIRONMENT_URL'] || nil
-  opt :root_group, "Root group for GPT data.", short: :none, type: :string, default: 'gpt'
+  opt :root_group, "Root group for GPT data.", short: :none, type: :string
   opt :horizontal, "Generate horizontal GPT data with multiple subgroups and projects.", short: :none, type: :boolean, default: true
-  opt :group, "Group name that the subgroups and projects will be generated under.", short: :none, type: :string, default: 'many_groups_and_projects'
+  opt :group, "Group name that the subgroups and projects will be generated under.", short: :none, type: :string
   opt :subgroup_prefix, "Prefix that the subgroups will be generated with.", short: :none, type: :string, default: 'gpt-subgroup-'
   opt :subgroups, "Number of subgroups to create", type: :integer
   opt :project_prefix, "Prefix that the projects will be generated with.", short: :none, type: :string, default: 'gpt-project-'
   opt :projects, "Number of projects to create in each subgroup", type: :integer
   opt :vertical, "Generate vertical GPT data with large projects", short: :none, type: :boolean, default: true
-  opt :vert_group, "Group name that the vertical data will be generated to.", short: :none, type: :string, default: 'large_projects'
+  opt :vert_group, "Group name that the vertical data will be generated to.", short: :none, type: :string
   opt :large_project_name, "Name for large project to import.", short: :none, type: :string
   opt :large_project_tarball, "Location of large project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz'
   opt :storage_nodes, "Repository storages that will be used to import vertical data.", short: :none, type: :strings
@@ -66,14 +66,15 @@ if opts[:environment]
   env_file_vars = JSON.parse(File.read(env_file))
 
   opts[:environment_url] ||= env_file_vars['environment']['url']
-  opts[:root_group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['root_group']
+  opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
 
   opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
 
-  large_project_file_name = env_file_vars['gpt_data']['large_project']
+  opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
+  large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
   large_projects_data_file = Dir.glob(["#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name, "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json"])[0]
   large_projects_data = JSON.parse(File.read(large_projects_data_file))
   opts[:large_project_name] ||= large_projects_data['name']
@@ -118,8 +119,8 @@ rescue StandardError => e
   GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n #{e.message}\n Traceback:#{e.backtrace}").red
 ensure
   unless gpt_test_data.nil?
-    gpt_test_data.restore_soft_delete_settings
-    gpt_test_data.restore_repo_storage_config
+    gpt_test_data.restore_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
+    gpt_test_data.restore_repo_storage_config unless ENV['SKIP_CHANGING_ENV_SETTINGS']
   end
   File.open(ENV['GPT_LOGGER_PATH'], 'a') { |f| f.write("\nGPT Data Generator: v#{gpt_data_version}") }
   puts "\n█ Logs: #{ENV['GPT_LOGGER_PATH']}" unless ENV['GPT_LOGGER_PATH'].nil?
