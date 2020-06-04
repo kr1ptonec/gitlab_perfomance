@@ -47,7 +47,9 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   projects.forEach(project => {
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}`);
+    project['group_id'] = JSON.parse(res.body)['group_id'];
+    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`);
     project['id'] = JSON.parse(res.body)['id'];
   });
 }
@@ -57,7 +59,7 @@ export default function() {
     let project = selectRandom(projects);
 
     scopes.forEach(scope => {
-      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&project_id=${project['id']}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}});
+      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&group_id=${project['group_id']}&project_id=${project['id']}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}});
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
 
       let counts_res = http.batch(scopes.map(count_scope => ["GET", `${__ENV.ENVIRONMENT_URL}/search/count?scope=${count_scope}&project_id=${project['id']}&search=${project['search'][scope]}`, null, { tags: { endpoint: `${count_scope}_count`, controller: 'SearchController', action: 'count' } }]));

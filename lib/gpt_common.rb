@@ -37,7 +37,7 @@ module GPTCommon
     raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
-    GPTLogger.logger.info "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n\n"
+    GPTLogger.logger.info "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n"
   end
 
   def get_env_settings(env_url:, headers:)
