@@ -109,7 +109,7 @@ report-k6-results-wiki:
       - $TEST_TYPE == "k6"
 
 report-k6-test-info-wiki:
-  extends: .k6-base
+  extends: .report-k6-wiki-base
   script:
     - bin/ci-report-test-info-wiki -p "Current Test Details"
   only:
