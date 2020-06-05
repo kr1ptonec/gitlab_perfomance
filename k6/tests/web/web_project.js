@@ -24,7 +24,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path']);
+export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
   console.log('')
@@ -38,7 +38,7 @@ export default function() {
   group("Web - Project Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

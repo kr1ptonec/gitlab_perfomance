@@ -43,7 +43,7 @@ class ImportProject
   end
 
   def import_project_request(proj_tarball_file:, project_name:, namespace:, storage_name:, project_description:)
-    GPTLogger.logger.info "Importing project #{project_name}..."
+    GPTLogger.logger.info "Importing project #{project_name}...\nNote that this may take some time to upload a file to the target environment."
     proj_url = URI.join(@environment_api_url, 'projects/import').to_s
     proj_params = {
       file: HTTP::FormData::File.new(proj_tarball_file),

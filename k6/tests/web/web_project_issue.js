@@ -37,7 +37,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path', 'issue_iid']);
+export let projects = getLargeProjects(['name', 'group_path_web', 'issue_iid']);
 
 export function setup() {
   console.log('')
@@ -49,7 +49,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'issues')
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, 'issues')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
@@ -59,11 +59,11 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::IssuesController', action: 'discussions.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/related_branches`, null, {tags: {endpoint: 'related_branches', controller: 'Projects::IssuesController', action: 'related_branches'}, headers: { 'Accept': 'application/json' }}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/can_create_branch`, null, {tags: {endpoint: 'can_create_branch', controller: 'Projects::IssuesController', action: 'can_create_branch'}, headers: { 'Accept': 'application/json' }}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}`, null, {tags: {endpoint: 'issue', controller: 'Projects::IssuesController', action: 'show'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/realtime_changes`, null, {tags: {endpoint: 'realtime_changes', controller: 'Projects::IssuesController', action: 'realtime_changes'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::IssuesController', action: 'discussions.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/related_branches`, null, {tags: {endpoint: 'related_branches', controller: 'Projects::IssuesController', action: 'related_branches'}, headers: { 'Accept': 'application/json' }}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['issue_iid']}/can_create_branch`, null, {tags: {endpoint: 'can_create_branch', controller: 'Projects::IssuesController', action: 'can_create_branch'}, headers: { 'Accept': 'application/json' }}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

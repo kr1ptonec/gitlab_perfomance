@@ -46,15 +46,15 @@ export default function() {
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=projects&search=${project['search']['projects']}`, null, Object.assign({}, params, { tags: { endpoint: 'projects' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=issues&search=${project['search']['issues']}`, null, Object.assign({}, params, { tags: { endpoint: 'issues' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=commits&search=${project['search']['commits']}`, null, Object.assign({}, params, { tags: { endpoint: 'commits' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=merge_requests&search=${project['search']['merge_requests']}`, null, Object.assign({}, params, { tags: { endpoint: 'merge_requests' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=milestones&search=${project['search']['milestones']}`, null, Object.assign({}, params, { tags: { endpoint: 'milestones' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=users&search=${project['search']['users']}`, null, Object.assign({}, params, { tags: { endpoint: 'users' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=projects&search=${project['search']['projects']}`, null, Object.assign({}, params, { tags: { endpoint: 'projects' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=issues&search=${project['search']['issues']}`, null, Object.assign({}, params, { tags: { endpoint: 'issues' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=commits&search=${project['search']['commits']}`, null, Object.assign({}, params, { tags: { endpoint: 'commits' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=merge_requests&search=${project['search']['merge_requests']}`, null, Object.assign({}, params, { tags: { endpoint: 'merge_requests' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=milestones&search=${project['search']['milestones']}`, null, Object.assign({}, params, { tags: { endpoint: 'milestones' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=users&search=${project['search']['users']}`, null, Object.assign({}, params, { tags: { endpoint: 'users' } })],
 
       // Blobs are disabled due to bad performance causing errors and knock on effects
-      // ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}/search?scope=blobs&search=${project['search']['blobs']}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
+      // ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=blobs&search=${project['search']['blobs']}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

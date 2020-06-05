@@ -47,7 +47,7 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
   projects.forEach(project => {
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group']}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}`);
     project['group_id'] = JSON.parse(res.body)['id'];
   });
 }

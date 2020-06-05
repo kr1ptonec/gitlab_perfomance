@@ -31,7 +31,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path']);
+export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
   console.log('')
@@ -43,7 +43,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group']}/${checkProject['name']}`, 'branches')
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, 'branches')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
@@ -53,8 +53,8 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'index'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/${data.endpointPath}/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::BranchesController', action: 'index'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'index'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::BranchesController', action: 'index'}}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

@@ -15,7 +15,7 @@ export function getRefsListGitPull(project) {
       "Pragma": "no-cache"
     }
   };
-  let response = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}.git/info/refs?service=git-upload-pack`, params);
+  let response = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_api']}/${project['name']}.git/info/refs?service=git-upload-pack`, params);
   return response;
 }
 
@@ -31,7 +31,7 @@ export function pullRefsData(project, firstRefSHA, secondRefSHA) {
     }
   };
   let body = `0054want ${firstRefSHA} multi_ack side-band-64k ofs-delta\n00000032have ${secondRefSHA}\n00000009done\n`;
-  let response = http.post(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}.git/git-upload-pack`, body, params);
+  let response = http.post(`${__ENV.ENVIRONMENT_URL}/${project['group_path_api']}/${project['name']}.git/git-upload-pack`, body, params);
   return response;
 }
 
@@ -53,7 +53,7 @@ export function getRefSHAs(project) {
 
 export function getLargeBranchName(project) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
   let branchName = JSON.parse(res.body)['target_branch'];
   branchName ? console.debug(`Branch with a lot of commits: ${branchName}`) : fail("Branch not found");
   return branchName;
@@ -71,7 +71,7 @@ export function getRefsListGitPush(authEnvUrl, project) {
       "Pragma": "no-cache"
     }
   };
-  let response = http.get(`${authEnvUrl}/${project['group']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
+  let response = http.get(`${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
   return response;
 }
 
@@ -84,15 +84,15 @@ export function pushRefsData(authEnvUrl, project) {
     }
   };
   let responses = http.batch([
-    ["POST", `${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_new_head, params],
-    ["POST", `${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params]
+    ["POST", `${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_new_head, params],
+    ["POST", `${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params]
   ]);
   return responses;
 }
 
 export function checkCommitExists(project, commit_sha) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/commits/${commit_sha}`, params);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/repository/commits/${commit_sha}`, params);
   /20(0|1)/.test(res.status) ? console.log(`Commit #${commit_sha} exists`) : (logError(res), fail(`Commit #${commit_sha} does not exist or user doesn't have developer access to the project. Failing the git push test. ⚠️ Please refer to documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md`));
 }
 
@@ -123,7 +123,7 @@ export function updateProjectPipelinesSetting(project, state) {
     formdata = { jobs_enabled: state }
   }
 
-  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}`, formdata, params);
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}`, formdata, params);
   /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting changed to ${state}`) : (logError(res), fail(`Error occured when attempting to change Project Pipelines setting.`));
 }
 

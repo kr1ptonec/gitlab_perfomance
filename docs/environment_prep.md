@@ -307,6 +307,7 @@ Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available an
 Environment and Access Token check was successful - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
 
 Importing project gitlabhq1...
+Note that this may take some time to upload a file to the target environment.
 {"id"=>1025, "description"=>nil, "name"=>"gitlabhq1", "name_with_namespace"=>"gpt / large_projects / gitlabhq1", "path"=>"gitlabhq1", "path_with_namespace"=>"gpt/large_projects/gitlabhq1", "created_at"=>"2020-05-26T20:08:49.943Z", "import_status"=>"scheduled", "correlation_id"=>"nKxTHXLIJr4", "failed_relations"=>[]}
 
 Project tarball has successfully uploaded and started to be imported with ID '1025'
@@ -323,6 +324,7 @@ Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available an
 Environment and Access Token check was successful - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
 
 Importing project gitlabhq1...
+Note that this may take some time to upload a file to the target environment.
 {"id"=>1026, "description"=>nil, "name"=>"gitlabhq2", "name_with_namespace"=>"gpt / large_projects / gitlabhq2", "path"=>"gitlabhq2", "path_with_namespace"=>"gpt/large_projects/gitlabhq2", "created_at"=>"2020-05-26T20:08:49.943Z", "import_status"=>"scheduled", "correlation_id"=>"nKAdHXLIJr3", "failed_relations"=>[]}
 
 Project tarball has successfully uploaded and started to be imported with ID '1026'
