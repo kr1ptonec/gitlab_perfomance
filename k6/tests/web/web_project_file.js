@@ -29,7 +29,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path', 'file_path']);
+export let projects = getLargeProjects(['name', 'group_path_web', 'file_path']);
 
 export function setup() {
   console.log('')
@@ -45,8 +45,8 @@ export default function() {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/blob/master/${project['file_path']}`, null, {tags: {endpoint: 'file', controller: 'Projects::BlobController', action: 'show'}, responseType: 'none'}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path']}/${project['name']}/blob/master/${project['file_path']}?format=json`, null, {tags: {endpoint: 'file?format=json', controller: 'Projects::BlobController', action: 'show.json'}, responseType: 'none'}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_path']}`, null, {tags: {endpoint: 'file', controller: 'Projects::BlobController', action: 'show'}, responseType: 'none'}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_path']}?format=json`, null, {tags: {endpoint: 'file?format=json', controller: 'Projects::BlobController', action: 'show.json'}, responseType: 'none'}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

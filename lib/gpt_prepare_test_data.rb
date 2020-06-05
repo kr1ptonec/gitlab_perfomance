@@ -14,8 +14,8 @@ module GPTPrepareTestData
     Array.new(large_projects_count) do |i|
       project = {
         'name' => "#{large_projects_data['name']}#{i + 1}",
-        'group' => large_projects_group,
-        'group_path' => CGI.unescape(large_projects_group)
+        'group_path_api' => large_projects_group,
+        'group_path_web' => CGI.unescape(large_projects_group)
       }
       large_projects_data.merge(project)
     end.to_json

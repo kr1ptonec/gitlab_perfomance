@@ -24,7 +24,7 @@ export let options = {
   stages: gitProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group_path_api']);
 
 export function setup() {
   console.log('')
@@ -38,7 +38,7 @@ export default function() {
   group("Git - Get Refs List", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group']}/${project['name']}.git/info/refs?service=git-upload-pack`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_api']}/${project['name']}.git/info/refs?service=git-upload-pack`);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

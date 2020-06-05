@@ -28,7 +28,7 @@ export let options = {
 };
 
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
-export let projects = getLargeProjects(['name', 'group', 'git_push_data']);
+export let projects = getLargeProjects(['name', 'group_path_api', 'git_push_data']);
 
 projects = projects.filter(project => checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]));
 if (projects.length == 0) fail('No projects found with required keys for test. Exiting...');
@@ -84,7 +84,7 @@ export function teardown() {
         "Content-Type": "application/x-git-receive-pack-request"
       }
     };
-    http.post(`${authEnvUrl}/${project['group']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
+    http.post(`${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
     // Reenable Pipelines in the Project
     updateProjectPipelinesSetting(project, true);
   });

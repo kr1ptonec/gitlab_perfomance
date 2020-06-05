@@ -20,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group', 'dir_path']);
+export let projects = getLargeProjects(['name', 'group_path_api', 'dir_path']);
 
 export function setup() {
   console.log('')
@@ -34,7 +34,7 @@ export default function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/repository/tree?path=${project['dir_path']}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/repository/tree?path=${project['dir_path']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

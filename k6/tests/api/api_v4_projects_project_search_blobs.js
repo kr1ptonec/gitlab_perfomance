@@ -22,7 +22,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group']);
+export let projects = getLargeProjects(['name', 'group_path_api']);
 
 export function setup() {
   console.log('')
@@ -43,7 +43,7 @@ export default function() {
       } 
     };
     let searchQuery = "test"; 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group']}%2F${project['name']}/search?scope=blobs&search=${searchQuery}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=blobs&search=${searchQuery}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
