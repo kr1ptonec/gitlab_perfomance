@@ -44,8 +44,8 @@ export default function() {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines`, null, {tags: {endpoint: '/pipelines', controller: 'Projects::PipelinesController', action: 'index'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines.json`, null, {tags: {endpoint: '/pipelines.json', controller: 'Projects::PipelinesController', action: 'index.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines`, null, {tags: {endpoint: '/pipelines', controller: 'Projects::PipelinesController', action: 'index'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines.json`, null, {tags: {endpoint: '/pipelines.json', controller: 'Projects::PipelinesController', action: 'index.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

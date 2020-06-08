@@ -40,8 +40,8 @@ export function setup() {
 export default function() {
   group("Web - User Page", function() {
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${__ENV.ENVIRONMENT_USER}`, null, {tags: {endpoint: 'user', controller: 'UserController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/users/${__ENV.ENVIRONMENT_USER}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${__ENV.ENVIRONMENT_USER}`, null, {tags: {endpoint: 'user', controller: 'UserController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/users/${__ENV.ENVIRONMENT_USER}/calendar.json`, null, {tags: {endpoint: 'calendar.json', controller: 'UserController', action: 'calendar.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

@@ -12,6 +12,9 @@ export function logError(res) {
     error = res.body
   }
 
+  // Report redirects when responseType is null
+  if (/30(1|2)/.test(res.status) && error === null) error = "request was redirected"
+
   if (logError.last != error) {
     logError.last = error;
     console.warn(`Error detected: '${logError.last}'`);
