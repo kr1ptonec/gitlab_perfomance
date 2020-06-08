@@ -75,7 +75,7 @@ class GPTTestData
     return if check_repo_storage_setting?([storage].flatten)
 
     GPTLogger.logger.info "Updating GitLab Application setting 'repository_storages' to '#{storage}'"
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { repository_storages: storage })
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { 'repository_storages[]': storage })
   end
 
   def restore_repo_storage_config
