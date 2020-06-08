@@ -57,10 +57,10 @@ export default function() {
     let project = selectRandom(projects);
 
     scopes.forEach(scope => {
-      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&group_id=${project['group_id']}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}});
+      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&group_id=${project['group_id']}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}, redirects: 0});
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
 
-      let counts_res = http.batch(scopes.map(count_scope => ["GET", `${__ENV.ENVIRONMENT_URL}/search/count?scope=${count_scope}&project_id=${project['id']}&search=${project['search'][scope]}`, null, { tags: { endpoint: `${count_scope}_count`, controller: 'SearchController', action: 'count' } }]));
+      let counts_res = http.batch(scopes.map(count_scope => ["GET", `${__ENV.ENVIRONMENT_URL}/search/count?scope=${count_scope}&project_id=${project['id']}&search=${project['search'][scope]}`, null, { tags: { endpoint: `${count_scope}_count`, controller: 'SearchController', action: 'count' }, redirects: 0 }]));
       counts_res.forEach(res => {
         /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
       });

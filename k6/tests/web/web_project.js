@@ -38,7 +38,7 @@ export default function() {
   group("Web - Project Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}`);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

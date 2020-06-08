@@ -56,9 +56,9 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs`, null, {tags: {endpoint: 'diffs', controller: 'Projects::MergeRequestsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_metadata.json?`, null, {tags: {endpoint: 'diffs_metadata.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_metadata.json'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=1`, null, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs`, null, {tags: {endpoint: 'diffs', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_metadata.json?`, null, {tags: {endpoint: 'diffs_metadata.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_metadata.json'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=1`, null, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}, redirects: 0}],
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
@@ -66,7 +66,7 @@ export default function(data) {
 
     let seqDiffRes = null
     for (let i = 2; i <= 5; i++) {
-      seqDiffRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=${i}`, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}});
+      seqDiffRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/diffs_batch.json?w=0&per_page=20&page=${i}`, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}, redirects: 0});
       /20(0|1)/.test(seqDiffRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiffRes));
     }
   });

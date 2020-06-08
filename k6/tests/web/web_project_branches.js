@@ -53,8 +53,8 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'index'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::BranchesController', action: 'index'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}`, null, {tags: {endpoint: 'branches', controller: 'Projects::BranchesController', action: 'index'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/all`, null, {tags: {endpoint: 'branches/all', controller: 'Projects::BranchesController', action: 'index'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

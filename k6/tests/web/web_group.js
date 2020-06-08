@@ -42,8 +42,8 @@ export function setup() {
 export default function() {
   group("Web - Groups Page", function() {
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${horizDataGroup}`, null, {tags: {endpoint: '/', controller: 'GroupsController', action: 'show'}}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/groups/${horizDataGroup}/-/children.json`, null, {tags: {endpoint: '/children.json', controller: 'Groups::ChildrenController', action: 'index'}}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${horizDataGroup}`, null, {tags: {endpoint: '/', controller: 'GroupsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/groups/${horizDataGroup}/-/children.json`, null, {tags: {endpoint: '/children.json', controller: 'Groups::ChildrenController', action: 'index'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
