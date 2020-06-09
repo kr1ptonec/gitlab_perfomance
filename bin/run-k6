@@ -77,6 +77,7 @@ aggregated_results = []
 aggregated_success = true
 
 # Run tests
+test_redo = false
 tests.each do |test_file|
   status, output = RunK6.run_k6(k6_path: k6_path, opts: opts, env_vars: env_vars, options_file: options_file, test_file: test_file, gpt_version: gpt_version)
 
@@ -84,8 +85,17 @@ tests.each do |test_file|
     out_file.puts output
   end
 
-  aggregated_results << RunK6.get_test_results(test_file: test_file, status: status, output: output)
+  if status == false && test_redo == false
+    warn Rainbow("Test failed. Retrying...").yellow
+    test_redo = true
+    redo
+  end
+
+  aggregated_results << RunK6.get_test_results(test_file: test_file, status: status, output: output, test_redo: test_redo)
   aggregated_success &&= status
+
+  # Reset redo flag
+  test_redo = false
 
   sleep ENV['GPT_SLEEP_BETWEEN'].to_i if ENV['GPT_SLEEP_BETWEEN'] && !test_file.equal?(tests.last)
 rescue Interrupt
