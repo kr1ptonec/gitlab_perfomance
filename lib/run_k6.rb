@@ -175,7 +175,7 @@ module RunK6
     [status, output]
   end
 
-  def get_test_results(test_file:, status:, output:)
+  def get_test_results(test_file:, status:, output:, test_redo:)
     results = {}
 
     output.each do |line|
@@ -203,6 +203,7 @@ module RunK6
 
     results["result"] = status
     results["score"] = [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?) ? ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) : 0.0
+    results['redo'] = test_redo
 
     results["issues"] = TestInfo.get_test_tag_value(test_file, 'issues')
     results["flags"] = TestInfo.get_test_tag_value(test_file, 'flags')
