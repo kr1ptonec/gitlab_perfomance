@@ -1,4 +1,5 @@
 k6/results/*
+results/*
 k6/tests/git/push_data/data/*
 node_modules/
 .bundle/

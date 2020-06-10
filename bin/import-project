@@ -15,8 +15,6 @@ require 'pathname'
 require 'time'
 require 'uri'
 
-k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
-
 opts = Optimist.options do
   banner "Usage: import-project [options]"
   banner "\nImports a GitLab Project tarball (local or remote) into the specified environment.\nDefaults to importing the gitlabhq project from a remote filestore to the specified environment, group and project namespace."
@@ -40,7 +38,7 @@ end
 raise 'Environment Variable ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['ACCESS_TOKEN']
 
 # GPT logger setup
-results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
+results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
 results_file_prefix = "#{URI(opts[:environment_url]).host}_#{Time.now.strftime('%Y-%m-%d_%H%M%S')}"
 ENV['GPT_LOGGER_PATH'] = "#{results_home}/import-project_#{results_file_prefix}.log"
 

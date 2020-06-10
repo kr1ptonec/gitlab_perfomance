@@ -85,7 +85,7 @@ raise Rainbow("Some generate-gpt-data option(s) are not defined. Exiting...\nOpt
 
 # GPT logger setup
 start_time = Time.now
-results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
+results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
 FileUtils.mkdir_p(results_home)
 results_file_prefix = "#{URI(opts[:environment_url]).host}_#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
 ENV['GPT_LOGGER_PATH'] = "#{results_home}/generate-gpt-data_#{results_file_prefix}.log"
