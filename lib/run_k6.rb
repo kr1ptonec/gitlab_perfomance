@@ -113,7 +113,7 @@ module RunK6
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
-      test_globs = Dir.glob([test_path, "#{k6_dir}/#{test_path}", "#{k6_dir}/tests/#{test_path}", "#{ENV['GPT_DOCKER_TESTS_DIR'] || ''}/#{test_path}"])
+      test_globs = Dir.glob([test_path, "#{ENV['GPT_DOCKER_TESTS_DIR'] || ''}/#{test_path}", "#{k6_dir}/#{test_path}", "#{k6_dir}/tests/#{test_path}"])
       test_globs.each do |test_glob|
         tests += Dir.glob(["#{test_glob}.js", "#{test_glob}/*.js", "#{test_glob}/api/*.js", "#{test_glob}/git/*.js", "#{test_glob}/web/*.js"])
         tests += Dir.glob("#{test_glob}/quarantined/*.js") if quarantined

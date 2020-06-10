@@ -44,7 +44,9 @@ gpt-build-docker:
     - |
       if echo $CI_COMMIT_TAG | grep -qv ".*beta.*"; then
         docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+        docker tag gitlab/gitlab-performance-tool:$CI_COMMIT_TAG gitlab/gitlab-performance-tool:latest
         docker push $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+        docker push gitlab/gitlab-performance-tool:latest
       fi
   only:
     - tags

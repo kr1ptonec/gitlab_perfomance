@@ -30,7 +30,7 @@ opts = Optimist.options do
   opt :unique_name, "Add timestamp to the project name to avoid uniqueness violations in case of multiple imports into the same group", short: :none, type: :boolean, default: false
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
-  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access for the ability to import projects. (Default: nil)"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set. (Default: nil)"
   banner "\nExamples:"
   banner "  import-project --environment-url 10k.testbed.gitlab.net"
   banner "  import-project --environment-url localhost:3000 --project-tarball /home/user/test-project.tar.gz --namespace test-group --project-name test-project"

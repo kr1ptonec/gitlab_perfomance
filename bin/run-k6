@@ -36,7 +36,7 @@ opts = Optimist.options do
   opt :help, 'Show this help message'
   opt :version, 'Print version and exit'
   banner "\nEnvironment Variable(s):"
-  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have API, read_repository, and write_repository permissions. (Default: nil)"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have all permissions set. (Default: nil)"
   banner "  GPT_DEBUG                Shows debug output when set to true. (Default: nil)"
   banner "\nExamples:"
   banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
@@ -52,10 +52,10 @@ warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various test
 k6_path = RunK6.setup_k6
 
 # Variables
-env_file = Dir.glob([opts[:environment], "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}", "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}"])[0]
+env_file = Dir.glob([opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}", "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}"])[0]
 raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
 
-options_file = Dir.glob([opts[:options], "#{k6_dir}/#{opts[:options]}", "#{k6_dir}/config/options/#{opts[:options]}", "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/options/#{opts[:options]}"])[0]
+options_file = Dir.glob([opts[:options], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/options/#{opts[:options]}", "#{k6_dir}/#{opts[:options]}", "#{k6_dir}/config/options/#{opts[:options]}"])[0]
 raise "Options config file '#{opts[:options]}' not found as given or in default folder. Exiting..." unless File.file?(options_file.to_s)
 
 env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file, options_file: options_file)
