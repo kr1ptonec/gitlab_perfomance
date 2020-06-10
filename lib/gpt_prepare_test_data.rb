@@ -6,7 +6,7 @@ module GPTPrepareTestData
   def prepare_vertical_json_data(k6_dir:, env_file_vars:)
     large_projects_group = "#{env_file_vars['gpt_data']['root_group']}%2F#{env_file_vars['gpt_data']['large_projects']['group']}"
     large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
-    large_projects_data_file = Dir.glob(["#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name, "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json"])[0]
+    large_projects_data_file = Dir.glob(["#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json", "#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name])[0]
     raise "Project Config file '#{large_project_file_name}' not found as given or in default folder. Exiting..." if large_projects_data_file.nil?
 
     large_projects_data = JSON.parse(File.read(large_projects_data_file))

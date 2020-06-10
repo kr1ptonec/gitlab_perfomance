@@ -42,7 +42,7 @@ opts = Optimist.options do
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
-  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access for the ability to create and import projects. (Default: nil)"
+  banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set.  (Default: nil)"
   banner "\nExamples:"
   banner "  Generate horizontal and vertical data using 10k.json environment file:"
   banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json"
@@ -60,7 +60,7 @@ raise Rainbow("Environment Variable ACCESS_TOKEN has not been set. Unable to cre
 
 # Variables
 if opts[:environment]
-  env_file = Dir.glob([opts[:environment], "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}", "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}"])[0]
+  env_file = Dir.glob([opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}", "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}"])[0]
   raise Rainbow("Environment file is not found: #{opts[:environment]}.").red if env_file.nil? || !File.exist?(env_file)
 
   env_file_vars = JSON.parse(File.read(env_file))
@@ -75,7 +75,7 @@ if opts[:environment]
 
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
   large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
-  large_projects_data_file = Dir.glob(["#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name, "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json"])[0]
+  large_projects_data_file = Dir.glob(["#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json", "#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name])[0]
   large_projects_data = JSON.parse(File.read(large_projects_data_file))
   opts[:large_project_name] ||= large_projects_data['name']
   opts[:large_project_version] ||= large_projects_data['version']

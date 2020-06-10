@@ -20,7 +20,7 @@ tp.set(:max_width, 800)
   opt :page_title, "Title to use for wiki page", type: :string, required: true
   opt :api_url, "GitLab wiki API URL", type: :string, default: "https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis"
   banner "\nEnvironment Variable(s):"
-  banner "  CI_PROJECT_ACCESS_TOKEN   A valid GitLab Personal Access Token that has access to the intended project where the wiki page will be posted. The token should come from a User that has admin access for the project(s) and have API permissions. (Default: nil)"
+  banner "  CI_PROJECT_ACCESS_TOKEN   A valid GitLab Personal Access Token that has access to the intended project where the wiki page will be posted. The token should come from a User that has admin access for the project(s) and have all permissions. (Default: nil)"
 end
 
 raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN']
