@@ -68,7 +68,7 @@ k6:
   artifacts:
     when: always
     paths:
-      - k6/results/
+      - results/
     expire_in: 14d
   retry:
     max: 2
