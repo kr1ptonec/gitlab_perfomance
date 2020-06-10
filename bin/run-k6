@@ -66,12 +66,12 @@ GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL'])
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], env_vars: env_vars)
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
-results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || "#{k6_dir}/results"
+results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
 results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_vars['ENVIRONMENT_VERSION'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_vars['ENVIRONMENT_VERSION'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
 results_dir = File.join(results_home, results_file_prefix)
-puts "\nSaving all test results to #{results_dir}"
-FileUtils.mkdir_p(results_dir)
 results_output_file = File.join(results_dir, "#{results_file_prefix}_results_output.log")
+FileUtils.mkdir_p(results_dir)
+puts "\nSaving all test results to #{results_dir}"
 
 aggregated_results = []
 aggregated_success = true
@@ -79,7 +79,7 @@ aggregated_success = true
 # Run tests
 test_redo = false
 tests.each do |test_file|
-  status, output = RunK6.run_k6(k6_path: k6_path, opts: opts, env_vars: env_vars, options_file: options_file, test_file: test_file, gpt_version: gpt_version)
+  status, output = RunK6.run_k6(k6_path: k6_path, opts: opts, env_vars: env_vars, options_file: options_file, test_file: test_file, results_dir: results_dir, gpt_version: gpt_version)
 
   File.open(results_output_file, 'a') do |out_file|
     out_file.puts output

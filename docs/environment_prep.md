@@ -235,7 +235,7 @@ Examples:
     bin/generate-gpt-data --environment 10k.json --no-horizontal --vertical --project-tarball=/home/user/test-project.tar.gz
 ```
 
-After running the logs will be in the tool's `k6/results` folder.
+After running the logs will be in the tool's `results` folder.
 
 #### Location and Network conditions
 

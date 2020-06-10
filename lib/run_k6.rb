@@ -144,13 +144,17 @@ module RunK6
     tests
   end
 
-  def run_k6(k6_path:, opts:, env_vars:, options_file:, test_file:, gpt_version:)
+  def run_k6(k6_path:, opts:, env_vars:, options_file:, test_file:, results_dir:, gpt_version:)
     test_name = File.basename(test_file, '.js')
+    test_summary_report_file = File.join(results_dir, 'test_results', "#{File.basename(test_file, '.js')}.json")
+    FileUtils.mkdir_p(File.dirname(test_summary_report_file))
+
     puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
     cmd = [k6_path, 'run']
     cmd += ['--config', options_file] if options_file
     cmd += ['--summary-time-unit', 'ms']
+    cmd += ['--summary-export', test_summary_report_file]
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += ['--insecure-skip-tls-verify']
     cmd += ['--http-debug'] if ENV['GPT_DEBUG']
