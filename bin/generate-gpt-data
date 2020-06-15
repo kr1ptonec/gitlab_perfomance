@@ -75,7 +75,10 @@ if opts[:environment]
 
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
   large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
+
   large_projects_data_file = Dir.glob(["#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json", "#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name])[0]
+  raise Rainbow("Project Config file '#{large_project_file_name}' not found as given or in default folder. Exiting...").red if large_projects_data_file.nil? || !File.exist?(large_projects_data_file)
+
   large_projects_data = JSON.parse(File.read(large_projects_data_file))
   opts[:large_project_name] ||= large_projects_data['name']
   opts[:large_project_version] ||= large_projects_data['version']
