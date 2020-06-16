@@ -14,7 +14,7 @@ class GPTTestData
     @force = force
     @unattended = unattended
     @env_url = env_url
-    @headers = { 'Authorization': "Bearer #{ENV['ACCESS_TOKEN']}" }
+    @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     @max_wait_for_delete = max_wait_for_delete
     @storage_nodes = storage_nodes
 
