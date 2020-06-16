@@ -102,7 +102,7 @@ File.write(results_comparision_file, results_comparision_contents)
 exit if @opts[:dry_run]
 
 puts "\nPosting results to Wiki page '#{@opts[:page_title]}'"
-headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
+headers = { 'PRIVATE-TOKEN': ENV['CI_PROJECT_ACCESS_TOKEN'] }
 
 create_params = {
   title: @opts[:page_title],

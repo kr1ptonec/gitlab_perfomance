@@ -52,7 +52,7 @@ wiki_report_contents << "\n## Known Issues\n"
 wiki_report_contents << TablePrint::Printer.table_print(tests_with_issues, [:name, :issues])
 
 puts "Posting test info to Wiki page..."
-headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
+headers = { 'PRIVATE-TOKEN': ENV['CI_PROJECT_ACCESS_TOKEN'] }
 
 create_params = {
   title: @opts[:page_title],
