@@ -12,7 +12,7 @@ class ImportProject
   def initialize(env_url:, project_tarball:)
     @env_url = env_url
     @environment_api_url = URI.join(@env_url, '/api/v4/')
-    @headers = { 'Authorization': "Bearer #{ENV['ACCESS_TOKEN']}" }
+    @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     @project_tarball = project_tarball
   end
 

@@ -5,9 +5,15 @@
 
 Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating a User](#creating-a-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
 
-**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/1.3.1/docs/README.md).**
+**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-master/README.md).**
 
 [[_TOC_]]
+
+## Environment Requirements
+
+GPT v2 as well as the GPT Data Generator supports GitLab versions **11.x and higher** but we recommend at least GitLab 12.5 and higher for optimal results.
+
+**Note: On GitLab versions older than 12.2 the environment setup may take significantly longer due to [slower project imports](#large-project-imports-aren't-working-or-are-slow-on-older-gitlab-versions).**
 
 ## Creating a User
 
@@ -489,3 +495,11 @@ Error importing repository into qa-perf-testing/gitlabhq - GitalyClient#call cal
 ```
 
 This is due to a [n+1 calls limit being set for development setups](https://docs.gitlab.com/ee/development/gitaly.html#toomanyinvocationserror-errors). You can work around this by setting `GITALY_DISABLE_REQUEST_LIMITS=1` as an environment variable, restarting your development environment and importing again.
+
+## Large Project Imports aren't working or are slow on older GitLab versions
+
+On some older GitLab versions Project Import may fail due to known issues at the time.
+
+Additionally imports may take significantly longer on GitLab versions older than 12.2 due to a [known issue](https://gitlab.com/gitlab-org/gitlab-foss/-/issues/64924).
+
+In both cases we recommend you upgrade to the latest GitLab version.

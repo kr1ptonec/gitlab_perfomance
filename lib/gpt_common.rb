@@ -1,6 +1,7 @@
 require 'http'
 require 'json'
 require 'gpt_logger'
+require 'semantic'
 
 module GPTCommon
   extend self
@@ -32,9 +33,12 @@ module GPTCommon
 
   def check_gitlab_env_and_token(env_url:)
     # Check that environment can be reached and that token is valid
-    GPTLogger.logger.info "Checking that GitLab environment '#{env_url}' is available and that provided Access Token works..."
+    GPTLogger.logger.info "Checking that GitLab environment '#{env_url}' is available, supported and that provided Access Token works..."
     check_res = make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
     raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
+
+    gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'])
+    raise "Environment check has failed: Minimum supported GitLab version is 11.0.0, target environment is #{gitlab_version}. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
     GPTLogger.logger.info "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n"

@@ -13,7 +13,7 @@ Documentation on how to use the tool can be found in the [`docs/`](/docs/README.
 * [Preparing the Environment](docs/environment_prep.md)
 * [Running the Tests](docs/k6.md)
 
-**Note:** These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/1.3.1/docs/README.md).
+**Note:** These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-master/README.md).
 
 ## GitLab Test Results
 
