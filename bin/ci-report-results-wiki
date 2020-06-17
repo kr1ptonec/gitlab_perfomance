@@ -33,7 +33,7 @@ raise 'Page Title must be specified' unless @opts[:page_title] || @opts[:dry_run
 def get_comparision_data(results)
   results_comparision_data = {}
   results_comparision_versions = []
-  ttfb_overall_target = ENV['GPT_TARGET_TTFB']&.dup.to_f || 500.0
+  ttfb_overall_target = (ENV['GPT_TARGET_TTFB']&.dup || 500).to_f
 
   results.each do |result|
     results_comparision_versions |= [result["version"].tr('.', '-')]
@@ -49,7 +49,7 @@ def get_comparision_data(results)
       if last_test_result&.dig('ttfb_p90')
         last_test_result_score = ((last_test_result['ttfb_p90'].to_f / ttfb_overall_target) * 100)
         last_test_result_score_diff = (test_result_score - last_test_result_score).round(2)
-        last_test_result_score_diff_str = last_test_result_score_diff.positive? ? "_+#{last_test_result_score_diff}%_" : "**#{last_test_result_score_diff}%**"
+        last_test_result_score_diff_str = last_test_result_score_diff.positive? ? "_{-+#{last_test_result_score_diff}%-}_" : "**{+#{last_test_result_score_diff}%+}**"
 
         results_comparision_data[test_result["name"]][result["version"].tr('.', '-')] = "#{test_result['ttfb_p90']}ms (#{last_test_result_score_diff_str})"
       else
@@ -89,11 +89,20 @@ results_list.each do |results|
   results_footer = RunK6.generate_results_footer(results_json: results)
 
   results_comparision_contents << "\n## #{results['name'].capitalize} - #{results['version']}\n" unless results_list.length == 1
-  results_comparision_contents << "#{results_summary}\n\n#{results_table}\n"
+  results_comparision_contents << "### Test Links" if ENV['CI_PIPELINE_URL'] || ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] || ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']
+  results_comparision_contents << "\n* [Pipeline](#{ENV['CI_PIPELINE_URL']})" if ENV['CI_PIPELINE_URL']
+  results_comparision_contents << "\n* [Metrics Dashboard](#{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results['time']['start_epoch']}&to=#{results['time']['end_epoch']})" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']
+  results_comparision_contents << "\n* [Results History Dashboard](#{ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']})" if ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']
+  results_comparision_contents << "\n### Test Results"
+  results_comparision_contents << "\n#{results_summary}\n\n#{results_table}\n"
   results_comparision_contents << "\n#{results_footer}\n" unless results_footer.empty?
   # Remove any terminal ANSI codes
   results_comparision_contents.gsub!(/\e\[([;\d]+)?m/, '')
 end
+
+# Colored results highlight for wiki
+results_comparision_contents.gsub!(/Passed/, '**{+Passed+}**')
+results_comparision_contents.gsub!(/FAILED/, '**{-FAILED-}**')
 
 results_comparision_file = File.join(@opts[:results_path], "results_comparision.txt")
 puts "Saving results to #{results_comparision_file}"
