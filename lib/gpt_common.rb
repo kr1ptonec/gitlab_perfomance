@@ -38,7 +38,7 @@ module GPTCommon
     raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
     gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'])
-    raise "Environment check has failed: Minimum supported GitLab version is 11.0.0, target environment is #{gitlab_version}. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
+    raise "Environment check has failed: Minimum supported GitLab version is 12.5.0, target environment is #{gitlab_version}. For older versions please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#environment-requirements. Exiting..." if gitlab_version < Semantic::Version.new('12.5.0')
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
     GPTLogger.logger.info "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n"
