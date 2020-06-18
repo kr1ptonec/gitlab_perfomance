@@ -23,13 +23,18 @@ module GPTPrepareTestData
 
   def prepare_horizontal_json_data(env_file_vars:)
     many_gr_and_proj = env_file_vars['gpt_data']['many_groups_and_projects']
-    many_gr_and_proj_group = "#{env_file_vars['gpt_data']['root_group']}%2F#{many_gr_and_proj['group']}"
+    many_gr_and_proj_group_path_api = "#{env_file_vars['gpt_data']['root_group']}%2F#{many_gr_and_proj['group']}"
+    many_gr_and_proj_group_path_web = "#{env_file_vars['gpt_data']['root_group']}/#{many_gr_and_proj['group']}"
     required_keys = %w[group subgroups subgroup_prefix projects project_prefix]
 
     return {}.to_json unless required_keys.all? { |required_key| many_gr_and_proj.key?(required_key) }
 
-    subgroups = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj_group}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
+    subgroups_path_api = 1.upto(many_gr_and_proj['subgroups']).map do |i|
+      "#{many_gr_and_proj_group_path_api}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
+    end
+
+    subgroups_path_web = 1.upto(many_gr_and_proj['subgroups']).map do |i|
+      "#{many_gr_and_proj_group_path_web}/#{many_gr_and_proj['subgroup_prefix']}#{i}"
     end
 
     # N projects in each subgroup
@@ -38,8 +43,10 @@ module GPTPrepareTestData
     end
 
     {
-      'group' => many_gr_and_proj_group,
-      'subgroups' => subgroups,
+      'group_path_api' => many_gr_and_proj_group_path_api,
+      'group_path_web' => many_gr_and_proj_group_path_web,
+      'subgroups_path_api' => subgroups_path_api,
+      'subgroups_path_web' => subgroups_path_web,
       'projects' => projects
     }.to_json
   end

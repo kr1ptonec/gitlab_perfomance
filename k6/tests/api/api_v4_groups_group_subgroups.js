@@ -21,7 +21,7 @@ export let options = {
   }
 };
 
-export let horizDataGroup = getManyGroupsOrProjects(['group']);
+export let horizDataGroup = getManyGroupsOrProjects(['group_path_api']);
 
 export function setup() {
   console.log('')

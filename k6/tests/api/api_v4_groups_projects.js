@@ -21,7 +21,7 @@ export let options = {
   }
 };
 
-export let subgroups = getManyGroupsOrProjects(['subgroups']);
+export let subgroups = getManyGroupsOrProjects(['subgroups_path_api']);
 
 export function setup() {
   console.log('')
