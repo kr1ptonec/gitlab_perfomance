@@ -1,16 +1,17 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /projects/:id/repository/files/:file_path`
-@description: [Get information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-from-repository)
+@endpoint: `GET /groups/:id/subgroups`
+@description: [List a group’s subgroups](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-subgroups)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211504
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let ttfbThreshold = getTtfbThreshold(1500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -20,7 +21,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group_path_api', 'file_source_path']);
+export let horizDataGroup = getManyGroupsOrProjects(['group']);
 
 export function setup() {
   console.log('')
@@ -30,11 +31,9 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Project Repository File", function() {
-    let project = selectRandom(projects);
-
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, responseType: 'none' };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/repository/files/${project['file_source_path']}?ref=master`, params);
+  group("API - Group Details", function() {
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${horizDataGroup}/subgroups`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

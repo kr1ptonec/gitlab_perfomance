@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path`
-@description: Web - Project Blob File. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
+@description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217580
 */
 
@@ -29,7 +29,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web', 'file_path']);
+export let projects = getLargeProjects(['name', 'group_path_web', 'file_source_path']);
 
 export function setup() {
   console.log('')
@@ -41,12 +41,12 @@ export function setup() {
 }
 
 export default function() {
-  group("Web - Project Blob File", function() {
+  group("Web - Project File Source", function() {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_path']}`, null, {tags: {endpoint: 'file', controller: 'Projects::BlobController', action: 'show'}, responseType: 'none', redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_path']}?format=json`, null, {tags: {endpoint: 'file?format=json', controller: 'Projects::BlobController', action: 'show.json'}, responseType: 'none', redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_source_path']}`, null, {tags: {endpoint: 'file', controller: 'Projects::BlobController', action: 'show'}, responseType: 'none', redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/blob/master/${project['file_source_path']}?format=json`, null, {tags: {endpoint: 'file?format=json', controller: 'Projects::BlobController', action: 'show.json'}, responseType: 'none', redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

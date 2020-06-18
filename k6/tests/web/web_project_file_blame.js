@@ -37,7 +37,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `blame/master/${checkProject['file_path']}`)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `blame/master/${checkProject['file_source_path']}`)
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
