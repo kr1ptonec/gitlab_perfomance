@@ -8,10 +8,10 @@ This function can be used to check if an endpoint path does redirect and pass th
 the test and maintain the numbers. */
 export function checkProjEndpointDash(projectUrl, endpointPath) {
   console.log(`Check if Endpoint URL '${projectUrl}/${endpointPath}' uses dash on GitLab Environment...`)
-  let res = http.get(`${projectUrl}/-/${endpointPath}`);
+  let res = http.get(`${projectUrl}/-/${endpointPath}`, { redirects: 0 });
   if (/20(0|1)/.test(res.status)) return `-/${endpointPath}`
 
-  res = http.get(`${projectUrl}/${endpointPath}`);
+  res = http.get(`${projectUrl}/${endpointPath}`, { redirects: 0 });
   if (/20(0|1)/.test(res.status)) return endpointPath
   if (/30[0-9]/.test(res.status)) {
     try {
