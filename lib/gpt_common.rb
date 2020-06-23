@@ -35,13 +35,14 @@ module GPTCommon
     # Check that environment can be reached and that token is valid
     GPTLogger.logger.info "Checking that GitLab environment '#{env_url}' is available, supported and that provided Access Token works..."
     check_res = make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
-    raise "Environment check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
+    raise "Environment access token check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
     gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'])
-    raise "Environment check has failed: Minimum supported GitLab version is 12.5.0, target environment is #{gitlab_version}. For older versions please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#environment-requirements. Exiting..." if gitlab_version < Semantic::Version.new('12.5.0')
+    warn Rainbow("\nEnvironment version check has failed: Minimum supported GitLab version is 12.5.0, target environment is #{gitlab_version}. For older versions please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#environment-requirements\n").red if gitlab_version < Semantic::Version.new('12.5.0')
+    raise "\nEnvironment version check has failed: GitLab versions lower than 11.0.0 are unsupported, target environment is #{gitlab_version}. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
-    GPTLogger.logger.info "Environment and Access Token check was successful - URL: #{env_url}, Version: #{version}\n"
+    GPTLogger.logger.info "Environment and Access Token check complete - URL: #{env_url}, Version: #{version}\n"
   end
 
   def get_env_settings(env_url:, headers:)
