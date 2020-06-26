@@ -9,6 +9,8 @@ require 'tty-spinner'
 class GPTTestData
   attr_reader :root_group
 
+  WaitForDeleteError = Class.new(StandardError)
+
   def initialize(gpt_data_version:, force:, unattended:, env_url:, root_group:, storage_nodes:, max_wait_for_delete:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
     @force = force
@@ -29,11 +31,11 @@ class GPTTestData
     start = Time.new
     loop do
       elapsed = (Time.new - start).to_i
-      raise Rainbow("Waiting failed after #{elapsed} seconds. Consider increasing `--max-wait-for-delete` option. Exiting...") if elapsed >= @max_wait_for_delete
+      raise WaitForDeleteError, "Waiting failed after #{elapsed} seconds. Consider increasing `--max-wait-for-delete` option. Exiting..." if elapsed >= @max_wait_for_delete
 
       check_deleted_entity = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/#{entity_endpoint}", headers: @headers, fail_on_error: false)
       break if check_deleted_entity.status.code == 404
-      raise "#{method.upcase} request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
+      raise WaitForDeleteError, "#{method.upcase} request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
 
       print '.'
       sleep 1
