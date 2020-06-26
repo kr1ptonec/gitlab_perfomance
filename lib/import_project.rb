@@ -9,6 +9,8 @@ require 'time'
 require 'uri'
 
 class ImportProject
+  ProjectImportError = Class.new(StandardError)
+
   def initialize(env_url:, project_tarball:)
     @env_url = env_url
     @environment_api_url = URI.join(@env_url, '/api/v4/')
@@ -74,7 +76,7 @@ class ImportProject
         GPTLogger.logger.info(Rainbow("\nProject has successfully imported in #{time_taken}:\n#{URI.join(@env_url, proj_imp_res['path_with_namespace'])}").green)
         break
       when 'failed'
-        raise GPTLogger.logger.error(Rainbow("Project has failed to import. Reason:\n#{proj_imp_res['import_error']}").red)
+        raise ProjectImportError, "Project has failed to import.\nGitLab import error:\n #{proj_imp_res['import_error']}\nCorrelation ID: #{proj_imp_res['correlation_id']}"
       when 'scheduled', 'started'
         print '.'
         sleep 5
