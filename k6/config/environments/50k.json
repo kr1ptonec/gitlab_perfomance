@@ -16,9 +16,9 @@
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 10,
+      "subgroups": 250,
       "subgroup_prefix": "gpt-subgroup-",
-      "projects": 100,
+      "projects": 10,
       "project_prefix": "gpt-project-"
     }
   }

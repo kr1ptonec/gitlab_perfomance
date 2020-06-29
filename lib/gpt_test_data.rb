@@ -2,6 +2,7 @@ $LOAD_PATH.unshift File.expand_path('.', __dir__)
 
 require 'cgi'
 require 'gpt_common'
+require 'http'
 require 'import_project'
 require 'rainbow'
 require 'tty-spinner'
@@ -121,6 +122,41 @@ class GPTTestData
     JSON.parse(grp_res.body.to_s).slice('id', 'name', 'full_path', 'description')
   end
 
+  def create_groups(group_prefix:, parent_group: nil, groups_count:)
+    GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
+    groups = []
+    HTTP.persistent @env_url do |http|
+      groups_count.times do |num|
+        print "."
+        group_name = "#{group_prefix}#{num + 1}"
+        grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
+        grp_check_res = http.get("/api/v4/groups/#{CGI.escape(grp_path)}", headers: @headers)
+        if grp_check_res.status.success?
+          existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
+          groups << existing_group
+          GPTLogger.logger(only_to_file: true).info "Group #{existing_group['full_path']} already exists"
+          next
+        else
+          grp_check_res.flush
+        end
+
+        grp_params = {
+          name: group_name,
+          path: group_name,
+          visibility: 'public',
+          description: @gpt_data_version_description
+        }
+        grp_params[:parent_id] = parent_group['id'] if parent_group
+        grp_res = http.post("/api/v4/groups", params: grp_params, headers: @headers)
+        new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
+        groups << new_group
+        GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
+      end
+    end
+    puts "\n"
+    groups
+  end
+
   def delete_group(group)
     GPTLogger.logger.info "Delete old group #{group['full_path']}"
     GPTCommon.make_http_request(method: 'delete', url: "#{@env_url}/api/v4/groups/#{group['id']}", headers: @headers)
@@ -136,36 +172,42 @@ class GPTTestData
 
   # Projects
 
-  def get_project(proj_path:)
-    GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
-  end
+  def create_projects(project_prefix:, subgroups:, projects_count:)
+    GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
+    projects = []
+    HTTP.persistent @env_url do |http|
+      subgroups.each_with_index do |parent_group, i|
+        projects_count_start = i * projects_count
 
-  def check_project_exists(proj_path)
-    proj_check_res = get_project(proj_path: proj_path)
+        projects_count.times do |num|
+          print "."
+          project_name = "#{project_prefix}#{projects_count_start + num + 1}"
+          proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
+          proj_check_res = http.get("/api/v4/projects/#{CGI.escape(proj_path)}", headers: @headers)
+          if proj_check_res.status.success?
+            existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
+            projects << existing_project
+            GPTLogger.logger(only_to_file: true).info "Project #{existing_project['path_with_namespace']} already exists"
+            next
+          else
+            proj_check_res.flush
+          end
 
-    return unless proj_check_res.status.success?
-
-    GPTLogger.logger.info "Project #{proj_path} already exists"
-    JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description')
-  end
-
-  def create_project(project_name:, parent_group:)
-    proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
-    proj_check_res = check_project_exists(proj_path)
-    return proj_check_res unless proj_check_res.nil?
-
-    GPTLogger.logger.info "Creating project #{proj_path}"
-
-    proj_params = {
-      name: project_name,
-      path: project_name,
-      visibility: 'public',
-      description: @gpt_data_version_description
-    }
-    proj_params[:namespace_id] = parent_group['id'] if parent_group
-    proj_res = GPTCommon.make_http_request(method: 'post', url: "#{@env_url}/api/v4/projects", params: proj_params, headers: @headers)
-
-    JSON.parse(proj_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description')
+          proj_params = {
+            name: project_name,
+            path: project_name,
+            visibility: 'public',
+            description: @gpt_data_version_description
+          }
+          proj_params[:namespace_id] = parent_group['id'] if parent_group
+          proj_res = http.post("/api/v4/projects", params: proj_params, headers: @headers)
+          new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
+          projects << new_project
+          GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
+        end
+      end
+    end
+    projects
   end
 
   def delete_project(project)
@@ -183,17 +225,13 @@ class GPTTestData
     existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{parent_group['id']}/subgroups", headers: @headers).headers.to_hash["X-Total"].to_i
     parent_group = recreate_group(group: parent_group, parent_group: @root_group) if existing_subgroups_count > subgroups_count
 
-    sub_groups = Array.new(subgroups_count) do |num|
-      create_group(group_name: "#{subgroup_prefix}#{num + 1}", parent_group: parent_group)
-    end
-
-    sub_groups.each_with_index do |sub_group, i|
+    sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
+    sub_groups.map! do |sub_group|
       existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{sub_group['id']}/projects", headers: @headers).headers.to_hash["X-Total"].to_i
       sub_group = recreate_group(group: sub_group, parent_group: parent_group) if existing_projects_count > projects_count
-      projects_count.times do |num|
-        create_project(project_name: "#{project_prefix}#{i * projects_count + num + 1}", parent_group: sub_group)
-      end
+      sub_group
     end
+    create_projects(project_prefix: project_prefix, subgroups: sub_groups, projects_count: projects_count)
   end
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_version:)
