@@ -94,9 +94,9 @@ Typically all that's needed to be done for this file is to copy one of the exist
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 10,
+      "subgroups": 250,
       "subgroup_prefix": "gpt-subgroup-",
-      "projects": 100,
+      "projects": 10,
       "project_prefix": "gpt-project-"
     }
   }
@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.0 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.2 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -260,7 +260,7 @@ docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST 
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.0 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.2 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified project `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
@@ -279,22 +279,10 @@ y
 Creating group gpt/many_groups_and_projects
 Updating GitLab Application setting 'repository_storages' to '["default", "storage2"]'
 Updating application settings: {:repository_storages=>["default", "storage2"]}
-Creating group gpt/many_groups_and_projects/gpt-subgroup-1
-Creating group gpt/many_groups_and_projects/gpt-subgroup-2
-Creating group gpt/many_groups_and_projects/gpt-subgroup-3
-Creating group gpt/many_groups_and_projects/gpt-subgroup-4
-Creating group gpt/many_groups_and_projects/gpt-subgroup-5
-Creating group gpt/many_groups_and_projects/gpt-subgroup-6
-Creating group gpt/many_groups_and_projects/gpt-subgroup-7
-Creating group gpt/many_groups_and_projects/gpt-subgroup-8
-Creating group gpt/many_groups_and_projects/gpt-subgroup-9
-Creating group gpt/many_groups_and_projects/gpt-subgroup-10
-Creating project gpt/many_groups_and_projects/gpt-subgroup-1/gpt-project-1
-...
-Creating project gpt/many_groups_and_projects/gpt-subgroup-10/gpt-project-997
-Creating project gpt/many_groups_and_projects/gpt-subgroup-10/gpt-project-998
-Creating project gpt/many_groups_and_projects/gpt-subgroup-10/gpt-project-999
-Creating project gpt/many_groups_and_projects/gpt-subgroup-10/gpt-project-1000
+Creating 250 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
+..........................................................................................................................................................................................................................................................
+Creating 10 projects each under 250 subgroups with name prefix 'gpt-project-'
+....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
 <-> Horizontal data: successfully generated!
 
 For the creation of `vertical` data with large projects, the GPT Data Generator will need to change the `repository_storages` setting on the target GitLab environment. This is to facilitate the creation of a large project in each Storage node specifically. As such, it will change this setting to point to each node as set in the `storage_nodes` option and then create the project sequentially.
