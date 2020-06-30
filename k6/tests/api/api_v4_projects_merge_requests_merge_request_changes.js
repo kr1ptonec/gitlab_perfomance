@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/changes`
 @description: [Get single MR changes](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-changes)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/225322
 */
 
 import http from "k6/http";
@@ -9,8 +10,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(0.1)
+export let ttfbThreshold = getTtfbThreshold(12000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -33,7 +34,7 @@ export default function() {
   group("API - Merge Request Changes", function() {
     let project = selectRandom(projects);
 
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, responseType: 'none' };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}/changes`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
