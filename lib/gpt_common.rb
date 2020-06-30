@@ -7,23 +7,32 @@ module GPTCommon
   extend self
 
   RequestError = Class.new(StandardError)
+  BadGatewayError = Class.new(StandardError)
 
-  def make_http_request(method: 'get', url: nil, params: {}, headers: {}, body: "", show_response: false, fail_on_error: true)
+  def make_http_request(method: 'get', url: nil, params: {}, headers: {}, body: "", show_response: false, fail_on_error: true, retry_on_error: false)
     raise "URL not defined for making request. Exiting..." unless url
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-    res = body.empty? ? HTTP.follow.method(method).call(url, form: params, headers: headers, ssl_context: ctx) : HTTP.follow.method(method).call(url, body: body, headers: headers, ssl_context: ctx)
+    begin
+      retries ||= 0
+      res = body.empty? ? HTTP.follow.method(method).call(url, form: params, headers: headers, ssl_context: ctx) : HTTP.follow.method(method).call(url, body: body, headers: headers, ssl_context: ctx)
 
-    if show_response
-      res_body =
-        if res.content_type.mime_type == "application/json"
-          JSON.parse(res.body.to_s)
-        else
-          res.body.to_s
-        end
-      GPTLogger.logger.info(res_body)
+      if show_response
+        res_body = res.content_type.mime_type == "application/json" ? JSON.parse(res.body.to_s) : res.body.to_s
+        GPTLogger.logger.info(res_body)
+      end
+      raise BadGatewayError, "#{method.upcase} request failed!\nURL: #{url}\nCode: #{res.code}\nResponse: #{res.body}\n" if res.status == 502
+
+    rescue BadGatewayError => e
+      # Retry to send request once, if response was 502
+      retries += 1
+      raise e if retries > 1 || retry_on_error == false
+
+      GPTLogger.logger.info("Retrying request in 5 seconds...")
+      sleep 5
+      retry
     end
 
     raise RequestError, "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n" if fail_on_error && !res.status.success?
