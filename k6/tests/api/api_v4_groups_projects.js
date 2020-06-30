@@ -33,7 +33,7 @@ export function setup() {
 export default function() {
   group("API - Group Projects List", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let subgroup = selectRandom(subgroups);  
+    let subgroup = selectRandom(subgroups);
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${subgroup}/projects`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));    
   });
