@@ -172,6 +172,19 @@ class GPTTestData
 
   # Projects
 
+  def get_project(proj_path:)
+    GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
+  end
+
+  def check_project_exists(proj_path)
+    proj_check_res = get_project(proj_path: proj_path)
+
+    return unless proj_check_res.status.success?
+
+    GPTLogger.logger.info "Project #{proj_path} already exists"
+    JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description')
+  end
+
   def create_projects(project_prefix:, subgroups:, projects_count:)
     GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
