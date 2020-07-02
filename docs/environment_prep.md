@@ -370,6 +370,7 @@ First you will need to create the [Project Config File](..k6/config/projects). T
   "compare_commits_sha": ["aec887ab", "5bfb7558"],
   "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "file_rendered_path": "CHANGELOG%2ejson",
+  "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "dir_path": "app%2Fassets%2Fimages%2Femoji",
   "git_push_data": {
     "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
@@ -401,6 +402,7 @@ Details for each of the settings are as follows. You should aim to have each of 
 * `compare_commits_sha` - The SHA references of two commits on the same branch that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the commits should be tuned to your environment's requirements.
 * `file_source_path` - The relative path to a large sized file in your project that would be shown as source code, e.g. a json file.
 * `file_rendered_path` - The relative path to a large sized file in your project that would be shown rendered, e.g. a markdown file.
+* `file_blame_path` - The relative path to a file in your project that is itself large and also has a large showable File Blame history.
 * `dir_path`- The relative path of a directory in your project that contains many files. Note that the directory must contain at least 100 files.
 * `git_push_data` - Git push data that will be used for git push test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git push test, please refer to [`Git Push test documentation`](test_docs/git_push.md). The size of the commits should be tuned to your environment's requirements.
   * `branch_current_head_sha` - The head commit of the `branch_name` branch.
