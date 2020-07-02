@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path?viewer=rich`
 @description: Web - Project File Rendered. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217580
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217580, https://gitlab.com/gitlab-org/gitlab/-/issues/223043
 */
 
 import http from "k6/http";

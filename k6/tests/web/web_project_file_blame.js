@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blame/master/:file_path`
 @description: Web - Project File Blame Page. <br>Controllers: `Projects::BlameController#show`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217572
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/220950, https://gitlab.com/gitlab-org/gitlab/-/issues/225174
 */
 
 import http from "k6/http";
@@ -26,7 +26,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web']);
+export let projects = getLargeProjects(['name', 'group_path_web', 'file_blame_path']);
 
 export function setup() {
   console.log('')
@@ -37,7 +37,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `blame/master/${checkProject['file_source_path']}`)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `blame/master/${checkProject['file_blame_path']}`)
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }

@@ -7,6 +7,7 @@
   "compare_commits_sha": ["aec887ab", "5bfb7558"],
   "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "file_rendered_path": "CHANGELOG%2emd",
+  "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "dir_path": "app%2Fassets%2Fimages%2Femoji",
   "git_push_data": {
     "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
