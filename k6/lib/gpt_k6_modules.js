@@ -24,10 +24,10 @@ export function logError(res) {
 export function getRpsThresholds(modifier=1.0, endpoints=1) {
   let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
   let thresholds = {
-    count: (Math.ceil((parseFloat(__ENV.OPTION_RPS_COUNT) * modifier).toFixed(2)) * buffer).toFixed(0),
-    mean: (Math.ceil((parseFloat(__ENV.OPTION_RPS) * modifier).toFixed(2)) * buffer).toFixed(2),
-    count_per_endpoint: (Math.ceil((parseFloat(__ENV.OPTION_RPS_COUNT) * modifier).toFixed(2)) * buffer / endpoints).toFixed(0),
-    mean_per_endpoint: (Math.ceil((parseFloat(__ENV.OPTION_RPS) * modifier).toFixed(2)) * buffer / endpoints).toFixed(2)
+    count: (parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer).toFixed(0),
+    mean: (parseFloat(__ENV.OPTION_RPS) * modifier * buffer).toFixed(2),
+    count_per_endpoint: ((parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer) / endpoints).toFixed(0),
+    mean_per_endpoint: ((parseFloat(__ENV.OPTION_RPS) * modifier * buffer) / endpoints).toFixed(2)
   }
   return thresholds;
 }
