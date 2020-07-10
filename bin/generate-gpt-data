@@ -54,7 +54,7 @@ opts = Optimist.options do
   banner "  Generate only horizontal data with 10 subgroups and 100 projects in each:"
   banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical"
   banner "  Generate only vertical data using custom project tarball path:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical --project-tarball=/home/user/test-project.tar.gz"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz"
 end
 
 raise Rainbow("Environment Variable ACCESS_TOKEN has not been set. Unable to create required test data. Exiting...").red unless ENV['ACCESS_TOKEN']

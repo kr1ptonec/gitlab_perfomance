@@ -180,7 +180,7 @@ Examples:
   Generate only horizontal data with 10 subgroups and 100 projects in each:
     docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
   Generate only vertical data using custom project tarball path:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical --project-tarball=/home/user/test-project.tar.gz
+    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
 ```
 
 As standard with Docker you can mount several volumes to get your own config files into the container and results out. The image provides several specific mount points for you to do this as detailed below:
@@ -236,7 +236,7 @@ Examples:
   Generate only horizontal data with 10 subgroups and 100 projects in each:
     bin/generate-gpt-data --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
   Generate only vertical data using custom project tarball path:
-    bin/generate-gpt-data --environment 10k.json --no-horizontal --vertical --project-tarball=/home/user/test-project.tar.gz
+    bin/generate-gpt-data --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
 ```
 
 After running the logs will be in the tool's `results` folder.
@@ -249,12 +249,12 @@ We strongly recommend running the GPT Data Generator is run as close as possible
 
 #### Airgapped Environments
 
-For environments that don't have internet access you'll need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) in advance so it's available locally and then pass in it's path via the `--project-tarball` option.
+For environments that don't have internet access you'll need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) in advance so it's available locally and then pass in it's path via the `--large-project-tarball` option.
 
-With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--project-tarball` option set also):
+With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --project-tarball=/projects/gitlabhq_export.tar.gz
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export.tar.gz
 ```
 
 #### GPT Data Generator Output
@@ -447,7 +447,7 @@ For this use case the `project` setting should be changed to the name of the Pro
 Finally to import the data itself you will need to have the project's [export tarball file](https://docs.gitlab.com/ee/user/project/settings/import_export.html#exporting-a-project-and-its-data) available. When ready you can then set up all of the test data, with custom project, as follows:
 
 ```sh
-docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
+docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
 ```
 
 Some notes you should consider on the above:
