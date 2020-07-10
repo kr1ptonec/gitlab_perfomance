@@ -6,6 +6,7 @@ require 'http'
 require 'import_project'
 require 'rainbow'
 require 'tty-spinner'
+require 'uri'
 
 class GPTTestData
   attr_reader :root_group
@@ -16,7 +17,7 @@ class GPTTestData
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
     @force = force
     @unattended = unattended
-    @env_url = env_url
+    @env_url = env_url.chomp('/')
     @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     @max_wait_for_delete = max_wait_for_delete
     @storage_nodes = storage_nodes
@@ -125,12 +126,13 @@ class GPTTestData
   def create_groups(group_prefix:, parent_group: nil, groups_count:)
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
     groups = []
+    api_path = URI.join(@env_url + '/', "api/v4").path
     HTTP.persistent @env_url do |http|
       groups_count.times do |num|
         print "."
         group_name = "#{group_prefix}#{num + 1}"
         grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
-        grp_check_res = http.get("/api/v4/groups/#{CGI.escape(grp_path)}", headers: @headers)
+        grp_check_res = http.get("#{api_path}/groups/#{CGI.escape(grp_path)}", headers: @headers)
         if grp_check_res.status.success?
           existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
           groups << existing_group
@@ -147,7 +149,9 @@ class GPTTestData
           description: @gpt_data_version_description
         }
         grp_params[:parent_id] = parent_group['id'] if parent_group
-        grp_res = http.post("/api/v4/groups", params: grp_params, headers: @headers)
+        grp_res = http.post("#{api_path}/groups", params: grp_params, headers: @headers)
+        raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
+
         new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
         groups << new_group
         GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
@@ -188,6 +192,7 @@ class GPTTestData
   def create_projects(project_prefix:, subgroups:, projects_count:)
     GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
+    api_path = URI.join(@env_url + '/', "api/v4").path
     HTTP.persistent @env_url do |http|
       subgroups.each_with_index do |parent_group, i|
         projects_count_start = i * projects_count
@@ -196,7 +201,7 @@ class GPTTestData
           print "."
           project_name = "#{project_prefix}#{projects_count_start + num + 1}"
           proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
-          proj_check_res = http.get("/api/v4/projects/#{CGI.escape(proj_path)}", headers: @headers)
+          proj_check_res = http.get("#{api_path}/projects/#{CGI.escape(proj_path)}", headers: @headers)
           if proj_check_res.status.success?
             existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
             projects << existing_project
@@ -213,7 +218,9 @@ class GPTTestData
             description: @gpt_data_version_description
           }
           proj_params[:namespace_id] = parent_group['id'] if parent_group
-          proj_res = http.post("/api/v4/projects", params: proj_params, headers: @headers)
+          proj_res = http.post("#{api_path}/projects", params: proj_params, headers: @headers)
+          raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
+
           new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
           projects << new_project
           GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"

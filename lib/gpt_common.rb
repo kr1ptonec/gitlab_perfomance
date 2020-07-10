@@ -24,7 +24,6 @@ module GPTCommon
         GPTLogger.logger.info(res_body)
       end
       raise BadGatewayError, "#{method.upcase} request failed!\nURL: #{url}\nCode: #{res.code}\nResponse: #{res.body}\n" if res.status == 502
-
     rescue BadGatewayError => e
       # Retry to send request once, if response was 502
       retries += 1

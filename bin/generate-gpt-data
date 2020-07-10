@@ -5,6 +5,7 @@ $stdout.sync = true
 
 require 'chronic_duration'
 require 'down/http'
+require 'http'
 require 'gpt_logger'
 require 'gpt_test_data'
 require 'import_project'
@@ -16,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.2'
+gpt_data_version = '1.0.3'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -118,8 +119,8 @@ begin
 rescue Interrupt
   GPTLogger.logger.warn Rainbow("Caught the interrupt. Stopping.").yellow
   exit
-rescue StandardError => e
-  GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n #{e.message}\n Traceback:#{e.backtrace}").red
+rescue StandardError, HTTP::Error => e
+  GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n#{e.message}\n Traceback:#{e.backtrace}").red
 ensure
   unless gpt_test_data.nil?
     gpt_test_data.restore_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
