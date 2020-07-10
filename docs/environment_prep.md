@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.2 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.3 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -249,10 +249,12 @@ We strongly recommend running the GPT Data Generator is run as close as possible
 
 #### Airgapped Environments
 
-For environments that don't have internet access we will recommend that you use the Docker variant of GPT Data Generator. In addition to this you will need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) manually and have it available for the generator locally. Then you need to pass the local project import file to the tool running this command:
+For environments that don't have internet access you'll need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) in advance so it's available locally and then pass in it's path via the `--project-tarball` option.
+
+With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --project-tarball=/home/user/gitlabhq_export.tar.gz
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --project-tarball=/projects/gitlabhq_export.tar.gz
 ```
 
 #### GPT Data Generator Output
@@ -260,7 +262,7 @@ docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST 
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.2 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.3 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified project `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
