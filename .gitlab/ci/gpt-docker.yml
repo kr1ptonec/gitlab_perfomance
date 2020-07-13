@@ -58,7 +58,7 @@ gpt-data-generator-build-docker:
   stage: build
   extends: .gpt-docker-base
   script:
-    - ([ -n "$GPT_DATA_GENERATOR_VERSION" ] && export GPT_DATA_GENERATOR_VERSION=$(cat bin/generate-gpt-data | grep -E "^gpt_data_version.*'[0-9]+.[0-9]+.[0-9]+'" | grep -Eo "[0-9]+.[0-9]+.[0-9]+"))
+    - GPT_DATA_GENERATOR_VERSION=${GPT_DATA_GENERATOR_VERSION:=$(cat bin/generate-gpt-data | grep -E "^gpt_data_version.*'[0-9]+.[0-9]+.[0-9]+'" | grep -Eo "[0-9]+.[0-9]+.[0-9]+")}
     - apk add -u --no-cache docker
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -f Dockerfile.gpt-data-generator -t gpt-data-generator:$GPT_DATA_GENERATOR_VERSION .
