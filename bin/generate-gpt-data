@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.3'
+gpt_data_version = '1.0.4'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -111,7 +111,8 @@ begin
     GPTCommon.show_warning_prompt("\nFor the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the `repository_storages` setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.\n\nWhile the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.\nThe original setting will be restored after the the tool is finished.") unless opts[:unattended]
     many_projects_group = gpt_test_data.create_group(group_name: opts[:group], parent_group: gpt_test_data.root_group)
     gpt_test_data.create_horizontal_test_data(parent_group: many_projects_group, subgroups_count: opts[:subgroups], subgroup_prefix: opts[:subgroup_prefix], projects_count: opts[:projects], project_prefix: opts[:project_prefix])
-    GPTLogger.logger.info Rainbow("\n<-> Horizontal data: successfully generated!").green
+    horizontal_run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long)
+    GPTLogger.logger.info Rainbow("\n<-> Horizontal data: successfully generated after #{horizontal_run_time}!").green
   end
 
   if opts[:vertical]
@@ -119,7 +120,8 @@ begin
     GPTLogger.logger.info Rainbow("\n| Vertical data: importing large projects for GPT...").color(230, 83, 35)
     large_projects_group = gpt_test_data.create_group(group_name: opts[:vert_group], parent_group: gpt_test_data.root_group)
     gpt_test_data.create_vertical_test_data(project_tarball: opts[:large_project_tarball], large_projects_group: large_projects_group, project_name: opts[:large_project_name], project_version: opts[:large_project_version])
-    GPTLogger.logger.info Rainbow("\n\n| Vertical data: successfully generated!").green
+    vertical_run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long)
+    GPTLogger.logger.info Rainbow("\n\n| Vertical data: successfully generated after #{vertical_run_time}!").green
   end
   run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long)
   GPTLogger.logger.info Rainbow("█ GPT data generation finished after #{run_time}.").green

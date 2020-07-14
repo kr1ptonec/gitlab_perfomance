@@ -18,6 +18,7 @@ class GPTTestData
     @force = force
     @unattended = unattended
     @env_url = env_url.chomp('/')
+    @env_api_url = URI.join(@env_url + '/', "api/v4")
     @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     @max_wait_for_delete = max_wait_for_delete
     @storage_nodes = storage_nodes
@@ -35,7 +36,7 @@ class GPTTestData
       elapsed = (Time.new - start).to_i
       raise WaitForDeleteError, "Waiting failed after #{elapsed} seconds. Consider increasing `--max-wait-for-delete` option. Exiting..." if elapsed >= @max_wait_for_delete
 
-      check_deleted_entity = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/#{entity_endpoint}", headers: @headers, fail_on_error: false, retry_on_error: true)
+      check_deleted_entity = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/#{entity_endpoint}", headers: @headers, fail_on_error: false, retry_on_error: true)
       break if check_deleted_entity.status.code == 404
       raise WaitForDeleteError, "#{method.upcase} request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
 
@@ -92,7 +93,7 @@ class GPTTestData
   # Groups
 
   def get_group(grp_path:)
-    GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{CGI.escape(grp_path)}", headers: @headers, fail_on_error: false, retry_on_error: true)
+    GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{CGI.escape(grp_path)}", headers: @headers, fail_on_error: false, retry_on_error: true)
   end
 
   def check_group_exists(grp_path)
@@ -118,7 +119,7 @@ class GPTTestData
       description: @gpt_data_version_description
     }
     grp_params[:parent_id] = parent_group['id'] if parent_group
-    grp_res = GPTCommon.make_http_request(method: 'post', url: "#{@env_url}/api/v4/groups", params: grp_params, headers: @headers, retry_on_error: true)
+    grp_res = GPTCommon.make_http_request(method: 'post', url: "#{@env_api_url}/groups", params: grp_params, headers: @headers, retry_on_error: true)
 
     JSON.parse(grp_res.body.to_s).slice('id', 'name', 'full_path', 'description')
   end
@@ -126,13 +127,12 @@ class GPTTestData
   def create_groups(group_prefix:, parent_group: nil, groups_count:)
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
     groups = []
-    api_path = URI.join(@env_url + '/', "api/v4").path
     HTTP.persistent @env_url do |http|
       groups_count.times do |num|
         print "."
         group_name = "#{group_prefix}#{num + 1}"
         grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
-        grp_check_res = http.get("#{api_path}/groups/#{CGI.escape(grp_path)}", headers: @headers)
+        grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers)
         if grp_check_res.status.success?
           existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
           groups << existing_group
@@ -149,7 +149,7 @@ class GPTTestData
           description: @gpt_data_version_description
         }
         grp_params[:parent_id] = parent_group['id'] if parent_group
-        grp_res = http.post("#{api_path}/groups", params: grp_params, headers: @headers)
+        grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers)
         raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
 
         new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
@@ -163,7 +163,7 @@ class GPTTestData
 
   def delete_group(group)
     GPTLogger.logger.info "Delete old group #{group['full_path']}"
-    GPTCommon.make_http_request(method: 'delete', url: "#{@env_url}/api/v4/groups/#{group['id']}", headers: @headers, retry_on_error: true)
+    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/groups/#{group['id']}", headers: @headers, retry_on_error: true)
     print("Waiting for group #{group['full_path']} to be deleted...")
     wait_for_delete("groups/#{group['id']}")
   end
@@ -177,7 +177,7 @@ class GPTTestData
   # Projects
 
   def get_project(proj_path:)
-    GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
+    GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
   end
 
   def check_project_exists(proj_path)
@@ -192,7 +192,6 @@ class GPTTestData
   def create_projects(project_prefix:, subgroups:, projects_count:)
     GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
-    api_path = URI.join(@env_url + '/', "api/v4").path
     HTTP.persistent @env_url do |http|
       subgroups.each_with_index do |parent_group, i|
         projects_count_start = i * projects_count
@@ -201,7 +200,7 @@ class GPTTestData
           print "."
           project_name = "#{project_prefix}#{projects_count_start + num + 1}"
           proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
-          proj_check_res = http.get("#{api_path}/projects/#{CGI.escape(proj_path)}", headers: @headers)
+          proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers)
           if proj_check_res.status.success?
             existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
             projects << existing_project
@@ -218,7 +217,7 @@ class GPTTestData
             description: @gpt_data_version_description
           }
           proj_params[:namespace_id] = parent_group['id'] if parent_group
-          proj_res = http.post("#{api_path}/projects", params: proj_params, headers: @headers)
+          proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers)
           raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
 
           new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
@@ -232,7 +231,7 @@ class GPTTestData
 
   def delete_project(project)
     GPTLogger.logger.info "Delete existing project #{project}"
-    GPTCommon.make_http_request(method: 'delete', url: "#{@env_url}/api/v4/projects/#{project['id']}", headers: @headers, retry_on_error: true)
+    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/projects/#{project['id']}", headers: @headers, retry_on_error: true)
     print("Waiting for project #{project['path_with_namespace']} to be deleted...")
     wait_for_delete("projects/#{project['id']}")
   end
@@ -242,12 +241,12 @@ class GPTTestData
   def create_horizontal_test_data(parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
     configure_repo_storage(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
-    existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+    existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
     parent_group = recreate_group(group: parent_group, parent_group: @root_group) if existing_subgroups_count > subgroups_count
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
     sub_groups.map! do |sub_group|
-      existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_url}/api/v4/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+      existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
       sub_group = recreate_group(group: sub_group, parent_group: parent_group) if existing_projects_count > projects_count
       sub_group
     end
