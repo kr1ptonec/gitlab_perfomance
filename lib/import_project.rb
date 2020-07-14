@@ -13,8 +13,8 @@ class ImportProject
   ProjectTarballDownloadError = Class.new(StandardError)
 
   def initialize(env_url:, project_tarball:)
-    @env_url = env_url
-    @environment_api_url = URI.join(@env_url, '/api/v4/')
+    @env_url = env_url.chomp('/')
+    @env_api_url = URI.join(@env_url + '/', "api/v4")
     @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
     @project_tarball = project_tarball
   end
@@ -39,10 +39,10 @@ class ImportProject
   end
 
   def setup_group(namespace:)
-    return unless namespace && !GPTCommon.make_http_request(method: 'get', url: URI.join(@environment_api_url, "namespaces/#{CGI.escape(namespace)}").to_s, headers: @headers, fail_on_error: false).status.success?
+    return unless namespace && !GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/namespaces/#{CGI.escape(namespace)}", headers: @headers, fail_on_error: false).status.success?
 
     GPTLogger.logger.info "Creating group #{namespace}..."
-    grp_url = URI.join(@environment_api_url, 'groups').to_s
+    grp_url = "#{@env_api_url}/groups"
     grp_params = {
       name: namespace,
       path: namespace,
@@ -53,7 +53,7 @@ class ImportProject
 
   def import_project_request(proj_tarball_file:, project_name:, namespace:, storage_name:, project_description:)
     GPTLogger.logger.info "Importing project #{project_name}...\nNote that this may take some time to upload a file to the target environment."
-    proj_url = URI.join(@environment_api_url, 'projects/import').to_s
+    proj_url = "#{@env_api_url}/projects/import"
     proj_params = {
       file: HTTP::FormData::File.new(proj_tarball_file),
       namespace: namespace,
@@ -65,7 +65,7 @@ class ImportProject
     upload_headers = {
       'Transfer-Encoding': 'chunked'
     }.merge(@headers)
-    proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: upload_headers, show_response: true)
+    proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: upload_headers)
     proj_id = JSON.parse(proj_res.body.to_s)['id']
 
     GPTLogger.logger.info "\nProject tarball has successfully uploaded and started to be imported with ID '#{proj_id}'"
@@ -75,12 +75,12 @@ class ImportProject
   def wait_for_import(proj_id:, start_time:)
     print "Waiting until Project '#{proj_id}' has imported successfully..."
     loop do
-      proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: URI.join(@environment_api_url, "projects/#{proj_id}/import").to_s, headers: @headers).body.to_s)
+      proj_imp_res = JSON.parse(GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{proj_id}/import", headers: @headers).body.to_s)
 
       case proj_imp_res['import_status']
       when 'finished'
         time_taken = ChronicDuration.output(Time.now.to_i - start_time, format: :long)
-        GPTLogger.logger.info(Rainbow("\nProject has successfully imported in #{time_taken}:\n#{URI.join(@env_url, proj_imp_res['path_with_namespace'])}").green)
+        GPTLogger.logger.info(Rainbow("\nProject has successfully imported in #{time_taken}:\n#{@env_url}/#{proj_imp_res['path_with_namespace']}").green)
         break
       when 'failed'
         raise ProjectImportError, "Project has failed to import.\nGitLab import error:\n #{proj_imp_res['import_error']}\nCorrelation ID: #{proj_imp_res['correlation_id']}"
@@ -96,7 +96,7 @@ class ImportProject
   def remove_prev_project(proj_id:)
     # Import cleanup: remove the project
     GPTLogger.logger.info "Removing previously imported project"
-    project_url = URI.join(@environment_api_url, "projects/#{proj_id}").to_s
+    project_url = "#{@env_api_url}/projects/#{proj_id}"
     GPTCommon.make_http_request(method: 'delete', url: project_url, headers: @headers)
     GPTLogger.logger.info "The project was removed"
   end
