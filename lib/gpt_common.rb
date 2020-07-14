@@ -23,7 +23,7 @@ module GPTCommon
         res_body = res.content_type.mime_type == "application/json" ? JSON.parse(res.body.to_s) : res.body.to_s
         GPTLogger.logger.info(res_body)
       end
-      raise BadGatewayError, "#{method.upcase} request failed!\nURL: #{url}\nCode: #{res.code}\nResponse: #{res.body}\n" if res.status == 502
+      raise BadGatewayError, "#{method.upcase} request failed!\nURL: #{url}\nCode: #{res.code}\nResponse: #{res.body}\n" if res.status == 502 && fail_on_error
     rescue BadGatewayError => e
       # Retry to send request once, if response was 502
       retries += 1
