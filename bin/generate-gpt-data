@@ -40,6 +40,7 @@ opts = Optimist.options do
   opt :storage_nodes, "Repository storages that will be used to import vertical data.", short: :none, type: :strings
   opt :force, "Force the data generation ignoring the existing data", type: :flag, default: false
   opt :unattended, "Skip the data injection warning", type: :flag, default: false
+  opt :clean_up, "Clean up GPT data", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
@@ -94,11 +95,17 @@ FileUtils.mkdir_p(results_home)
 results_file_prefix = "#{URI(opts[:environment_url]).host}_#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
 ENV['GPT_LOGGER_PATH'] = "#{results_home}/generate-gpt-data_#{results_file_prefix}.log"
 
-GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified project `#{opts[:root_group]}` on #{opts[:environment_url]}. Note that this may take some time.") unless opts[:unattended]
+GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified group `#{opts[:root_group]}` on #{opts[:environment_url]}. Note that this may take some time.") unless opts[:unattended] || opts[:clean_up]
 
 # Generate opinionated test data
 begin
   gpt_test_data = GPTTestData.new(gpt_data_version: gpt_data_version, force: opts[:force], unattended: opts[:unattended], env_url: opts[:environment_url], root_group: opts[:root_group], storage_nodes: opts[:storage_nodes], max_wait_for_delete: opts[:max_wait_for_delete])
+
+  if opts[:clean_up]
+    GPTCommon.show_warning_prompt("\nThe GPT Data Generator will delete this root group for GPT data:\n#{gpt_test_data.root_group}.") unless opts[:unattended]
+    gpt_test_data.delete_group(gpt_test_data.root_group)
+    exit
+  end
 
   if opts[:horizontal]
     GPTCommon.show_warning_prompt("\nFor the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the `repository_storages` setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.\n\nWhile the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.\nThe original setting will be restored after the the tool is finished.") unless opts[:unattended]
