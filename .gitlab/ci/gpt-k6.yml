@@ -51,6 +51,7 @@ update-environment:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: update
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+    GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
   trigger:
     project: gitlab-org/quality/performance-environment-builder
     branch: $ENVIRONMENT_BUILDER_BRANCH
@@ -65,6 +66,7 @@ stop-environment:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: stop
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
+    GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
   trigger:
     project: gitlab-org/quality/performance-environment-builder
     branch: $ENVIRONMENT_BUILDER_BRANCH
