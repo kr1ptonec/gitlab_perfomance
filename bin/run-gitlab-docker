@@ -17,19 +17,21 @@ require 'tty-spinner'
   opt :name, "Name to use for Gitlab Docker Container", short: :none, type: :string, default: "gitlab"
   opt :hostname, "Address to use that resolves to Gitlab Docker Container", short: :none, type: :string, default: "docker"
   opt :project_id, "ID or URL-encoded path of a project on the GitLab image to perform checks.", short: :none, type: :string, default: "qa-perf-testing%2Fgitlabhq"
+  opt :pull, "Pull new version of image", short: :none, type: :boolean, default: false
   opt :help, 'Show help message'
 end
 
 raise "Docker not installed. Exiting..." unless Open3.capture2e("docker version" + ';')[1]
 
-start_time = Time.now
 spinner = TTY::Spinner.new("[:spinner] Starting GitLab Docker")
 spinner.auto_spin
-gd_out, gd_status = Open3.capture2e("docker pull #{@opts[:image]} && docker run -d --publish 80:80 --publish 443:443 --publish 22:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']\" #{@opts[:image]}")
+Open3.capture2e("docker pull #{@opts[:image]}") if @opts[:pull]
+gd_out, gd_status = Open3.capture2e("docker run -d --publish 80:80 --publish 443:443 --publish 2222:22 --name #{@opts[:name]} --hostname #{@opts[:hostname]} --env GITLAB_OMNIBUS_CONFIG=\"gitlab_rails['monitoring_whitelist'] = ['0.0.0.0/0']; gitlab_rails['gitlab_shell_ssh_port'] = 2222\" #{@opts[:image]}")
 raise "docker issue:\n#{gd_out}" unless gd_status.success?
 
 spinner.success
 
+start_time = Time.now
 spinner = TTY::Spinner.new("[:spinner] Waiting for GitLab Container to be ready")
 spinner.auto_spin
 begin
