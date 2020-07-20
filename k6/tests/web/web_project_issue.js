@@ -16,7 +16,7 @@ export let endpointCount = 5
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let ttfbThreshold = getTtfbThreshold(2000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
