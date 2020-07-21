@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/tree/master`
 @description: Web - Project Files Tree. <br>Controllers: `Projects::TreeController#show`, `Projects::BlobController#show.json`, `Projects::RefsController#logs_tree.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366, https://gitlab.com/gitlab-org/gitlab/-/issues/222685
 */
 
 import http from "k6/http";
@@ -14,7 +14,7 @@ export let endpointCount = 6
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.75, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(2500)
+export let ttfbThreshold = getTtfbThreshold(1000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
