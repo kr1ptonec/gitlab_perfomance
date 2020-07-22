@@ -163,6 +163,7 @@ Options:
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
   -f, --force                      Force the data generation ignoring the existing data
   -u, --unattended                 Skip the data injection warning
+  -c, --clean-up                   Clean up GPT data
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
   -h, --help                       Show help message
 
@@ -263,12 +264,12 @@ The tool's output will look like the following:
 
 ```txt
 GPT Data Generator v1.0.4 - opinionated test data for the GitLab Performance Tool
-The GPT Data Generator will inject the data into the specified project `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
+The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check was successful - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
 
 Creating group gpt
 
@@ -303,7 +304,7 @@ Tarball is remote, downloading...
 Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check was successful - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
 
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
@@ -320,7 +321,7 @@ Updating application settings: {:repository_storages=>"storage2"}
 Starting import of Project 'gitlabhq2' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check was successful - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
 
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
@@ -473,6 +474,12 @@ The Generator has been designed to be idempotent for this use case. As such, whe
 When you are finished performing performance tests with GPT you're free to then remove all the data for it. This includes the created user and the data that was generated with GPT Data Generator.
 
 Both of these can easily be deleted by an admin user with data specifically easily removed by deleting the root group `gpt` on the environment that will in turn delete all of it's subgroups and projects.
+
+The Generator can also be used to delete the root group by passing the `--clean-up` param:
+
+```sh
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+```
 
 # Troubleshooting
 
