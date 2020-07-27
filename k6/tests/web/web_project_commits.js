@@ -27,7 +27,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web', 'branch']);
+export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
   console.log('')
