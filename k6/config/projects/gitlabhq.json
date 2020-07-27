@@ -1,8 +1,8 @@
-{ 
+{
   "name": "gitlabhq",
   "version": 1,
   "branch": "10-0-stable",
-  "commit_sha": "0a99e022",
+  "commit_sha": "2af90cef",
   "commit_sha_signed": "6526e91f",
   "compare_commits_sha": ["aec887ab", "5bfb7558"],
   "file_source_path": "fixtures%2femojis%2findex%2ejson",
