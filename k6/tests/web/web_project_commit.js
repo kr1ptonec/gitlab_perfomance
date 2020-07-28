@@ -3,6 +3,7 @@
 @endpoint: `GET /:group/:project/commit/:commit_sha`
 @description: Web - Commit Details Page. <br>Controllers: `Projects::CommitController#show`, `Projects::CommitController#branches`, `Projects::CommitController#merge_requests.json`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/232509
+@flags: dash_url
 */
 
 import http from "k6/http";

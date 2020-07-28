@@ -3,6 +3,7 @@
 @endpoint: `GET /:group/:project/blame/master/:file_path`
 @description: Web - Project File Blame Page. <br>Controllers: `Projects::BlameController#show`</br>
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/220950, https://gitlab.com/gitlab-org/gitlab/-/issues/225174
+@flags: dash_url
 */
 
 import http from "k6/http";
