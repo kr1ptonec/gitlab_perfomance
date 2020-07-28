@@ -14,8 +14,8 @@ import { checkProjEndpointDash } from "../../lib/gpt_web_functions.js";
 export let endpointCount = 3
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(7500)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(12500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
