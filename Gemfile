@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+ruby '>= 2.6.6'
+
 group :dev do
   gem 'gitlab-styles'
   # Pin these dependencies, otherwise a new rule could break the CI pipelines
