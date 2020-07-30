@@ -12,6 +12,8 @@ class GPTTestData
   attr_reader :root_group
 
   WaitForDeleteError = Class.new(StandardError)
+  IncorrectProjectRepoStorage = Class.new(StandardError)
+  GetProjectError = Class.new(StandardError)
 
   def initialize(gpt_data_version:, force:, unattended:, env_url:, root_group:, storage_nodes:, max_wait_for_delete:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
@@ -71,23 +73,51 @@ class GPTTestData
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: @settings['deletion_adjourned_period'] })
   end
 
+  def weighted_repo_storages_supported?
+    @settings.key?('repository_storages_weighted')
+  end
+
   def check_repo_storage_setting?(setting)
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    current_settings['repository_storages'] == setting
+    return current_settings['repository_storages'] == setting unless weighted_repo_storages_supported?
+
+    setting = setting.product([100]).to_h if setting.is_a?(Array)
+    current_settings['repository_storages_weighted'] == setting
+  end
+
+  def get_storage_settings(storages)
+    storage_settings = {}
+    if weighted_repo_storages_supported?
+      # (GitLab 13.1 and later) Hash of names of enabled storage paths with weights.
+      # New projects are created in one of these stores, chosen by a weighted random selection.
+      # https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored
+      storages = storages.product([100]).to_h if storages.is_a?(Array)
+
+      storages.each { |storage, weight| storage_settings["repository_storages_weighted[#{storage}]"] = weight }
+    else
+      # (GitLab 13.0 and earlier) List of names of enabled storage paths.
+      # New projects are created in one of these stores, chosen at random.
+      storage_settings = { 'repository_storages[]': storages }
+    end
+    storage_settings
   end
 
   def configure_repo_storage(storage:)
-    return if check_repo_storage_setting?([storage].flatten)
+    storage = [storage] if storage.is_a?(String)
+    return if check_repo_storage_setting?(storage)
 
-    GPTLogger.logger.info "Updating GitLab Application setting 'repository_storages' to '#{storage}'"
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { 'repository_storages[]': storage })
+    storage_settings = get_storage_settings(storage)
+    GPTLogger.logger.info "Updating GitLab Application Repository Storage setting"
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
   end
 
   def restore_repo_storage_config
-    return if @settings['repository_storages'].nil? || check_repo_storage_setting?(@settings['repository_storages'])
+    repo_storage_setting = weighted_repo_storages_supported? ? @settings['repository_storages_weighted'] : @settings['repository_storages']
+    return if repo_storage_setting.nil? || check_repo_storage_setting?(repo_storage_setting)
 
-    GPTLogger.logger.info "Restoring the original 'repository_storages' GitLab Application setting."
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { 'repository_storages[]': @settings['repository_storages'] })
+    storage_settings = get_storage_settings(repo_storage_setting)
+    GPTLogger.logger.info "Restoring the original Repository Storage setting in GitLab Application."
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
   end
 
   # Groups
@@ -178,6 +208,14 @@ class GPTTestData
 
   def get_project(proj_path:)
     GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
+  end
+
+  def check_proj_repo_storage(proj_path:, storage:)
+    proj_check_res = get_project(proj_path: proj_path)
+    raise GetProjectError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
+
+    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'repository_storage')
+    raise IncorrectProjectRepoStorage, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}" unless storage == project['repository_storage']
   end
 
   def check_project_exists(proj_path)
@@ -297,6 +335,9 @@ class GPTTestData
           retry
         end
       end
+      # Check that project was imported to the correct repo storage
+      # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
+      check_proj_repo_storage(proj_path: proj_path, storage: gitaly_node)
     end
   end
 end
