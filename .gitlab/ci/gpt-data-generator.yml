@@ -33,6 +33,8 @@ check:generator:
   stage: check
   extends: .generator-base
   only:
+    refs:
+      - schedules
     variables:
       - $GPT_DATA_GENERATOR
 
@@ -42,4 +44,6 @@ check:generator:manual:
   only:
     - master
     - merge_requests
+  except:
+    - schedules
   when: manual
