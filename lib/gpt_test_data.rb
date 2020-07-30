@@ -269,11 +269,11 @@ class GPTTestData
         configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
         proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
         import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
-      elsif existing_project['description'].match?(/^Version: #{project_version}/)
+      elsif existing_project['description']&.match?(/^Version: #{project_version}/)
         GPTLogger.logger.info "Project version number matches version from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
         next
       else
-        existing_project_version = existing_project['description'].match(/Version: (.*)/)
+        existing_project_version = existing_project['description']&.match?(/Version: (.*)/)
         version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{existing_project_version[1]} > #{project_version})."
         GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
         disable_soft_delete unless ENV['SKIP_CHANGING_ENV_SETTINGS']
