@@ -4,3 +4,4 @@ include:
   - local: '.gitlab/ci/gpt-k6.yml'
   - local: '.gitlab/ci/gpt-k6-compare.yml'
   - local: '.gitlab/ci/gpt-docker.yml'
+  - local: '.gitlab/ci/gpt-data-generator.yml'
