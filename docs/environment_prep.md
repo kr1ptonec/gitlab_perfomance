@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.5 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.6 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -263,7 +263,7 @@ docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST 
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.5 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.6 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
@@ -273,14 +273,14 @@ Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net
 
 Creating group gpt
 
-For the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the `repository_storages` setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.
+For the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.
 
 While the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.
 The original setting will be restored after the the tool is finished.
 Do you want to proceed? [Y/N]
 y
 Creating group gpt/many_groups_and_projects
-Updating GitLab Application setting 'repository_storages' to '["default", "storage2"]'
+Updating GitLab Application Repository Storage setting
 Updating application settings: {:repository_storages=>["default", "storage2"]}
 Creating 250 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
 ..........................................................................................................................................................................................................................................................
@@ -288,7 +288,7 @@ Creating 10 projects each under 250 subgroups with name prefix 'gpt-project-'
 ....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
 <-> Horizontal data: successfully generated!
 
-For the creation of `vertical` data with large projects, the GPT Data Generator will need to change the `repository_storages` setting on the target GitLab environment. This is to facilitate the creation of a large project in each Storage node specifically. As such, it will change this setting to point to each node as set in the `storage_nodes` option and then create the project sequentially.
+For the creation of `vertical` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of a large project in each Storage node specifically. As such, it will change this setting to point to each node as set in the `storage_nodes` option and then create the project sequentially.
 
 While the Generator is doing this any other projects created or imported during this time will also be confined to the currently active Storage node.
 The original setting will be restored after the the script is finished.
@@ -298,7 +298,7 @@ y
 | Vertical data: importing large projects for GPT...
 Creating group gpt/large_projects
 Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
-Updating GitLab Application setting 'repository_storages' to 'default'
+Updating GitLab Application Repository Storage setting
 Updating application settings: {:repository_storages=>"default"}
 Tarball is remote, downloading...
 Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
@@ -316,7 +316,7 @@ Project has successfully imported in 27 minutes 45 seconds:
 http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
 
 Checking if project gitlabhq2 already exists in gpt/large_projects/gitlabhq2...
-Updating GitLab Application setting 'repository_storages' to 'storage2'
+Updating GitLab Application Repository Storage setting
 Updating application settings: {:repository_storages=>"storage2"}
 Starting import of Project 'gitlabhq2' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
