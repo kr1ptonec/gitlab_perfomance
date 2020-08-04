@@ -66,7 +66,7 @@ graph LR
 
 In this section we'll detail how to use the GPT Data Generator to set up the test data on your GitLab Environment broken down into two parts:
 
-1. [Preparing the Environment Config File](#preparing-the-environment-config-file)
+1. [Preparing the Environment Config File](#preparing-the-environment-file)
 1. [Running the GPT Data Generator tool](#running-the-gpt-data-generator-tool)
 
 ### Preparing the Environment File
@@ -422,7 +422,7 @@ Details for each of the settings are as follows. You should aim to have each of 
   * `users` - [Users Scope](https://docs.gitlab.com/ee/api/search.html#scope-users) search term.
 * `issue_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of an issue available in the project that has a large number of discussions / comments. The size of the issue discussions should be tuned to your environment's requirements.
 
-Project config files typically should be saved to the `k6/config/projects` directory although you can save it elsewhere if desired. When the Project Config file is in place, you'll then need to specify its name (or file path) in the `large_project` setting of your [Environment Config file](#preparing-the-environment-config-file).
+Project config files typically should be saved to the `k6/config/projects` directory although you can save it elsewhere if desired. When the Project Config file is in place, you'll then need to specify its name (or file path) in the `large_project` setting of your [Environment Config file](#preparing-the-environment-file).
 
 ##### Configure Environment Config file
 
@@ -494,3 +494,21 @@ Error importing repository into qa-perf-testing/gitlabhq - GitalyClient#call cal
 ```
 
 This is due to a [n+1 calls limit being set for development setups](https://docs.gitlab.com/ee/development/gitaly.html#toomanyinvocationserror-errors). You can work around this by setting `GITALY_DISABLE_REQUEST_LIMITS=1` as an environment variable, restarting your development environment and importing again.
+
+## Repository Storages config can't be updated via application settings API
+
+Due to an [application bug](https://gitlab.com/gitlab-org/gitlab/-/issues/227408), configuring a key setting that allows us to import large projects into specific storage nodes was broken. This bug was introduced in GitLab version [`13.1.0`](https://gitlab.com/gitlab-org/gitlab/-/releases/v13.1.0-ee) and was fixed in [`13.2.2`](https://gitlab.com/gitlab-org/gitlab/-/releases/v13.2.2-ee). Updating the target environment version to `13.2.2` or higher will resolve this problem. If you can't update the environment, vertical data will need to be imported manually.
+
+For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Generator essentially imports our test large project into each Gitaly (storage) node as configured. Due to the above bug if you need to test against the affected versions then this process will need to be done manually as follows:
+
+1. List all [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment under the `storage_nodes` setting in the [Environment Config file](#preparing-the-environment-file) following the documentation. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment. As an example, suppose we have 2 storage nodes `"storage_nodes": ["default", "storage2"]`.
+1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly node itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
+1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the [GitLab FOSS Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz) specifying these options:
+    * Select the `gpt/large_projects` group for "Project URL"
+    * Enter project name in "Project slug" following this structure `<PROJECT NAME><STORAGE NODE SEQUENCE NUMBER>`. In our example it would be `gitlabhq1` for the `default` node and `gitlabhq2` for `storage2` node.
+1. After this has been completed for every Gitaly node listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
+    * To verify that vertical data was imported correctly head to **Admin Area > Overview > Projects**. Click on each imported project and ensure it has a correct `Gitaly storage name`. In our example `gitlabhq1` should be on `default` gitaly storage and `gitlabhq2` should be on `storage2`.
+
+## Large Project repository storage is different than expected
+
+This error could occur due to the bug, [Repository Storages config can't be updated via application settings API](#repository-storages-config-cant-be-updated-via-application-settings-api), described above. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
