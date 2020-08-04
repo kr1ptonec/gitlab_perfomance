@@ -25,7 +25,7 @@ class GPTTestData
     @max_wait_for_delete = max_wait_for_delete
     @storage_nodes = storage_nodes
 
-    GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
+    @gitlab_version = GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
     @root_group = create_group(group_name: root_group)
   end
@@ -215,7 +215,7 @@ class GPTTestData
     raise GetProjectError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
 
     project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'repository_storage')
-    raise IncorrectProjectRepoStorage, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}" unless storage == project['repository_storage']
+    raise IncorrectProjectRepoStorage, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected." unless storage == project['repository_storage']
   end
 
   def check_project_exists(proj_path)
@@ -274,7 +274,7 @@ class GPTTestData
     wait_for_delete("projects/#{project['id']}")
   end
 
-  # Horiztonal \ Vertical
+  # Horiztonal
 
   def create_horizontal_test_data(parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
     configure_repo_storage(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
@@ -291,7 +291,19 @@ class GPTTestData
     create_projects(project_prefix: project_prefix, subgroups: sub_groups, projects_count: projects_count)
   end
 
+  #  Vertical
+
+  def check_repo_storage_support
+    return if weighted_repo_storages_supported? || @storage_nodes.size == 1
+
+    return unless @gitlab_version >= Semantic::Version.new('13.1.0') && @gitlab_version < Semantic::Version.new('13.2.2')
+
+    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage config changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
+  end
+
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_version:)
+    check_repo_storage_support
+
     proj_tarball_file = nil
     @storage_nodes.each.with_index(1) do |gitaly_node, i|
       import_project = ImportProject.new(env_url: @env_url, project_tarball: project_tarball)

@@ -51,6 +51,7 @@ module GPTCommon
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
     GPTLogger.logger.info "Environment and Access Token check complete - URL: #{env_url}, Version: #{version}\n"
+    gitlab_version
   end
 
   def get_env_settings(env_url:, headers:)
