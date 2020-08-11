@@ -60,7 +60,8 @@ def post_slack_snippet(results_file_path, message, content = nil)
 end
 
 def prepare_message_text(result, results_json = nil)
-  message = "Test #{@opts[:test_name]} against #{ENV['ENVIRONMENT_NAME'].capitalize} has"
+  environment = ENV['ENVIRONMENT_NAME']&.match?(/docker/i) ? "multiple GitLab versions" : ENV['ENVIRONMENT_NAME'].capitalize
+  message = "#{@opts[:test_name].upcase} tests against #{environment} has"
   summary = result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing:"
   summary << "\n• Pipeline - #{ENV['CI_PIPELINE_URL']}" if ENV['CI_PIPELINE_URL']
   summary << "\n• Metrics Dashboard - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json

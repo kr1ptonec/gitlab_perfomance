@@ -61,7 +61,7 @@ k6:
     refs:
       - schedules
     variables:
-      - $TEST_TYPE == "k6"
+      - $TEST_TYPE == "gpt"
   except:
     variables:
       - $ENVIRONMENT_NAME == null
@@ -87,7 +87,7 @@ report-k6-success-slack:
     TEST_RESULT: "passed"
   only:
     variables:
-      - $TEST_TYPE == "k6"
+      - $TEST_TYPE == "gpt"
   when: on_success
 
 report-k6-failure-slack:
@@ -96,7 +96,7 @@ report-k6-failure-slack:
     TEST_RESULT: "failed"
   only:
     variables:
-      - $TEST_TYPE == "k6"
+      - $TEST_TYPE == "gpt"
   when: on_failure
 
 ##############################
@@ -108,7 +108,7 @@ report-k6-results-wiki:
     WIKI_PAGE: "Benchmarks/Latest/$ENVIRONMENT_NAME"
   only:
     variables:
-      - $TEST_TYPE == "k6"
+      - $TEST_TYPE == "gpt"
 
 report-k6-test-info-wiki:
   extends: .report-k6-wiki-base
