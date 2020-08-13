@@ -19,7 +19,7 @@ The first part of preparation is to create a user on the target environment. Thi
 
 The user can be created in the normal way but with the following requirements:
 
-* The user can be named as desired
+* The username can be set as desired with one exception: the username cannot be the same as the `root_group` name which is set in [Environment File](#preparing-the-environment-file)
 * It should be an Admin user
 * To ensure consistent test results the User should be new or have no data associated with it (i.e. no groups, projects, etc...)
 
