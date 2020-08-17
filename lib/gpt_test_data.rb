@@ -139,8 +139,8 @@ class GPTTestData
 
   def check_users_with_group_name(grp_path)
     user_check_res = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/search?scope=users&search=#{grp_path}", headers: @headers, fail_on_error: false, retry_on_error: true)
-    user = JSON.parse(user_check_res.body.to_s)
-    raise GroupPathTaken, "Root Group path '#{grp_path}' is already taken by user #{user}.\nPlease change their username or use a different group name by changing a `root_group` option in Environment Config File." if user&.any?
+    users = JSON.parse(user_check_res.body.to_s)
+    raise GroupPathTaken, "Root Group path '#{grp_path}' is already taken by user #{user}.\nPlease change their username or use a different group name by changing the `root_group` option in Environment Config File." if users&.any? { |user| user['username'] == grp_path }
   end
 
   def create_group(group_name:, parent_group: nil)

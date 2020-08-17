@@ -29,9 +29,9 @@ opts = Optimist.options do
   opt :root_group, "Root group for GPT data.", short: :none, type: :string
   opt :horizontal, "Generate horizontal GPT data with multiple subgroups and projects.", short: :none, type: :boolean, default: true
   opt :group, "Group name that the subgroups and projects will be generated under.", short: :none, type: :string
-  opt :subgroup_prefix, "Prefix that the subgroups will be generated with.", short: :none, type: :string, default: 'gpt-subgroup-'
+  opt :subgroup_prefix, "Prefix that the subgroups will be generated with.", short: :none, type: :string
   opt :subgroups, "Number of subgroups to create", type: :integer
-  opt :project_prefix, "Prefix that the projects will be generated with.", short: :none, type: :string, default: 'gpt-project-'
+  opt :project_prefix, "Prefix that the projects will be generated with.", short: :none, type: :string
   opt :projects, "Number of projects to create in each subgroup", type: :integer
   opt :vertical, "Generate vertical GPT data with large projects", short: :none, type: :boolean, default: true
   opt :vert_group, "Group name that the vertical data will be generated to.", short: :none, type: :string
@@ -70,7 +70,9 @@ if opts[:environment]
   opts[:environment_url] ||= env_file_vars['environment']['url']
   opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
+  opts[:subgroup_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroup_prefix']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
+  opts[:project_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['project_prefix']
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
 
   opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
