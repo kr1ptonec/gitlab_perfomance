@@ -79,6 +79,17 @@ class GPTTestData
     @settings.key?('repository_storages_weighted')
   end
 
+  def check_repo_storage_support
+    # Check that the fix https://gitlab.com/gitlab-org/gitlab/-/merge_requests/36376 is
+    # available on a target environment and we can change `repository_storages_weighted` via API.
+    # This is an additional safeguard in case env is on 13.2-pre versions where the fix is in place after `13.2.0-pre a3ee515ecc`
+    return if weighted_repo_storages_supported?
+
+    return unless @gitlab_version >= Semantic::Version.new('13.1.0') && @gitlab_version < Semantic::Version.new('13.2.2')
+
+    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage config changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
+  end
+
   def check_repo_storage_setting?(setting)
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
     return current_settings['repository_storages'] == setting unless weighted_repo_storages_supported?
@@ -300,14 +311,6 @@ class GPTTestData
   end
 
   #  Vertical
-
-  def check_repo_storage_support
-    return if weighted_repo_storages_supported? || @storage_nodes.size == 1
-
-    return unless @gitlab_version >= Semantic::Version.new('13.1.0') && @gitlab_version < Semantic::Version.new('13.2.2')
-
-    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage config changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
-  end
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_version:)
     check_repo_storage_support
