@@ -203,6 +203,7 @@ class GPTTestData
           grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers)
           break if grp_res.status.success?
 
+          grp_res.flush
           print 'x'
           GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{i + 1}) - status #{grp_res.status}"
           sleep 1
@@ -287,6 +288,7 @@ class GPTTestData
             proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers)
             break if proj_res.status.success?
 
+            proj_res.flush
             print 'x'
             GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{i + 1}) - status #{proj_res.status}"
             sleep 1
