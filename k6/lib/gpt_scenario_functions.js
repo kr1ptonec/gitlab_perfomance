@@ -24,6 +24,7 @@ export function createProject(groupId) {
   let formdata = {
     name: `project-api-v4-new-scenario`,
     namespace_id: groupId,
+    auto_devops_enabled: false,
     visibility: "public"
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
