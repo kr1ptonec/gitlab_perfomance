@@ -28,7 +28,7 @@ export let options = {
 };
 
 // Setup creates 'commits_count' files for commit request tests.
-export let commits_count = options.rps > 4 ? 15 : 10;
+export let commits_count = 10;
 
 export function setup() {
   console.log('')
