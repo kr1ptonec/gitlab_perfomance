@@ -46,3 +46,6 @@ Layout/LineLength:
 
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+Metrics/AbcSize:
+  Max: 65.0

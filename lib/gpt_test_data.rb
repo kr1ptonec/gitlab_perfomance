@@ -176,15 +176,16 @@ class GPTTestData
   def create_groups(group_prefix:, parent_group: nil, groups_count:)
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
     groups = []
+    redo_count = 0
     HTTP.persistent @env_url do |http|
       groups_count.times do |num|
-        print '.'
         group_name = "#{group_prefix}#{num + 1}"
         grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
         grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers)
         if grp_check_res.status.success?
           existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
           groups << existing_group
+          print '*'
           GPTLogger.logger(only_to_file: true).info "Group #{existing_group['full_path']} already exists"
           next
         else
@@ -198,20 +199,22 @@ class GPTTestData
           description: @gpt_data_version_description
         }
         grp_params[:parent_id] = parent_group['id'] if parent_group
-        grp_res = nil
-        5.times do |i|
-          grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers)
-          break if grp_res.status.success?
-
-          grp_res.flush
+        grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers)
+        unless grp_res.status.success?
           print 'x'
-          GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{i + 1}) - status #{grp_res.status}"
+          GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{redo_count}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
+          grp_res.flush
+
+          redo_count += 1
           sleep 1
+          redo unless redo_count == 5
+          raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
         end
-        raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
 
         new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
         groups << new_group
+        print '.'
+        redo_count = 0
         GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
       end
     end
@@ -258,18 +261,19 @@ class GPTTestData
   def create_projects(project_prefix:, subgroups:, projects_count:)
     GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
+    redo_count = 0
     HTTP.persistent @env_url do |http|
       subgroups.each_with_index do |parent_group, i|
         projects_count_start = i * projects_count
 
         projects_count.times do |num|
-          print '.'
           project_name = "#{project_prefix}#{projects_count_start + num + 1}"
           proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
           proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers)
           if proj_check_res.status.success?
             existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
             projects << existing_project
+            print '*'
             GPTLogger.logger(only_to_file: true).info "Project #{existing_project['path_with_namespace']} already exists"
             next
           else
@@ -283,20 +287,22 @@ class GPTTestData
             description: @gpt_data_version_description
           }
           proj_params[:namespace_id] = parent_group['id'] if parent_group
-          proj_res = nil
-          5.times do |i|
-            proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers)
-            break if proj_res.status.success?
-
-            proj_res.flush
+          proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers)
+          unless proj_res.status.success?
             print 'x'
-            GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{i + 1}) - status #{proj_res.status}"
+            GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{redo_count}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
+            proj_res.flush
+
+            redo_count += 1
             sleep 1
+            redo unless redo_count == 5
+            raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
           end
-          raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
 
           new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
           projects << new_project
+          print '.'
+          redo_count = 0
           GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
         end
       end
@@ -320,6 +326,7 @@ class GPTTestData
     parent_group = recreate_group(group: parent_group, parent_group: @root_group) if existing_subgroups_count > subgroups_count
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
+    GPTLogger.logger.info "Checking for existing projects under groups..."
     sub_groups.map! do |sub_group|
       existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
       sub_group = recreate_group(group: sub_group, parent_group: parent_group) if existing_projects_count > projects_count
