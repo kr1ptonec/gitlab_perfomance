@@ -29,7 +29,7 @@ export let options = {
 
 // Setup creates 'commits_count' files for commit request tests.
 // For higher RPS we need to increase commits count to resolve concurrency issues
-export let commits_count = options.rps > 4 ? 20 : 10;
+export let commits_count = options.rps > 4 ? 15 : 10;
 
 export function setup() {
   console.log('')
