@@ -17,7 +17,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.26.2'
+    k6_version = ENV['K6_VERSION'] || '0.27.1'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
@@ -62,11 +62,14 @@ module RunK6
     options_env_vars = {}
     options_file_vars = JSON.parse(File.read(options_file))
 
-    options_env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
-    options_env_vars['OPTION_RPS_COUNT'] = begin
-      duration = options_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
-      (duration * options_file_vars['rps'].to_f).to_i.to_s
-    end
+    options_env_vars['OPTION_RPS'] = '200'
+    options_env_vars['OPTION_RPS_COUNT'] = (200 * 60).to_s
+
+    # options_env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
+    # options_env_vars['OPTION_RPS_COUNT'] = begin
+    #  duration = options_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
+    #  (duration * options_file_vars['rps'].to_f).to_i.to_s
+    # end
     options_env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
 
     options_env_vars
@@ -157,6 +160,7 @@ module RunK6
     cmd += ['--summary-export', test_summary_report_file]
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += ['--insecure-skip-tls-verify']
+    cmd += ['--batch-per-host', '0']
     cmd += ['--http-debug'] if ENV['GPT_DEBUG']
     cmd += ['--out', "influxdb=#{opts[:influxdb_url]}"] if opts[:influxdb_url] && ENV['K6_INFLUXDB_OUTPUT']
     cmd += [test_file]
