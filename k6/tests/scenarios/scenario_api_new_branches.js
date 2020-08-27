@@ -21,7 +21,8 @@ export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting": [`p(90)<${ttfbThreshold}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`]
+    "http_reqs": [`count>=${rpsThresholds['count']}`],
+    "http_reqs{endpoint:branches}": [`count>=${rpsThresholds['count']}`],
   },
   stages: stages,
   rps: rps
@@ -41,7 +42,7 @@ export function setup() {
 
 export default function(data) {
   group("API - Create New Branch", function() {
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'branches' } };
 
     let branchName = `test-branch-${__VU}-${__ITER}`
     let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/repository/branches`, { branch: branchName, ref: "master" }, params);

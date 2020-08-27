@@ -20,7 +20,8 @@ export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting": [`p(90)<${ttfbThreshold}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`]
+    "http_reqs": [`count>=${rpsThresholds['count']}`],
+    "http_reqs{endpoint:issues}": [`count>=${rpsThresholds['count']}`],
   },
   stages: issueStages,
   rps: issueRps
@@ -40,7 +41,7 @@ export function setup() {
 
 export default function (data) {
   group("API - Issue create", function () {
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'issues' } };
     let formdata = { title: `issue-${__VU}-${__ITER}` };
     let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/issues`, formdata, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
