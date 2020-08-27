@@ -63,7 +63,7 @@ export function teardown(data) {
 }
 
 export function createCommit(projectId, action, file_postfix, update = false) {
-  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}`, 'Content-Type': 'application/json' } };
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}`, 'Content-Type': 'application/json' }, redirects: 0 };
   let content = `# GitLab Performance Tool\nCommit ${action} action.\n\nThe GitLab Performance Tool (gpt) has been built by the GitLab Quality team to provide performance testing of any GitLab instance.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nSed nec dui diam. Integer et ligula at urna accumsan iaculis sed a lectus.\n\nPraesent porttitor ex ipsum, sit amet tincidunt eros fringilla et.\n\nMorbi semper, massa ut ornare viverra, lectus turpis consectetur libero, ac feugiat ex erat non orci.\n\nProin eros metus, varius ut velit at, sagittis sodales mauris.\n\nPellentesque sit amet egestas neque.\n\nInteger eleifend eros vitae fringilla lacinia.\n\nInteger maximus condimentum arcu, id sodales nisi accumsan eu.\n\nMauris metus nunc, ultricies id imperdiet vel, ornare eget felis.\n\nProin odio lorem, auctor in accumsan vitae, tempor nec mi.\n\nProin venenatis elementum elit ac fringilla. Mauris eget porta enim.\n\nAliquam cursus quam et dui fringilla, blandit vulputate leo euismod.\n\nUt euismod augue auctor, rhoncus luctus.\n\n`
   // Content size: 30 lines, 1000 characters * 10 = roughly 10 kb
   content = content.repeat(10)
