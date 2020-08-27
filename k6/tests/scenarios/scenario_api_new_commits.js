@@ -28,8 +28,7 @@ export let options = {
 };
 
 // Setup creates 'commits_count' files for commit request tests.
-// For higher RPS we need to increase commits count to resolve concurrency issues
-export let commits_count = options.rps > 4 ? 15 : 10;
+export let commits_count = 15;
 
 export function setup() {
   console.log('')
@@ -58,6 +57,7 @@ export default function(data) {
     /20(0|1|4)/.test(createCommitRes.status) ? successRate.add(true) : successRate.add(false) && logError(createCommitRes);
   });
 }
+
 export function teardown(data) {
   deleteGroup(data.groupId, __ENV.ENVIRONMENT_URL);
 }
