@@ -91,6 +91,7 @@ tests.each do |test_file|
     redo
   end
 
+  puts "hello!"
   aggregated_results << RunK6.get_test_results(test_file: test_file, status: status, output: output, test_redo: test_redo)
   aggregated_success &&= status
 

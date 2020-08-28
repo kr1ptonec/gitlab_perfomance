@@ -58,23 +58,6 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : {}
   end
 
-  def get_options_env_vars(options_file:)
-    options_env_vars = {}
-    options_file_vars = JSON.parse(File.read(options_file))
-
-    options_env_vars['OPTION_RPS'] = '200'
-    options_env_vars['OPTION_RPS_COUNT'] = (200 * 60).to_s
-
-    # options_env_vars['OPTION_RPS'] = options_file_vars['rps'].to_s
-    # options_env_vars['OPTION_RPS_COUNT'] = begin
-    #  duration = options_file_vars['stages'].inject(0.0) { |sum, n| sum + n['duration'].delete('a-z').to_f }
-    #  (duration * options_file_vars['rps'].to_f).to_i.to_s
-    # end
-    options_env_vars['OPTION_STAGES'] = options_file_vars['stages'].to_json
-
-    options_env_vars
-  end
-
   def setup_env_vars(k6_dir:, env_file:, options_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
@@ -82,6 +65,7 @@ module RunK6
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
     env_vars['ENVIRONMENT_USER'] = ENV['ENVIRONMENT_USER'].dup || env_file_vars['environment']['user']
+    env_vars['ENVIRONMENT_RPS'] = env_file_vars['environment']['rps'].to_s
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
@@ -94,15 +78,9 @@ module RunK6
     env_vars['WEB_ENDPOINT_THROUGHPUT'] = ENV['WEB_ENDPOINT_THROUGHPUT'].dup || '0.1'
     env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.01'
 
-    env_vars['K6_SETUP_TIMEOUT'] = ENV['K6_SETUP_TIMEOUT'].dup || '60s'
-    env_vars['K6_TEARDOWN_TIMEOUT'] = ENV['K6_TEARDOWN_TIMEOUT'].dup || '60s'
-
     env_version = get_env_version(env_url: env_vars['ENVIRONMENT_URL'])
     env_vars['ENVIRONMENT_VERSION'] = env_version['version']
     env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
-
-    options_env_vars = get_options_env_vars(options_file: options_file)
-    env_vars.merge!(options_env_vars)
 
     env_vars
   end
@@ -197,7 +175,7 @@ module RunK6
       when /vus_max/
         results["rps_target"] = line.match(/max=(\d+)/)[1]
       when /RPS Threshold:/
-        results["rps_threshold"] = line.match(/(\d+\.\d+)\/s/)[1]
+        results["rps_threshold"] = line.match(/(\d+(\.\d+)?)\/s/)[1]
       when /TTFB P90 Threshold:/
         results["ttfb_p90_threshold"] = line.match(/(\d+)ms/)[1]
       when /http_reqs/

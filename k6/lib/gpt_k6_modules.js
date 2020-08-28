@@ -38,7 +38,7 @@ export function getTtfbThreshold(ttfbBase=__ENV.TTFB_THRESHOLD) {
 }
 
 export function adjustRps(modifier=1.0) {
-   return Math.ceil(parseFloat(__ENV.OPTION_RPS) * modifier);
+   return Math.ceil(parseFloat(__ENV.ENVIRONMENT_RPS) * modifier);
 }
 
 export function adjustStageVUs(modifier=1.0) {
@@ -48,6 +48,12 @@ export function adjustStageVUs(modifier=1.0) {
     return stage
   });
   return stages;
+}
+
+export function getRpsThreshold(modifier=1.0) {
+  let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
+
+  return (parseFloat(__ENV.ENVIRONMENT_RPS) * modifier * buffer).toFixed(2);
 }
 
 export function checkProjectKeys(project, keys) {
