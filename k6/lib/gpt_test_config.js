@@ -22,7 +22,7 @@ export function getDuration() {
   } else if (__ENV.ENVIRONMENT_DURATION) {
     duration = __ENV.ENVIRONMENT_DURATION;
   } else {
-    duration = '60s'
+    duration = '20s'
   }
 
   return duration;

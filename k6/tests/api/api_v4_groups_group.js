@@ -8,24 +8,28 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
+import { logError, getManyGroupsOrProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
+import { getRps, getRpsThreshold, getScenario, getTtfbThreshold} from "../../lib/gpt_test_config.js";
 
-export let rpsThresholds = getRpsThresholds(0.1)
+export let rps = getRps('api')
+export let rpsThreshold = getRpsThreshold('api', 0.1)
+export let scenario = getScenario('api')
 export let ttfbThreshold = getTtfbThreshold(7500)
 export let successRate = new Rate("successful_requests")
 export let options = {
+  scenarios: scenario,
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting": [`p(90)<${ttfbThreshold}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`]
+    "http_reqs": [`rate>=${rpsThreshold}`]
   }
 };
 
 export let subgroups = getManyGroupsOrProjects(['subgroups_path_api']);
 
 export function setup() {
-  console.log('')
-  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`API Protocol RPS: ${rps}/s`)
+  console.log(`RPS Threshold: ${rpsThreshold}/s`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
