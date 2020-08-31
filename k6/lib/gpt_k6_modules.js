@@ -21,41 +21,6 @@ export function logError(res) {
   }
 }
 
-export function getRpsThresholds(modifier=1.0, endpoints=1) {
-  let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
-  let thresholds = {
-    count: (parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer).toFixed(0),
-    mean: (parseFloat(__ENV.OPTION_RPS) * modifier * buffer).toFixed(2),
-    count_per_endpoint: ((parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer) / endpoints).toFixed(0),
-    mean_per_endpoint: ((parseFloat(__ENV.OPTION_RPS) * modifier * buffer) / endpoints).toFixed(2)
-  }
-  return thresholds;
-}
-
-export function getTtfbThreshold(ttfbBase=__ENV.TTFB_THRESHOLD) {
-  let latency = parseInt(__ENV.ENVIRONMENT_LATENCY) || 0;
-  return parseInt(ttfbBase) + latency;
-}
-
-export function adjustRps(modifier=1.0) {
-   return Math.ceil(parseFloat(__ENV.ENVIRONMENT_RPS) * modifier);
-}
-
-export function adjustStageVUs(modifier=1.0) {
-  let stages = JSON.parse(__ENV.OPTION_STAGES)
-  stages.map((stage) => {
-    stage.target = Math.ceil(stage.target * modifier);
-    return stage
-  });
-  return stages;
-}
-
-export function getRpsThreshold(rps, modifier=1.0) {
-  let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
-
-  return (rps * modifier * buffer).toFixed(2);
-}
-
 export function checkProjectKeys(project, keys) {
   return keys.every(key => Object.prototype.hasOwnProperty.call(project, key));
 }
