@@ -86,6 +86,10 @@ Typically all that's needed to be done for this file is to copy one of the exist
     },
     "storage_nodes": ["default", "storage2"]
   },
+  "test_config": {
+    "rps": 200,
+    "duration": "60s"
+  },
   "gpt_data": {
     "root_group": "gpt",
     "large_projects": {
@@ -112,6 +116,9 @@ Details for each of the settings are as follows. Some are also available to be c
   * `config`- Additional details about the environment that are used to adjust test results accordingly.
     * `latency` - The network latency (in ms) between where the Tool will be running and the environment. (Environment variable: `ENVIRONMENT_LATENCY`)
   * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Node](https://docs.gitlab.com/ee/administration/gitaly/). If you have multiple nodes, you should list them in full to ensure that the test data is spread across all storage nodes evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
+* How tests should be run against the environment (refer to the [Configuring Environment Test RPS and Duration](#configure-environment-test-rps-and-duration) below for more details on how to configure this section):
+  * `rps` - The maximum Requests per Second that the environment is expected to handle.
+  * `duration` - How long each individual test should run against the environment.
 * The test data for the GitLab Performance Tool(`gpt_data`). You should aim to have each of these details present here and in the target environment otherwise the specific tests that require them will be skipped automatically:
   * `root_group` - The name of the Root Group for all the GitLab Performance Tool test data. (Default: `gpt`).
   * `large_projects` - Contains information about the "vertical" data.
@@ -127,6 +134,29 @@ Details for each of the settings are as follows. Some are also available to be c
 For a new environment the following settings will typically only need to be changed: `name`, `url`, `user` and `storage_nodes`. Environment config files typically should be saved to the `k6/config/environments` directory although you can save it elsewhere if desired.
 
 **Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/master/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
+
+#### Configuring Environment Test RPS and Duration
+
+As detailed above the Environment config file will configure the test conditions, namely RPS and Duration.
+
+Configuring the correct test conditions for the environment depends on the number of users it's expected to handle. As a rule of thumb we've validated that following RPS is used for every 1000 users through our [Reference Architectures](https://docs.gitlab.com/ee/administration/reference_architectures/):
+
+* API: 20 RPS
+* Web: 2 RPS
+* Git: 2 RPS
+
+As such, the following options files are recommended to be used based on your target environment user count:
+
+| Users | RPS  |
+|-------|------|
+| 1k    | 20   |
+| 2k    | 40   |
+| 5k    | 60   |
+| 10k   | 100  |
+| 25k   | 500  |
+| 50k   | 1000 |
+
+For Duration, we've also found that **60 seconds** per test is optimal to get a good result as well as give the tests enough time to handle slower endpoints.
 
 ### Running the GPT Data Generator tool
 
