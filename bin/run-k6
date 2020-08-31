@@ -17,7 +17,7 @@ require 'tmpdir'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_version = '2.0.6'
+gpt_version = '2.1.0'
 puts Rainbow("GitLab Performance Tool (GPT) v#{gpt_version} - Performance test runner for GitLab environments based on k6").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -26,7 +26,7 @@ opts = Optimist.options do
   banner "\nUsage: run-k6 [options]"
   banner "Options:"
   opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
-  opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: "20s_2rps.json"
+  opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string
   opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs.", type: :strings, default: ["tests"]
   opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
@@ -55,10 +55,12 @@ k6_path = RunK6.setup_k6
 env_file = Dir.glob([opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}", "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}"])[0]
 raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
 
-options_file = Dir.glob([opts[:options], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/options/#{opts[:options]}", "#{k6_dir}/#{opts[:options]}", "#{k6_dir}/config/options/#{opts[:options]}"])[0]
-raise "Options config file '#{opts[:options]}' not found as given or in default folder. Exiting..." unless File.file?(options_file.to_s)
-
-env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file, options_file: options_file)
+env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file)
+if opts[:options]
+  warn Rainbow("Options config files passed with --options / -o flags are deprecated. GPT will attempt to recreate scenario for this run but please refer to docs for info...").yellow
+  options_env_vars = RunK6.setup_options_env_vars(options: opts[:options])
+  env_vars.merge!(options_env_vars)
+end
 start_time = Time.now
 
 GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL'])
@@ -79,7 +81,7 @@ aggregated_success = true
 # Run tests
 test_redo = false
 tests.each do |test_file|
-  status, output = RunK6.run_k6(k6_path: k6_path, opts: opts, env_vars: env_vars, options_file: options_file, test_file: test_file, results_dir: results_dir, gpt_version: gpt_version)
+  status, output = RunK6.run_k6(k6_path: k6_path, opts: opts, env_vars: env_vars, test_file: test_file, results_dir: results_dir, gpt_version: gpt_version)
 
   File.open(results_output_file, 'a') do |out_file|
     out_file.puts output
@@ -141,7 +143,6 @@ results_json = {
   "version" => env_vars['ENVIRONMENT_VERSION'],
   "revision" => env_vars['ENVIRONMENT_REVISION'],
   "gpt_version" => gpt_version,
-  "option" => File.basename(options_file, '.json'),
   "date" => start_time.strftime('%F'),
   "time" => {
     "start" => start_time.utc.strftime('%T %Z'),

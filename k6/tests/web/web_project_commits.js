@@ -8,28 +8,33 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-import { webRps, webRpsThreshold, gptWebScenario } from "../../lib/gpt_scenarios.js";
+import { logError, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
+import { getRps, getRpsThreshold, getScenario, getTtfbThreshold, getDuration} from "../../lib/gpt_test_config.js";
 
+export let rps = getRps('web')
+export let rpsThreshold = getRpsThreshold('web')
+export let scenario = getScenario('web')
+export let duration = getDuration()
 export let ttfbThreshold = getTtfbThreshold(750)
 export let successRate = new Rate("successful_requests")
 export let options = {
-  scenarios: gptWebScenario,
+  scenarios: scenario,
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting{endpoint:commits}": [`p(90)<${ttfbThreshold}`],
-    "http_reqs": [`rate>=${webRpsThreshold}`],
-    "http_reqs{endpoint:commits}": [`rate>=${webRpsThreshold}`]
+    "http_reqs": [`rate>=${rpsThreshold}`],
+    "http_reqs{endpoint:commits}": [`rate>=${rpsThreshold}`]
   }
 };
 
 export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
-  console.log(`Web Protocol RPS: ${webRps}`)
-  console.log(`RPS Threshold: ${webRpsThreshold}/s`)
+  console.log(`Web Protocol RPS: ${rps}`)
+  console.log(`RPS Threshold: ${rpsThreshold}/s`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+  console.log(`Duration: ${duration}`)
 }
 
 export default function() {

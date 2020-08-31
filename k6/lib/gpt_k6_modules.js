@@ -50,10 +50,10 @@ export function adjustStageVUs(modifier=1.0) {
   return stages;
 }
 
-export function getRpsThreshold(modifier=1.0) {
+export function getRpsThreshold(rps, modifier=1.0) {
   let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
 
-  return (parseFloat(__ENV.ENVIRONMENT_RPS) * modifier * buffer).toFixed(2);
+  return (rps * modifier * buffer).toFixed(2);
 }
 
 export function checkProjectKeys(project, keys) {

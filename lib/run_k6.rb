@@ -58,7 +58,7 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : {}
   end
 
-  def setup_env_vars(k6_dir:, env_file:, options_file:)
+  def setup_env_vars(k6_dir:, env_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
@@ -83,6 +83,16 @@ module RunK6
     env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
 
     env_vars
+  end
+
+  def setup_options_env_vars(options:)
+    matches = options.match(/(\d+s)_(\d+)rps.json/)
+
+    options_env_vars = {}
+    options_env_vars['OPTIONS_DURATION'] = matches[1]
+    options_env_vars['OPTIONS_RPS'] = matches[2]
+
+    options_env_vars
   end
 
   def prepare_tests(tests:, env_vars:)
@@ -125,7 +135,7 @@ module RunK6
     tests
   end
 
-  def run_k6(k6_path:, opts:, env_vars:, options_file:, test_file:, results_dir:, gpt_version:)
+  def run_k6(k6_path:, opts:, env_vars:, test_file:, results_dir:, gpt_version:)
     test_name = File.basename(test_file, '.js')
     test_summary_report_file = File.join(results_dir, 'test_results', "#{File.basename(test_file, '.js')}.json")
     FileUtils.mkdir_p(File.dirname(test_summary_report_file))
@@ -133,7 +143,6 @@ module RunK6
     puts "Running k6 test '#{test_name}' against environment '#{env_vars['ENVIRONMENT_NAME']}'..."
 
     cmd = [k6_path, 'run']
-    cmd += ['--config', options_file] if options_file
     cmd += ['--summary-time-unit', 'ms']
     cmd += ['--summary-export', test_summary_report_file]
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
