@@ -1,9 +1,0 @@
-{
-  "stages": [
-    { "duration": "5s", "target": 80 },
-    { "duration": "50s", "target": 80 },
-    { "duration": "5s", "target": 0 }
-  ],
-  "rps": 80,
-  "batchPerHost": 0
-}
