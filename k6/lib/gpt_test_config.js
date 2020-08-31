@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 
 export function getRps(endpointType) {
-  let rps = __ENV.OPTIONS_RPS ? parseInt(__ENV.OPTIONS_RPS) : parseInt(__ENV.ENVIRONMENT_RPS);
+  let rps = __ENV.OPTIONS_RPS ? parseInt(__ENV.OPTIONS_RPS) : parseInt(__ENV.ENVIRONMENT_TEST_RPS);
 
   switch(endpointType) {
     case 'web':
@@ -17,7 +17,7 @@ export function getRps(endpointType) {
 }
 
 export function getDuration() {
-  let duration = __ENV.OPTIONS_DURATION ? __ENV.OPTIONS_DURATION : __ENV.ENVIRONMENT_DURATION;
+  let duration = __ENV.OPTIONS_DURATION ? __ENV.OPTIONS_DURATION : __ENV.ENVIRONMENT_TEST_DURATION;
 
   return duration;
 }

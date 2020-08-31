@@ -6,8 +6,11 @@
     "config": {
       "latency": "0"
     },
-    "storage_nodes": ["default", "storage2"],
-    "rps": 200
+    "storage_nodes": ["default", "storage2"]
+  },
+  "test_config": {
+    "rps": 200,
+    "duration": "60s"
   },
   "gpt_data": {
     "root_group": "gpt",

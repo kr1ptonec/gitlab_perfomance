@@ -26,7 +26,7 @@ opts = Optimist.options do
   banner "\nUsage: run-k6 [options]"
   banner "Options:"
   opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true
-  opt :options, "Name of Options Config file in options directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string
+  opt :options, "Deprecated option. Was previously used to pass in an Options Config file. If passed GPT will attempt to translate into scenario. Refer to docs for more info...", type: :string
   opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs.", type: :strings, default: ["tests"]
   opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
@@ -39,12 +39,12 @@ opts = Optimist.options do
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have all permissions set. (Default: nil)"
   banner "  GPT_DEBUG                Shows debug output when set to true. (Default: nil)"
   banner "\nExamples:"
-  banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
-  banner "  Run all API Tests with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api"
-  banner "  Run a specific Test with the 60s_200rps Options file against the 10k Environment:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api_v4_groups_projects.js"
+  banner "  Run all Tests against the 10k Environment:"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json"
+  banner "  Run all API Tests against the 10k Environment:"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --tests api"
+  banner "  Run a specific Test against the 10k Environment:"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --tests api_v4_groups_projects.js"
 end
 
 warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
@@ -57,7 +57,6 @@ raise "Environment config file '#{opts[:environment]}' not found as given or in 
 
 env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file)
 if opts[:options]
-  warn Rainbow("Options config files passed with --options / -o flags are deprecated. GPT will attempt to recreate scenario for this run but please refer to docs for info...").yellow
   options_env_vars = RunK6.setup_options_env_vars(options: opts[:options])
   env_vars.merge!(options_env_vars)
 end
@@ -143,8 +142,8 @@ results_json = {
   "version" => env_vars['ENVIRONMENT_VERSION'],
   "revision" => env_vars['ENVIRONMENT_REVISION'],
   "gpt_version" => gpt_version,
-  "rps" => env_vars['ENVIRONMENT_RPS'],
-  "duration" => env_vars['ENVIRONMENT_DURATION'],
+  "rps" => env_vars['ENVIRONMENT_TEST_RPS'],
+  "duration" => env_vars['ENVIRONMENT_TEST_DURATION'],
   "date" => start_time.strftime('%F'),
   "time" => {
     "start" => start_time.utc.strftime('%T %Z'),

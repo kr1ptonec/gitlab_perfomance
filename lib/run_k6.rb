@@ -65,11 +65,12 @@ module RunK6
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
     env_vars['ENVIRONMENT_USER'] = ENV['ENVIRONMENT_USER'].dup || env_file_vars['environment']['user']
-    env_vars['ENVIRONMENT_RPS'] = (ENV['ENVIRONMENT_RPS'].dup || env_file_vars['environment']['rps'] || 2).to_s
-    env_vars['ENVIRONMENT_DURATION'] = (ENV['ENVIRONMENT_DURATION'].dup || env_file_vars['environment']['duration'] || '20s').to_s
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
+
+    env_vars['ENVIRONMENT_TEST_RPS'] = (ENV['ENVIRONMENT_TEST_RPS'].dup || env_file_vars['test_config']['rps'] || 2).to_s
+    env_vars['ENVIRONMENT_TEST_DURATION'] = (ENV['ENVIRONMENT_TEST_DURATION'].dup || env_file_vars['test_config']['duration'] || '20s').to_s
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.95'
@@ -93,7 +94,10 @@ module RunK6
   end
 
   def setup_options_env_vars(options:)
+    warn Rainbow("Options config files passed with --options / -o flags are deprecated. GPT will attempt to recreate scenario for this run but please refer to docs for info...").yellow
+
     matches = options.match(/(\d+s)_(\d+)rps.json/)
+    raise Rainbow("Attempt to recreate scenario for run failed. Options config files are deprecated, refer to docs for info...").red if matches.length.zero?
 
     options_env_vars = {}
     options_env_vars['OPTIONS_DURATION'] = matches[1]
