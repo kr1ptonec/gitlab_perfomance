@@ -145,7 +145,7 @@ Configuring the correct test conditions for the environment depends on the numbe
 * Web: 2 RPS
 * Git: 2 RPS
 
-As such, the following options files are recommended to be used based on your target environment user count:
+As such, the following RPS is recommended to be used based on your target environment user count:
 
 | Users | RPS  |
 |-------|------|
