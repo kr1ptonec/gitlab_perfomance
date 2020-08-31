@@ -20,14 +20,15 @@ stages:
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
-    OPTIONS_FILE: 60s_2rps
+    ENVIRONMENT_TEST_RPS: '2'
+    ENVIRONMENT_TEST_DURATION: '60s'
     GPT_CP_DOCKER_IMAGE: registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance
   script:
     - apk add docker
     - echo "$GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
     - bin/run-gitlab-docker --image $GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0
     - sleep $STARTUP_DELAY
-    - bin/run-k6 -s -u -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -x api_v4_projects_repository_commits_sha_signature
+    - bin/run-k6 -s -u -e $ENVIRONMENT_NAME.json -x api_v4_projects_repository_commits_sha_signature
   artifacts:
     when: always
     paths:
