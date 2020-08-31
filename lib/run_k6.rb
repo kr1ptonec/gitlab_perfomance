@@ -65,7 +65,8 @@ module RunK6
     env_vars['ENVIRONMENT_NAME'] = ENV['ENVIRONMENT_NAME'].dup || env_file_vars['environment']['name']
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
     env_vars['ENVIRONMENT_USER'] = ENV['ENVIRONMENT_USER'].dup || env_file_vars['environment']['user']
-    env_vars['ENVIRONMENT_RPS'] = env_file_vars['environment']['rps'].to_s
+    env_vars['ENVIRONMENT_RPS'] = (ENV['ENVIRONMENT_RPS'].dup || env_file_vars['environment']['rps'] || 2).to_s
+    env_vars['ENVIRONMENT_DURATION'] = (ENV['ENVIRONMENT_DURATION'].dup || env_file_vars['environment']['duration'] || '20s').to_s
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
@@ -74,15 +75,21 @@ module RunK6
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.95'
     env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '500'
 
-    env_vars['GIT_ENDPOINT_THROUGHPUT'] = ENV['GIT_ENDPOINT_THROUGHPUT'].dup || '0.1'
-    env_vars['WEB_ENDPOINT_THROUGHPUT'] = ENV['WEB_ENDPOINT_THROUGHPUT'].dup || '0.1'
-    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.01'
-
     env_version = get_env_version(env_url: env_vars['ENVIRONMENT_URL'])
     env_vars['ENVIRONMENT_VERSION'] = env_version['version']
     env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
 
     env_vars
+  end
+
+  def setup_version_env_vars(env_url:)
+    env_version = get_env_version(env_url: env_vars['ENVIRONMENT_URL'])
+
+    version_env_vars = {}
+    version_env_vars['ENVIRONMENT_VERSION'] = env_version['version']
+    version_env_vars['ENVIRONMENT_REVISION'] = env_version['revision']
+
+    version_env_vars
   end
 
   def setup_options_env_vars(options:)
@@ -217,7 +224,7 @@ module RunK6
     results_summary = <<~DOC
       * Environment:                #{results_json['name'].capitalize}
       * Environment Version:        #{results_json['version']} `#{results_json['revision']}`
-      * Option:                     #{results_json['option']}
+      * Test Config:                RPS: #{results_json['rps']}, Duration: #{results_json['duration']}
       * Date:                       #{results_json['date']}
       * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}

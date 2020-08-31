@@ -9,12 +9,12 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-import { getRps, getRpsThreshold, getScenario, getTtfbThreshold, getDuration} from "../../lib/gpt_test_config.js";
+import { getDuration, getRps, getRpsThreshold, getScenario, getTtfbThreshold } from "../../lib/gpt_test_config.js";
 
+export let duration = getDuration()
 export let rps = getRps('web')
 export let rpsThreshold = getRpsThreshold('web')
 export let scenario = getScenario('web')
-export let duration = getDuration()
 export let ttfbThreshold = getTtfbThreshold(750)
 export let successRate = new Rate("successful_requests")
 export let options = {
@@ -30,11 +30,11 @@ export let options = {
 export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
+  console.log(`Duration: ${duration}`)
   console.log(`Web Protocol RPS: ${rps}`)
   console.log(`RPS Threshold: ${rpsThreshold}/s`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
-  console.log(`Duration: ${duration}`)
 }
 
 export default function() {

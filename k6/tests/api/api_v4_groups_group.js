@@ -9,8 +9,9 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getManyGroupsOrProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-import { getRps, getRpsThreshold, getScenario, getTtfbThreshold} from "../../lib/gpt_test_config.js";
+import { getDuration, getRps, getRpsThreshold, getScenario, getTtfbThreshold } from "../../lib/gpt_test_config.js";
 
+export let duration = getDuration();
 export let rps = getRps('api')
 export let rpsThreshold = getRpsThreshold('api', 0.1)
 export let scenario = getScenario('api')
@@ -28,6 +29,7 @@ export let options = {
 export let subgroups = getManyGroupsOrProjects(['subgroups_path_api']);
 
 export function setup() {
+  console.log(`Duration: ${duration}`)
   console.log(`API Protocol RPS: ${rps}/s`)
   console.log(`RPS Threshold: ${rpsThreshold}/s`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)

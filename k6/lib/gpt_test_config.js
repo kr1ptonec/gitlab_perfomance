@@ -1,29 +1,23 @@
 /*global __ENV : true  */
 
 export function getRps(endpointType) {
-  let rps;
-  if (__ENV.OPTIONS_RPS) {
-    rps = parseInt(__ENV.OPTIONS_RPS);
-  } else if (__ENV.ENVIRONMENT_RPS) {
-    rps = parseInt(__ENV.ENVIRONMENT_RPS);
-  } else {
-    rps = 2
+  let rps = __ENV.OPTIONS_RPS ? parseInt(__ENV.OPTIONS_RPS) : parseInt(__ENV.ENVIRONMENT_RPS);
+
+  switch(endpointType) {
+    case 'web':
+    case 'git':
+      rps *= 0.1;
+      break;
+    case 'scenario':
+      rps *= 0.01;
+      break;
   }
 
-  if (endpointType === 'web' || endpointType === 'git') rps *= 0.1;
-
-  return rps.toFixed(0);
+  return Math.ceil(rps);
 }
 
 export function getDuration() {
-  let duration;
-  if (__ENV.OPTIONS_DURATION) {
-    duration = __ENV.OPTIONS_DURATION;
-  } else if (__ENV.ENVIRONMENT_DURATION) {
-    duration = __ENV.ENVIRONMENT_DURATION;
-  } else {
-    duration = '20s'
-  }
+  let duration = __ENV.OPTIONS_DURATION ? __ENV.OPTIONS_DURATION : __ENV.ENVIRONMENT_DURATION;
 
   return duration;
 }

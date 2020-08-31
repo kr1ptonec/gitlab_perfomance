@@ -9,28 +9,30 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError } from "../../lib/gpt_k6_modules.js";
+import { getDuration, getRps, getRpsThreshold, getScenario, getTtfbThreshold, } from "../../lib/gpt_test_config.js";
 import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
-export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
+export let duration = getDuration()
+export let rps = getRps('scenario')
+export let rpsThreshold = getRpsThreshold('scenario')
+export let scenario = getScenario('scenario')
 export let ttfbThreshold = getTtfbThreshold(1500)
 export let successRate = new Rate("successful_requests")
 export let options = {
+  scenarios: scenario,
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting": [`p(90)<${ttfbThreshold}`],
-    "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:branches}": [`count>=${rpsThresholds['count']}`],
-  },
-  stages: stages,
-  rps: rps
+    "http_reqs": [`rate>=${rpsThreshold}`],
+    "http_reqs{endpoint:branches}": [`rate>=${rpsThreshold}`],
+  }
 };
 
 export function setup() {
-  console.log('')
-  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
+  console.log(`Duration: ${duration}`)
+  console.log(`Scenario Protocol RPS: ${rps}`)
+  console.log(`RPS Threshold: ${rpsThreshold}/s`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
