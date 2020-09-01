@@ -1,0 +1,51 @@
+# Test Config
+test_config:
+  target_user_count: 100
+  rps: 0
+  duration: 60s
+  latency: 0
+
+# Test Data
+test_data:
+  root_group: gpt
+
+  large_projects:
+    group: large_projects
+    large_project_data:
+    gitlabhq:
+      version: 1
+      branch: 10-0-stable
+      commit_sha: 8f9beefa
+      commit_sha_signed: 6526e91f
+      compare_commits_sha:
+      - aec887ab
+      - 5bfb7558
+      file_source_path: fixtures%2femojis%2findex%2ejson
+      file_rendered_path: CHANGELOG%2emd
+      file_blame_path: spec%2fmodels%2fproject_spec%2erb
+      dir_path: spec%2Flib%2Fgitlab
+      git_push_data:
+        branch_current_head_sha: 8606c89683c913641243fc667edeb90600fe1a0e
+        branch_new_head_sha: 8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2
+        branch_name: 12-1-auto-deploy-20190714
+      mr_commits_iid: '10495'
+      mr_discussions_iid: '6958'
+      search:
+        projects: gitlab
+        issues: broken
+        commits: fix
+        merge_requests: fix
+        milestones: '2.6'
+        blobs: test
+        users: root
+      issue_iid: '4218'
+
+  many_groups_and_projects:
+    group: many_groups_and_projectsq
+    subgroups: 250
+    subgroup_prefix: gpt-subgroup-
+    projects: 10
+    project_prefix: gpt-project-
+
+k6_env_config:
+  

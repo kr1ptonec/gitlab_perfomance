@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 $stdout.sync = true
 
 require 'chronic_duration'
+require 'config'
 require 'fileutils'
 require 'influxdb'
 require 'optimist'
@@ -15,6 +16,7 @@ require 'test_info'
 require 'time'
 require 'tmpdir'
 
+conf_dir = Pathname.new(File.expand_path('../config', __dir__)).relative_path_from(Dir.pwd)
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
 gpt_version = '2.1.0'
@@ -49,11 +51,13 @@ end
 
 warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
 
-k6_path = RunK6.setup_k6
-
-# Variables
-env_file = Dir.glob([opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}", "#{k6_dir}/#{opts[:environment]}", "#{k6_dir}/config/environments/#{opts[:environment]}"])[0]
+# Setup
+env_config_file = Dir.glob([opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{opts[:environment]}", "#{conf_dir}/#{opts[:environment]}", "#{conf_dir}/environments/#{opts[:environment]}"])[0]
 raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
+
+Config.load_and_set_settings("#{conf_dir}/gpt.yml", env_config_file)
+
+k6_path = RunK6.setup_k6
 
 env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file)
 if opts[:options]

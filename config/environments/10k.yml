@@ -1,0 +1,11 @@
+# example environment config file
+environment:
+  name: 10k
+  url: http://10k.testbed.gitlab.net
+  user: root
+  storage_nodes:
+  - default
+  - storage2
+
+test_config:
+  target_user_count: 10000
