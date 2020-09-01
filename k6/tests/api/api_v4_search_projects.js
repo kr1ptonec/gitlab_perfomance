@@ -4,7 +4,7 @@
 @description: [Project Search API](https://docs.gitlab.com/ee/api/search.html#project-search-api)
 @gitlab_settings: { "elasticsearch_indexing": true, "elasticsearch_search": true }
 @flags: search
-@issue: https://gitlab.com/groups/gitlab-org/-/epics/3166
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229627
 */
 
 import http from "k6/http";
