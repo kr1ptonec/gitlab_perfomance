@@ -2,7 +2,6 @@ $LOAD_PATH.unshift File.expand_path('.', __dir__)
 
 require 'cgi'
 require 'chronic_duration'
-require 'down/http'
 require 'gpt_common'
 require 'rainbow'
 require 'time'
@@ -10,7 +9,6 @@ require 'uri'
 
 class ImportProject
   ProjectImportError = Class.new(StandardError)
-  ProjectTarballDownloadError = Class.new(StandardError)
 
   def initialize(env_url:, project_tarball:)
     @env_url = env_url.chomp('/')
@@ -22,14 +20,8 @@ class ImportProject
   def setup_tarball(project_tarball:)
     # Check that the tarball file is valid
     if project_tarball.match?(URI::DEFAULT_PARSER.make_regexp(%w[http https ftp]))
-      begin
-        GPTLogger.logger.info "Tarball is remote, downloading..."
-        proj_file = Down::Http.download(project_tarball)
-      rescue Down::TimeoutError
-        raise ProjectTarballDownloadError, "Large project tarball download timeout.\nIf the machine you are running the Generator on doesn't have internet access please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#airgapped-environments for next steps."
-      rescue Down::Error => e
-        raise e, "Large project tarball download error: #{e.exception}"
-      end
+      GPTLogger.logger.info "Tarball is remote, downloading..."
+      proj_file = GPTCommon.download_file(url: project_tarball)
     else
       proj_file = project_tarball
     end
