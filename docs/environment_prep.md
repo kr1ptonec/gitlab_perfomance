@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.8 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.9 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -242,13 +242,11 @@ Examples:
 
 After running the logs will be in the tool's `results` folder.
 
-#### Location and Network conditions
+#### Internet Access
 
-Two factors that can significantly affect the Generator's run time are the conditions it's run in - Namely Location (physically in relation to the GitLab Environment) and Network.
+The Generator requires access by default to the internet to download required file(s). However it can be configured to run in other conditions as noted below.
 
-We strongly recommend running the GPT Data Generator is run as close as possible physically to the GitLab environment and in optimum network conditions. This is due to the generator performing heavy data operations and imports. If it's run in less than ideal conditions then the time it may take to complete may be increased significantly.
-
-#### Airgapped Environments
+##### Airgapped Environments
 
 For environments that don't have internet access you'll need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) in advance so it's available locally and then pass in it's path via the `--large-project-tarball` option.
 
@@ -258,12 +256,28 @@ With our recommended way of running Generator via Docker you'll have to make the
 docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export.tar.gz
 ```
 
+##### Environments running behind a Proxy
+
+For environments that do have internet access but through a http proxy the Generator can be configured to use this via the environment variable `PROXY_URL`. The variable can be given in the format of `http://proxy.org` or `http://username:password:proxy.org` if authentication is passed.
+
+With our recommended way of running Generator via Docker you'll need to pass this environment variable in directly in the command, for example:
+
+```sh
+docker run -it -e ACCESS_TOKEN=<TOKEN> -e PROXY_URL=<URL> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json
+```
+
+#### Location and Network conditions
+
+Two factors that can significantly affect the Generator's run time are the conditions it's run in - Namely Location (physically in relation to the GitLab Environment) and Network.
+
+We strongly recommend running the GPT Data Generator as close as possible physically to the GitLab environment and in optimum network conditions. This is due to the generator performing heavy data operations and imports. If it's run in less than ideal conditions then the time it may take to complete may be increased significantly.
+
 #### GPT Data Generator Output
 
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.8 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.9 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y

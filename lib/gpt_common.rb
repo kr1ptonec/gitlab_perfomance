@@ -1,3 +1,4 @@
+require 'down'
 require 'http'
 require 'json'
 require 'gpt_logger'
@@ -37,6 +38,14 @@ module GPTCommon
     raise RequestError, "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n" if fail_on_error && !res.status.success?
 
     res
+  end
+
+  def download_file(url:)
+    ENV['PROXY_URL'] ? Down.download(url, proxy: ENV['PROXY_URL']) : Down.download(url)
+  rescue Down::TimeoutError => e
+    raise e, "File download from url '#{url}' has timed out.\nIf the machine you are running this tool on doesn't have internet access please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#airgapped-environments for further info."
+  rescue Down::Error => e
+    raise e, "File download from url '#{url}' with the following error: #{e.exception}"
   end
 
   def check_gitlab_env_and_token(env_url:)

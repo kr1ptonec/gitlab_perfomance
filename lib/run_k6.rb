@@ -2,7 +2,6 @@ $LOAD_PATH.unshift File.expand_path('.', __dir__)
 
 require 'chronic_duration'
 require 'test_info'
-require 'down/http'
 require 'fileutils'
 require 'gpt_common'
 require 'json'
@@ -27,14 +26,14 @@ module RunK6
       k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux#{OS.bits}.tar.gz"
       warn Rainbow("k6 not found or different version detected. Downloading k6 v#{k6_version} from #{k6_url} to system temp folder...").yellow
 
-      k6_archive = Down::Http.download(k6_url)
+      k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.mac?
       k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-mac.zip"
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
-      k6_archive = Down::Http.download(k6_url)
+      k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('unzip', '-j', k6_archive.path, '-d', File.dirname(k6_archive.path))
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.windows?
