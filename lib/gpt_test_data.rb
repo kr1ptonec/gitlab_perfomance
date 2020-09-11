@@ -12,11 +12,11 @@ class GPTTestData
   attr_reader :root_group
 
   WaitForDeleteError = Class.new(StandardError)
-  IncorrectProjectRepoStorage = Class.new(StandardError)
-  GetProjectError = Class.new(StandardError)
-  GroupPathTaken = Class.new(StandardError)
+  IncorrectProjectRepoStorageError = Class.new(StandardError)
+  ProjectCheckError = Class.new(StandardError)
+  GroupCheckError = Class.new(StandardError)
 
-  def initialize(gpt_data_version:, force:, unattended:, env_url:, root_group:, storage_nodes:, max_wait_for_delete:)
+  def initialize(gpt_data_version:, force:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
     @force = force
     @unattended = unattended
@@ -28,21 +28,27 @@ class GPTTestData
 
     @gitlab_version = GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    check_users_with_group_name(root_group)
-    @root_group = create_group(group_name: root_group)
   end
 
   # Shared
 
-  def wait_for_delete(entity_endpoint)
+  def wait_for_delete(entity_endpoint:)
     start = Time.new
     loop do
       elapsed = (Time.new - start).to_i
       raise WaitForDeleteError, "Waiting failed after #{elapsed} seconds. Consider increasing `--max-wait-for-delete` option. Exiting..." if elapsed >= @max_wait_for_delete
 
       check_deleted_entity = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/#{entity_endpoint}", headers: @headers, fail_on_error: false, retry_on_error: true)
-      break if check_deleted_entity.status.code == 404
-      raise WaitForDeleteError, "#{method.upcase} request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
+
+      if !JSON.parse(check_deleted_entity.body.to_s)&.dig('marked_for_deletion_on').nil?
+        GPTLogger.logger.warn Rainbow("Delete request successfully scheduled. It will be removed after the time as defined by the environment's deletion delay settings. \nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#group-or-project-is-marked-for-deletion").yellow
+        break
+      elsif check_deleted_entity.status.code == 404
+        GPTLogger.logger.info "Delete successful"
+        break
+      end
+
+      raise WaitForDeleteError, "Delete request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
 
       print '.'
       sleep 1
@@ -51,7 +57,7 @@ class GPTTestData
 
   # Settings
 
-  def disable_soft_delete
+  def disable_soft_delete_config
     # Deletion adjourned period is only available for GitLab Premium or Ultimate
     # For other tiers settings won't have 'deletion_adjourned_period'
     return if @settings['deletion_adjourned_period'].nil? || @settings['deletion_adjourned_period'].zero?
@@ -65,7 +71,7 @@ class GPTTestData
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: 0 })
   end
 
-  def restore_soft_delete_settings
+  def restore_soft_delete_config
     return if @settings['deletion_adjourned_period'].nil?
 
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
@@ -90,7 +96,7 @@ class GPTTestData
     abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage config changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
   end
 
-  def check_repo_storage_setting?(setting)
+  def check_repo_storage_setting?(setting:)
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
     return current_settings['repository_storages'] == setting unless weighted_repo_storages_supported?
 
@@ -98,7 +104,7 @@ class GPTTestData
     current_settings['repository_storages_weighted'] == setting
   end
 
-  def get_storage_settings(storages)
+  def get_storage_settings(storages:)
     storage_settings = {}
     if weighted_repo_storages_supported?
       # (GitLab 13.1 and later) Hash of names of enabled storage paths with weights.
@@ -117,18 +123,18 @@ class GPTTestData
 
   def configure_repo_storage(storage:)
     storage = [storage] if storage.is_a?(String)
-    return if check_repo_storage_setting?(storage)
+    return if check_repo_storage_setting?(setting: storage)
 
-    storage_settings = get_storage_settings(storage)
+    storage_settings = get_storage_settings(storages: storage)
     GPTLogger.logger.info "Updating GitLab Application Repository Storage setting"
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
   end
 
   def restore_repo_storage_config
     repo_storage_setting = weighted_repo_storages_supported? ? @settings['repository_storages_weighted'] : @settings['repository_storages']
-    return if repo_storage_setting.nil? || check_repo_storage_setting?(repo_storage_setting)
+    return if repo_storage_setting.nil? || check_repo_storage_setting?(setting: repo_storage_setting)
 
-    storage_settings = get_storage_settings(repo_storage_setting)
+    storage_settings = get_storage_settings(storages: repo_storage_setting)
     GPTLogger.logger.info "Restoring the original Repository Storage setting in GitLab Application."
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
   end
@@ -139,24 +145,25 @@ class GPTTestData
     GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{CGI.escape(grp_path)}", headers: @headers, fail_on_error: false, retry_on_error: true)
   end
 
-  def check_group_exists(grp_path)
+  def check_group_exists(grp_path:)
     grp_check_res = get_group(grp_path: grp_path)
-
     return unless grp_check_res.status.success?
 
     GPTLogger.logger.info "Group #{grp_path} already exists"
-    JSON.parse(grp_check_res.body.to_s).slice('id', 'name', 'full_path', 'description')
+    JSON.parse(grp_check_res.body.to_s).slice('id', 'name', 'full_path', 'description', 'marked_for_deletion_on')
   end
 
-  def check_users_with_group_name(grp_path)
+  def check_users_with_group_name(grp_path:)
     user_check_res = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/search?scope=users&search=#{grp_path}", headers: @headers, fail_on_error: false, retry_on_error: true)
     users = JSON.parse(user_check_res.body.to_s)
-    raise GroupPathTaken, "Root Group path '#{grp_path}' is already taken by user #{user}.\nPlease change their username or use a different group name by changing the `root_group` option in Environment Config File." if users&.any? { |user| user['username'] == grp_path }
+    raise GroupCheckError, "Root Group path '#{grp_path}' is already taken by user #{user}.\nPlease change their username or use a different group name by changing the `root_group` option in Environment Config File." if users&.any? { |user| user['username'] == grp_path }
   end
 
   def create_group(group_name:, parent_group: nil)
     grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
-    grp_check_res = check_group_exists(grp_path)
+    grp_check_res = check_group_exists(grp_path: grp_path)
+
+    GPTLogger.logger.warn Rainbow("\nGroup #{grp_path} has been scheduled to be deleted as per the environment's settings. If this is not expected it's recommended you confirm this on the GitLab environment and adjust directly where required.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#group-or-project-is-marked-for-deletion\n").yellow unless grp_check_res&.dig('marked_for_deletion_on').nil?
     return grp_check_res unless grp_check_res.nil?
 
     GPTLogger.logger.info "Creating group #{grp_path}"
@@ -222,16 +229,16 @@ class GPTTestData
     groups
   end
 
-  def delete_group(group)
-    GPTLogger.logger.info "Delete old group #{group['full_path']}"
-    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/groups/#{group['id']}", headers: @headers, retry_on_error: true)
-    print("Waiting for group #{group['full_path']} to be deleted...")
-    wait_for_delete("groups/#{group['id']}")
+  def delete_group(group:)
+    GPTLogger.logger.info "Deleting group #{group['full_path']}"
+    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/groups/#{group['id']}", headers: @headers, fail_on_error: false, retry_on_error: true)
+    puts("Waiting for group #{group['full_path']} to be deleted...")
+    wait_for_delete(entity_endpoint: "groups/#{group['id']}")
   end
 
   def recreate_group(group:, parent_group:)
-    disable_soft_delete unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
-    delete_group(group)
+    disable_soft_delete_config unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
+    delete_group(group: group)
     create_group(group_name: group['name'], parent_group: parent_group)
   end
 
@@ -243,13 +250,13 @@ class GPTTestData
 
   def check_proj_repo_storage(proj_path:, storage:)
     proj_check_res = get_project(proj_path: proj_path)
-    raise GetProjectError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
+    raise ProjectCheckError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
 
     project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'repository_storage')
-    raise IncorrectProjectRepoStorage, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected." unless storage == project['repository_storage']
+    raise IncorrectProjectRepoStorageError, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected." unless storage == project['repository_storage']
   end
 
-  def check_project_exists(proj_path)
+  def check_project_exists(proj_path:)
     proj_check_res = get_project(proj_path: proj_path)
 
     return unless proj_check_res.status.success?
@@ -310,20 +317,20 @@ class GPTTestData
     projects
   end
 
-  def delete_project(project)
+  def delete_project(project:)
     GPTLogger.logger.info "Delete existing project #{project}"
-    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/projects/#{project['id']}", headers: @headers, retry_on_error: true)
-    print("Waiting for project #{project['path_with_namespace']} to be deleted...")
-    wait_for_delete("projects/#{project['id']}")
+    GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/projects/#{project['id']}", headers: @headers, fail_on_error: false, retry_on_error: true)
+    puts("Waiting for project #{project['path_with_namespace']} to be deleted...")
+    wait_for_delete(entity_endpoint: "projects/#{project['id']}")
   end
 
-  # Horiztonal
+  # Horizontal
 
-  def create_horizontal_test_data(parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
+  def create_horizontal_test_data(root_group:, parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
     configure_repo_storage(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
     existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
-    parent_group = recreate_group(group: parent_group, parent_group: @root_group) if existing_subgroups_count > subgroups_count
+    parent_group = recreate_group(group: parent_group, parent_group: root_group) if existing_subgroups_count > subgroups_count
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
     GPTLogger.logger.info "Checking for existing projects under groups..."
@@ -347,7 +354,7 @@ class GPTTestData
       proj_path = "#{large_projects_group['full_path']}/#{new_project_name}"
 
       GPTLogger.logger.info "Checking if project #{new_project_name} already exists in #{proj_path}..."
-      existing_project = check_project_exists(proj_path)
+      existing_project = check_project_exists(proj_path: proj_path)
       project_description = "#{@gpt_data_version_description}. Please do not edit this project's description or data loss may occur.\n\nVersion: #{project_version}"
 
       # Import only if either the project doesn't exist or if its version number doesn't match config in the project's description
@@ -362,8 +369,8 @@ class GPTTestData
         existing_project_version = existing_project['description']&.match?(/Version: (.*)/)
         version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{existing_project_version[1]} > #{project_version})."
         GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
-        disable_soft_delete unless ENV['SKIP_CHANGING_ENV_SETTINGS']
-        delete_project(existing_project)
+        disable_soft_delete_config unless ENV['SKIP_CHANGING_ENV_SETTINGS']
+        delete_project(project: existing_project)
         configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
         proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
 

@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.9 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.10 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -277,7 +277,7 @@ We strongly recommend running the GPT Data Generator as close as possible physic
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.9 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.10 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
@@ -526,3 +526,11 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 ## Large Project repository storage is different than expected
 
 This error could occur due to the bug, [Repository Storages config can't be updated via application settings API](#repository-storages-config-cant-be-updated-via-application-settings-api), described above. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
+
+## Group or Project is marked for deletion
+
+Depending on the target GitLab environment's tier and settings there may be a [delayed deletion function enabled](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) for Groups and \ or Projects. When this is the case they will not be deleted immediately and will do so after the configured period.
+
+The Generator will check for this when it's working through inserting or cleaning up data and call this out accordingly with appropriate advice depending on the context. If you're needing the data to be deleted quicker
+then it can be done manually via the [GitLab Admin Area](https://docs.gitlab.com/ee/user/admin_area/). This will also need to be done specifically if you're looking to clean up
+and then reinsert the data straight after (or as an alternative the group \ project name can be changed).
