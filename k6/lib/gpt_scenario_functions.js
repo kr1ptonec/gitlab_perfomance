@@ -19,7 +19,7 @@ export function createGroup(groupName) {
   return groupId;
 }
 
-export function createProject(groupId) {
+export function createProject(groupId, additionalConfig={}) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata = {
     name: `project-api-v4-new-scenario`,
@@ -30,7 +30,17 @@ export function createProject(groupId) {
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
   let projectId = JSON.parse(res.body)['id'];
   /20(0|1)/.test(res.status) ? console.log(`Project #${projectId} was created`) : (logError(res), fail("Project was not created"));
+
+  if (Object.keys(additionalConfig).length !== 0) editProject(projectId, additionalConfig)
+
   return projectId;
+}
+
+export function editProject(projectId, config) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, config, params);
+  /20(0|1)/.test(res.status) ? console.log(`Project config changed to ${JSON.stringify(config)}`) : (logError(res), fail(`Error occured when attempting to edit Project settings to ${JSON.stringify(config)}.`));
 }
 
 export function deleteGroup(groupId) {
