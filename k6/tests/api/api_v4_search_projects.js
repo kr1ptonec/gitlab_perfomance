@@ -14,10 +14,10 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let endpointCount = 5
 export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(25000)
+export let ttfbThreshold = getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests")
 
-let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users']
+let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
 let scopes_thresholds = {
   "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD * 0.1}`],
   "http_reqs": [`count>=${rpsThresholds['count']}`],
@@ -51,9 +51,7 @@ export default function() {
       ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=merge_requests&search=${project['search']['merge_requests']}`, null, Object.assign({}, params, { tags: { endpoint: 'merge_requests' } })],
       ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=milestones&search=${project['search']['milestones']}`, null, Object.assign({}, params, { tags: { endpoint: 'milestones' } })],
       ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=users&search=${project['search']['users']}`, null, Object.assign({}, params, { tags: { endpoint: 'users' } })],
-
-      // Blobs are disabled due to bad performance causing errors and knock on effects
-      //["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=blobs&search=${project['search']['blobs']}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/search?scope=blobs&search=${project['search']['blobs']}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

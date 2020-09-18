@@ -14,10 +14,10 @@ export let endpointCount = 10
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1000)
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 
-let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users']
+let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
 let scopes_thresholds = {
   "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
   "http_reqs": [`count>=${rpsThresholds['count']}`],
