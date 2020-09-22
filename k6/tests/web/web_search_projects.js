@@ -10,15 +10,17 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-export let endpointCount = 10
+
+export let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs', 'notes']
+
+export let endpointCount = scopes.length * 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(2000)
 export let successRate = new Rate("successful_requests")
 
-let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
-let scopes_thresholds = {
+export let scopes_thresholds = {
   "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
   "http_reqs": [`count>=${rpsThresholds['count']}`],
 }

@@ -18,12 +18,13 @@
   "mr_discussions_iid": "6958",
   "search": {
     "projects": "gitlab",
-    "issues": "broken",
+    "issues": "gitlab",
     "commits": "fix",
-    "merge_requests": "fix",
+    "merge_requests": "the",
     "milestones": "2.6",
     "blobs": "test",
-    "users": "root"
+    "users": "root",
+    "notes": "test"
   },
   "issue_iid": "4218"
 }
