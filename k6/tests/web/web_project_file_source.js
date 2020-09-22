@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path`
 @description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217580
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/247878
 */
 
 import http from "k6/http";
