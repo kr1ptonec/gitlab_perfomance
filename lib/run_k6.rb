@@ -16,7 +16,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.26.2'
+    k6_version = ENV['K6_VERSION'] || '0.28.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
@@ -34,7 +34,7 @@ module RunK6
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
-      extract_output, extract_status = Open3.capture2e('unzip', '-j', k6_archive.path, '-d', File.dirname(k6_archive.path))
+      extract_output, extract_status = Open3.capture2e('unzip', '-j', '-o', k6_archive.path, '-d', File.dirname(k6_archive.path))
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.windows?
       raise "k6 not found or wrong version detected. Please install k6 version #{k6_version} on your machine and ensure it's found on the PATH"
