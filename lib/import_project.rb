@@ -71,7 +71,7 @@ class ImportProject
 
       case proj_imp_res['import_status']
       when 'finished'
-        time_taken = ChronicDuration.output(Time.now.to_i - start_time, format: :long)
+        time_taken = ChronicDuration.output(Time.now.to_i - start_time, format: :long, keep_zero: true)
         GPTLogger.logger.info(Rainbow("\nProject has successfully imported in #{time_taken}:\n#{@env_url}/#{proj_imp_res['path_with_namespace']}").green)
         break
       when 'failed'

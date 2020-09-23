@@ -57,86 +57,104 @@ class GPTTestData
 
   # Settings
 
-  def disable_soft_delete_config
+  def check_setting_available?(setting:)
+    @settings.key?(setting)
+  end
+
+  ## Soft Delete
+
+  def disable_soft_delete_settings
     # Deletion adjourned period is only available for GitLab Premium or Ultimate
     # For other tiers settings won't have 'deletion_adjourned_period'
-    return if @settings['deletion_adjourned_period'].nil? || @settings['deletion_adjourned_period'].zero?
-
-    current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    return if current_settings['deletion_adjourned_period'].zero?
+    return if !check_setting_available?(setting: 'deletion_adjourned_period') || @settings['deletion_adjourned_period'].zero?
 
     # Workaround until https://gitlab.com/gitlab-org/gitlab/-/issues/191367 is addressed
-    GPTCommon.show_warning_prompt("The GPT Data Generator will update GitLab Environment 'deletion_adjourned_period' setting to disable soft-delete and remove GPT data immediately.\nWhile the 'generate-gpt-data' script is running any other projects or groups if deleted will also be removed immediately.\nThe original setting will be restored after the the script is finished.") unless @unattended
-    GPTLogger.logger.info "Disabling soft-delete by updating 'deletion_adjourned_period' to 0"
+    GPTCommon.show_warning_prompt("GPT Data Generator will update the GitLab Environment 'deletion_adjourned_period' setting to disable soft-delete.\n\nWhile the GPT Data Generator is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
+    GPTLogger.logger.info "Disabling soft-delete by updating 'deletion_adjourned_period' to 0..."
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: 0 })
   end
 
-  def restore_soft_delete_config
-    return if @settings['deletion_adjourned_period'].nil?
-
+  def restore_soft_delete_settings
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    return if current_settings['deletion_adjourned_period'] == @settings['deletion_adjourned_period']
+    return if !check_setting_available?(setting: 'deletion_adjourned_period') || current_settings['deletion_adjourned_period'] == @settings['deletion_adjourned_period']
 
-    GPTLogger.logger.info "Restoring the original 'deletion_adjourned_period' setting."
+    GPTLogger.logger.info "Restoring the original 'deletion_adjourned_period' setting..."
     GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: @settings['deletion_adjourned_period'] })
   end
 
-  def weighted_repo_storages_supported?
-    @settings.key?('repository_storages_weighted')
-  end
+  ## Storage
 
-  def check_repo_storage_support
+  def check_repo_storage_settings_type
     # Check that the fix https://gitlab.com/gitlab-org/gitlab/-/merge_requests/36376 is
     # available on a target environment and we can change `repository_storages_weighted` via API.
     # This is an additional safeguard in case env is on 13.2-pre versions where the fix is in place after `13.2.0-pre a3ee515ecc`
-    return if weighted_repo_storages_supported?
+    return if check_setting_available?(setting: 'repository_storages_weighted') || @gitlab_version < Semantic::Version.new('13.1.0') || @gitlab_version > Semantic::Version.new('13.2.2')
 
-    return unless @gitlab_version >= Semantic::Version.new('13.1.0') && @gitlab_version < Semantic::Version.new('13.2.2')
-
-    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage config changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
+    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage settings changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
   end
 
-  def check_repo_storage_setting?(setting:)
+  def compare_repo_storage_settings(setting:)
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    return current_settings['repository_storages'] == setting unless weighted_repo_storages_supported?
 
-    setting = setting.product([100]).to_h if setting.is_a?(Array)
-    current_settings['repository_storages_weighted'] == setting
+    if current_settings.key?('repository_storages_weighted')
+      setting = setting.product([100]).to_h if setting.is_a?(Array)
+      current_settings['repository_storages_weighted'] == setting
+    else
+      current_settings['repository_storages'] == setting
+    end
   end
 
-  def get_storage_settings(storages:)
-    storage_settings = {}
-    if weighted_repo_storages_supported?
+  def generate_repo_storage_settings_payload(storages:)
+    repo_storage_settings_payload = {}
+    if check_setting_available?(setting: 'repository_storages_weighted')
       # (GitLab 13.1 and later) Hash of names of enabled storage paths with weights.
       # New projects are created in one of these stores, chosen by a weighted random selection.
       # https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored
       storages = storages.product([100]).to_h if storages.is_a?(Array)
 
-      storages.each { |storage, weight| storage_settings["repository_storages_weighted[#{storage}]"] = weight }
+      storages.each { |storage, weight| repo_storage_settings_payload["repository_storages_weighted[#{storage}]"] = weight }
     else
       # (GitLab 13.0 and earlier) List of names of enabled storage paths.
       # New projects are created in one of these stores, chosen at random.
-      storage_settings = { 'repository_storages[]': storages }
+      repo_storage_settings_payload = { 'repository_storages[]': storages }
     end
-    storage_settings
+    repo_storage_settings_payload
   end
 
-  def configure_repo_storage(storage:)
+  def configure_repo_storage_settings(storage:)
     storage = [storage] if storage.is_a?(String)
-    return if check_repo_storage_setting?(setting: storage)
+    return if compare_repo_storage_settings(setting: storage)
 
-    storage_settings = get_storage_settings(storages: storage)
+    repo_storage_settings_payload = generate_repo_storage_settings_payload(storages: storage)
     GPTLogger.logger.info "Updating GitLab Application Repository Storage setting"
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: repo_storage_settings_payload)
   end
 
-  def restore_repo_storage_config
-    repo_storage_setting = weighted_repo_storages_supported? ? @settings['repository_storages_weighted'] : @settings['repository_storages']
-    return if repo_storage_setting.nil? || check_repo_storage_setting?(setting: repo_storage_setting)
+  def restore_repo_storage_settings
+    repo_storage_settings = check_setting_available?(setting: 'repository_storages_weighted') ? @settings['repository_storages_weighted'] : @settings['repository_storages']
+    return if repo_storage_settings.nil? || compare_repo_storage_settings(setting: repo_storage_settings)
 
-    storage_settings = get_storage_settings(storages: repo_storage_setting)
+    repo_storage_settings_payload = generate_repo_storage_settings_payload(storages: repo_storage_settings)
     GPTLogger.logger.info "Restoring the original Repository Storage setting in GitLab Application."
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: storage_settings)
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: repo_storage_settings_payload)
+  end
+
+  ## Max Import Size
+
+  def disable_max_import_size_setting
+    return if !check_setting_available?(setting: 'max_import_size') || @settings['max_import_size'].zero?
+
+    GPTCommon.show_warning_prompt("GPT Data Generator will disable the GitLab Environment 'max_import_size' setting to allow for large project imports.\nWhile the GPT Data Generator  is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
+    GPTLogger.logger.info "Disabling Max Import Size limit on environment..."
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { max_import_size: 0 })
+  end
+
+  def restore_max_import_size_setting
+    current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
+    return if !check_setting_available?(setting: 'max_import_size') || current_settings['max_import_size'] == @settings['max_import_size']
+
+    GPTLogger.logger.info "Restoring the original 'max_import_size' setting..."
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { max_import_size: @settings['max_import_size'] })
   end
 
   # Groups
@@ -237,7 +255,7 @@ class GPTTestData
   end
 
   def recreate_group(group:, parent_group:)
-    disable_soft_delete_config unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
+    disable_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
     delete_group(group: group)
     create_group(group_name: group['name'], parent_group: parent_group)
   end
@@ -327,7 +345,7 @@ class GPTTestData
   # Horizontal
 
   def create_horizontal_test_data(root_group:, parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
-    configure_repo_storage(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
+    configure_repo_storage_settings(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
     existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
     parent_group = recreate_group(group: parent_group, parent_group: root_group) if existing_subgroups_count > subgroups_count
@@ -345,51 +363,52 @@ class GPTTestData
   #  Vertical
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_version:)
-    check_repo_storage_support
+    check_repo_storage_settings_type
 
     proj_tarball_file = nil
     @storage_nodes.each.with_index(1) do |gitaly_node, i|
       import_project = ImportProject.new(env_url: @env_url, project_tarball: project_tarball)
       new_project_name = "#{project_name}#{i}"
       proj_path = "#{large_projects_group['full_path']}/#{new_project_name}"
+      project_description = "#{@gpt_data_version_description}. Please do not edit this project's description or data loss may occur.\n\nVersion: #{project_version}"
 
       GPTLogger.logger.info "Checking if project #{new_project_name} already exists in #{proj_path}..."
       existing_project = check_project_exists(proj_path: proj_path)
-      project_description = "#{@gpt_data_version_description}. Please do not edit this project's description or data loss may occur.\n\nVersion: #{project_version}"
-
-      # Import only if either the project doesn't exist or if its version number doesn't match config in the project's description
-      if existing_project.nil?
-        configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
-        proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
-        import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
-      elsif existing_project['description']&.match?(/^Version: #{project_version}/)
-        GPTLogger.logger.info "Project version number matches version from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
-        next
-      else
-        existing_project_version = existing_project['description']&.match?(/Version: (.*)/)
-        version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{existing_project_version[1]} > #{project_version})."
-        GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
-        disable_soft_delete_config unless ENV['SKIP_CHANGING_ENV_SETTINGS']
-        delete_project(project: existing_project)
-        configure_repo_storage(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
-        proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
-
-        begin
-          retries ||= 0
-          import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
-        rescue GPTCommon::RequestError => e
-          # Sometimes when project was deleted and responses with 404, it's still being deleted in background
-          # We need to wait and retry to import
-          raise e unless e.message.include?("The project is still being deleted. Please try again later.")
-
-          GPTLogger.logger.warn(Rainbow("Project #{new_project_name} is still in the process of being deleted.\nRetrying in 5 seconds...").yellow)
-          retries += 1
-          raise e if retries > @max_wait_for_delete
-
-          sleep 5
-          retry
+      if existing_project
+        if existing_project['description']&.match?(/^Version: #{project_version}/)
+          GPTLogger.logger.info "Project version number matches version from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
+          next
         end
+
+        existing_project_version = existing_project['description']&.match(/Version: (.*)/)
+        version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{project_version}) than configured (#{existing_project_version[1]})."
+        GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
+
+        disable_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
+        delete_project(project: existing_project)
       end
+
+      disable_max_import_size_setting unless ENV['SKIP_CHANGING_ENV_SETTINGS']
+      configure_repo_storage_settings(storage: gitaly_node) unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Due to bug: https://gitlab.com/gitlab-org/gitlab/-/issues/216994
+
+      proj_tarball_file ||= import_project.setup_tarball(project_tarball: project_tarball)
+
+      begin
+        retries ||= 0
+        import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
+      rescue GPTCommon::RequestError => e
+        # Sometimes when project was deleted and responses with 404, it's still being deleted in background
+        # We need to wait and retry to import
+        raise e unless e.message.include?("The project is still being deleted. Please try again later.")
+
+        GPTLogger.logger.warn(Rainbow("Project #{new_project_name} is still in the process of being deleted.\nRetrying in 5 seconds...").yellow)
+        retries += 1
+        raise e if retries > @max_wait_for_delete
+
+        sleep 5
+        retry
+      end
+
       # Check that project was imported to the correct repo storage
       # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
       check_proj_repo_storage(proj_path: proj_path, storage: gitaly_node)
