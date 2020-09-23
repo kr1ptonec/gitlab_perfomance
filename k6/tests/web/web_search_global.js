@@ -4,6 +4,7 @@
 @description: Web - Global Search <br>Controllers: `SearchController#show`,`SearchController#count`</br>
 @gitlab_settings: { "elasticsearch_indexing": true, "elasticsearch_search": true }
 @flags: search
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/254966
 */
 
 import http from "k6/http";

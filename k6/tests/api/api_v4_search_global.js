@@ -4,7 +4,7 @@
 @description: [Global Search API](https://docs.gitlab.com/ee/api/search.html#global-search-api)
 @gitlab_settings: { "elasticsearch_indexing": true, "elasticsearch_search": true }
 @flags: search
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229627, https://gitlab.com/gitlab-org/gitlab/-/issues/254218
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229627
 */
 
 import http from "k6/http";
@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let endpointCount = 7
 export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(17500)
+export let ttfbThreshold = getTtfbThreshold(10000)
 export let successRate = new Rate("successful_requests")
 
 let scopes = ['projects', 'issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
