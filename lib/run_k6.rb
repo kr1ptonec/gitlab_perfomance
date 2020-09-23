@@ -227,7 +227,7 @@ module RunK6
       * Environment Version:        #{results_json['version']} `#{results_json['revision']}`
       * Option:                     #{results_json['option']}
       * Date:                       #{results_json['date']}
-      * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
+      * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short, keep_zero: true)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
       * GPT Version:                v#{results_json['gpt_version']}
     DOC
     results_summary += "\n❯ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
