@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let endpointCount = 6
 export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(10000)
+export let ttfbThreshold = getTtfbThreshold(5000)
 export let successRate = new Rate("successful_requests")
 
 let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
