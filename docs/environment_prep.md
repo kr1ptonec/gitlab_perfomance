@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.11 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.12 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -151,15 +151,14 @@ Options:
   --root-group=<s>                 Root group for GPT data.
   --horizontal, --no-horizontal    Generate horizontal GPT data with multiple subgroups and projects. (Default: true)
   --group=<s>                      Group name that the subgroups and projects will be generated under.
-  --subgroup-prefix=<s>            Prefix that the subgroups will be generated with. (Default: gpt-subgroup-)
+  --subgroup-prefix=<s>            Prefix that the subgroups will be generated with.
   -s, --subgroups=<i>              Number of subgroups to create
-  --project-prefix=<s>             Prefix that the projects will be generated with. (Default: gpt-project-)
+  --project-prefix=<s>             Prefix that the projects will be generated with.
   -p, --projects=<i>               Number of projects to create in each subgroup
   --vertical, --no-vertical        Generate vertical GPT data with large projects (default: true)
   --vert-group=<s>                 Group name that the vertical data will be generated to.
   --large-project-name=<s>         Name for large project to import.
-  --large-project-tarball=<s>      Location of large project tarball to import. Can be local or remote. (Default:
-                                   https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz)
+  --large-project-tarball=<s>      Location of custom large project tarball to import. Can be local or remote.
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
   -f, --force                      Force the data generation ignoring the existing data
   -u, --unattended                 Skip the data injection warning
@@ -207,7 +206,7 @@ When you run the tool directly without any options it will perform the following
 1. Create `subgroups` number of subgroups under the parent group using `subgroup_prefix` for the name.
 1. Create `projects` number of projects for each subgroup using `project_prefix` for the name.
 1. Create the parent group for "vertical" data using `vert_group` tool option. (Default: `large_projects`).
-1. Import [GitLab FOSS Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz) for each `storage_nodes` specified in the Environment file. It could take up to 20 minutes for each project to import fully.
+1. Import GitLab FOSS Project Tarball for each `storage_nodes` specified in the Environment file. It could take up to 20 minutes for each project to import fully.
 
 #### Linux or Mac
 
@@ -248,12 +247,15 @@ The Generator requires access by default to the internet to download required fi
 
 ##### Airgapped Environments
 
-For environments that don't have internet access you'll need to download the [large project import file](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/gitlabhq_export.tar.gz) in advance so it's available locally and then pass in it's path via the `--large-project-tarball` option.
+For environments that don't have internet access you'll need to download the default large project import file then in its path via the `--large-project-tarball` option. The file to use is dependent on your GitLab environment's version. To download the correct file select the link from below as instructed:
+
+* [For GitLab environments with versions `13.0.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz)
+* [For GitLab environments with versions lower than `13.0.0`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz)
 
 With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export.tar.gz
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_13.0.0.tar.gz
 ```
 
 ##### Environments running behind a Proxy
@@ -277,7 +279,7 @@ We strongly recommend running the GPT Data Generator as close as possible physic
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.11 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.12 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
@@ -315,7 +317,7 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Updating GitLab Application Repository Storage setting
 Updating application settings: {:repository_storages=>"default"}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
@@ -332,7 +334,7 @@ http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
 Checking if project gitlabhq2 already exists in gpt/large_projects/gitlabhq2...
 Updating GitLab Application Repository Storage setting
 Updating application settings: {:repository_storages=>"storage2"}
-Starting import of Project 'gitlabhq2' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq2' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
@@ -517,7 +519,8 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 
 1. List all [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment under the `storage_nodes` setting in the [Environment Config file](#preparing-the-environment-file) following the documentation. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment. As an example, suppose we have 2 storage nodes `"storage_nodes": ["default", "storage2"]`.
 1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly node itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
-1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the [GitLab FOSS Project Tarball](https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export.tar.gz) specifying these options:
+1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the correct GitLab FOSS Project Tarball specifying these options:
+    * Download the correct GitLab FOSS Project Tarball file. For GitLab environments running on `13.0.0` or higher [`gitlabhq_export_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz) should be used and for all other environments [`gitlabhq_export.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz)
     * Select the `gpt/large_projects` group for "Project URL"
     * Enter project name in "Project slug" following this structure `<PROJECT NAME><STORAGE NODE SEQUENCE NUMBER>`. In our example it would be `gitlabhq1` for the `default` node and `gitlabhq2` for `storage2` node.
 1. After this has been completed for every Gitaly node listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
