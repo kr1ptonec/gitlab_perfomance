@@ -36,6 +36,8 @@ export function setup() {
 
   let groupId = createGroup("group-api-v4-create-commit");
   let projectId = createProject(groupId);
+  // Create a default branch
+  createCommit(projectId,  "create");
 
   let data = { groupId, projectId };
   return data;
@@ -44,7 +46,7 @@ export function setup() {
 export default function(data) {
   group("API - Create New Commit", function() {
     // Test creates a commit with 3 "update" actions and 1 "create" action for each VU.
-    let createCommitRes = createCommit(data.projectId, __ITER === 0 ? "create" : "update", __VU, true);
+    let createCommitRes = createCommit(data.projectId, __ITER === 0 ? "create" : "update");
     /20(0|1|4)/.test(createCommitRes.status) ? successRate.add(true) : successRate.add(false) && logError(createCommitRes);
   });
 }
@@ -80,7 +82,7 @@ export function createCommit(projectId, action) {
       }
     ]
   };
-  if (action === "create") { body["start_branch"] = `${branch_name}1` } 
+  if (action === "create") { body["start_branch"] = `${branch_name}0` } 
   if (action === "update") { body["actions"].push({ action: "create", file_path: `create/gpt_${__VU}_${__ITER}.md`, content: content }) }
   
   let createCommitRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/commits`, JSON.stringify(body), params);
