@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let endpointCount = 7
 export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(5000)
+export let ttfbThreshold = getTtfbThreshold(10000)
 export let successRate = new Rate("successful_requests")
 
 let scopes = ['projects', 'issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
@@ -37,7 +37,7 @@ export function setup() {
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`RPS Threshold per Endpoint: ${rpsThresholds['mean_per_endpoint']}/s (${rpsThresholds['count_per_endpoint']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD * 0.1)*100}%`)
+  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
 
 export default function() {
