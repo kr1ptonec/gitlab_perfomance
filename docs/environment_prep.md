@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.12 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.13 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -279,7 +279,7 @@ We strongly recommend running the GPT Data Generator as close as possible physic
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.12 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.13 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
