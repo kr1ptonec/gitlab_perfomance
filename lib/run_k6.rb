@@ -79,6 +79,7 @@ module RunK6
     env_vars['ENVIRONMENT_URL'] = (ENV['ENVIRONMENT_URL'].dup || env_file_vars['environment']['url']).chomp('/')
     env_vars['ENVIRONMENT_USER'] = ENV['ENVIRONMENT_USER'].dup || env_file_vars['environment']['user']
     env_vars['ENVIRONMENT_LATENCY'] = ENV['ENVIRONMENT_LATENCY'].dup || env_file_vars['environment'].dig('config', 'latency')
+    env_vars['ENVIRONMENT_ROOT_GROUP'] = env_file_vars['gpt_data']['root_group']
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
 
