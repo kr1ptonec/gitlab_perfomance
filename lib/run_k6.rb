@@ -84,7 +84,7 @@ module RunK6
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
-    env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.95'
+    env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.99'
     env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '500'
 
     env_vars['GIT_ENDPOINT_THROUGHPUT'] = ENV['GIT_ENDPOINT_THROUGHPUT'].dup || '0.1'
