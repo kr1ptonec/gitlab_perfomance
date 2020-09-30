@@ -3,7 +3,10 @@ import http from "k6/http";
 import { fail } from "k6";
 import { logError } from "./gpt_k6_modules.js";
 
+// Group //
+
 export function createGroup(groupName) {
+  let rootGroupId = searchForGroup(__ENV.ENVIRONMENT_ROOT_GROUP);
   let groupId = searchForGroup(groupName);
   if (groupId) { deleteGroup(groupId) }
 
@@ -11,13 +14,31 @@ export function createGroup(groupName) {
   let formdata = {
     name: `${groupName}-${Date.now()}`,
     path: `${groupName}-${Date.now()}`,
-    visibility: "public"
+    visibility: "public",
+    parent_id: rootGroupId
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/groups`, formdata, params);
   groupId = JSON.parse(res.body)['id'];
   /20(0|1)/.test(res.status) ? console.log(`Group #${groupId} was created`) : (logError(res), fail("Group was not created"));
   return groupId;
 }
+
+export function deleteGroup(groupId) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.del(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}`, undefined, params);
+  (res.status == "202") ? console.log(`Group #${groupId} was deleted`) : logError(res);
+}
+
+export function searchForGroup(groupName) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
+  let foundGroup = JSON.parse(res.body)[0];
+  let groupId = foundGroup && foundGroup.id;  
+  groupId ? console.log(`Group contaning '${groupName}' name has id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
+  return groupId;
+}
+
+// Project //
 
 export function createProject(groupId, additionalConfig={}) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
@@ -43,17 +64,11 @@ export function editProject(projectId, config) {
   /20(0|1)/.test(res.status) ? console.log(`Project config changed to ${JSON.stringify(config)}`) : (logError(res), fail(`Error occured when attempting to edit Project settings to ${JSON.stringify(config)}.`));
 }
 
-export function deleteGroup(groupId) {
-  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.del(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}`, undefined, params);
-  (res.status == "202") ? console.log(`Group #${groupId} was deleted`) : logError(res);
-}
+// Source Code //
 
-export function searchForGroup(groupName) {
-  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
-  let foundGroup = JSON.parse(res.body)[0];
-  let groupId = foundGroup && foundGroup.id;  
-  groupId ? console.log(`Group contaning '${groupName}' name already exists with id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
-  return groupId;
+export function createBranch(projectId, branchName) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'branches' } };
+
+  let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/branches`, { branch: branchName, ref: "master" }, params);
+  return createBranchRes;
 }

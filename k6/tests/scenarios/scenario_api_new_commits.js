@@ -9,7 +9,7 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { createGroup, createProject, createBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
@@ -37,7 +37,7 @@ export function setup() {
   let groupId = createGroup("group-api-v4-create-commit");
   let projectId = createProject(groupId);
   // Create a default branch
-  createCommit(projectId,  "create");
+  createBranch(projectId, "master");
 
   let data = { groupId, projectId };
   return data;
@@ -82,7 +82,8 @@ export function createCommit(projectId, action) {
       }
     ]
   };
-  if (action === "create") { body["start_branch"] = `${branch_name}0` } 
+  // First commits will create new branches from 'master'
+  if (action === "create") { body["start_branch"] = "master" } 
   if (action === "update") { body["actions"].push({ action: "create", file_path: `create/gpt_${__VU}_${__ITER}.md`, content: content }) }
   
   let createCommitRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/commits`, JSON.stringify(body), params);

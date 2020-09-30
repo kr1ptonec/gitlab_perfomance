@@ -6,11 +6,10 @@
 @flags: unsafe
 */
 
-import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { createGroup, createProject, createBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
@@ -42,10 +41,8 @@ export function setup() {
 
 export default function(data) {
   group("API - Create New Branch", function() {
-    let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'branches' } };
-
-    let branchName = `test-branch-${__VU}-${__ITER}`
-    let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${data.projectId}/repository/branches`, { branch: branchName, ref: "master" }, params);
+    let branchName = `test-branch-${__VU}-${__ITER}`;
+    let createBranchRes = createBranch(data.projectId, branchName);
     /20(0|1|4)/.test(createBranchRes.status) ? successRate.add(true) : successRate.add(false) && logError(createBranchRes);
   });
 }
