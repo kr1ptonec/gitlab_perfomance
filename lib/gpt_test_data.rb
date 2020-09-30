@@ -202,11 +202,15 @@ class GPTTestData
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
     groups = []
     redo_count = 0
+
+    ctx = OpenSSL::SSL::SSLContext.new
+    ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
     HTTP.persistent @env_url do |http|
       groups_count.times do |num|
         group_name = "#{group_prefix}#{num + 1}"
         grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
-        grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers)
+        grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers, ssl_context: ctx)
         if grp_check_res.status.success?
           existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
           groups << existing_group
@@ -224,7 +228,7 @@ class GPTTestData
           description: @gpt_data_version_description
         }
         grp_params[:parent_id] = parent_group['id'] if parent_group
-        grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers)
+        grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers, ssl_context: ctx)
         unless grp_res.status.success?
           print 'x'
           GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{redo_count}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
@@ -287,6 +291,10 @@ class GPTTestData
     GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
     redo_count = 0
+
+    ctx = OpenSSL::SSL::SSLContext.new
+    ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
     HTTP.persistent @env_url do |http|
       subgroups.each_with_index do |parent_group, i|
         projects_count_start = i * projects_count
@@ -294,7 +302,7 @@ class GPTTestData
         projects_count.times do |num|
           project_name = "#{project_prefix}#{projects_count_start + num + 1}"
           proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
-          proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers)
+          proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers, ssl_context: ctx)
           if proj_check_res.status.success?
             existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
             projects << existing_project
@@ -312,7 +320,7 @@ class GPTTestData
             description: @gpt_data_version_description
           }
           proj_params[:namespace_id] = parent_group['id'] if parent_group
-          proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers)
+          proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
           unless proj_res.status.success?
             print 'x'
             GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{redo_count}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
