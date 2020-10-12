@@ -20,7 +20,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group_path_api', 'file_source_path']);
+export let projects = getLargeProjects(['name', 'group_path_api', 'file_raw_path']);
 
 export function setup() {
   console.log('')
