@@ -2,7 +2,6 @@
 /*
 @endpoint: `GET /projects/:id/issues/:issue_iid`
 @description: [Get a single project issue](https://docs.gitlab.com/ee/api/issues.html#single-issue)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/213708
 */
 
 import http from "k6/http";
@@ -10,8 +9,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(0.6)
-export let ttfbThreshold = getTtfbThreshold(3000)
+export let rpsThresholds = getRpsThresholds()
+export let ttfbThreshold = getTtfbThreshold(500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
