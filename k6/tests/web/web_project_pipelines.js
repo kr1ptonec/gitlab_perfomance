@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/pipelines`
 @description: Web - Project Pipelines Page. <br>Controllers: `Projects::PipelinesController#index`, `Projects::PipelinesController#index.json`</br>
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/268237
 */
 
 import http from "k6/http";
