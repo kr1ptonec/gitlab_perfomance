@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path?viewer=rich`
 @description: Web - Project File Rendered. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/223043
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/271242
 */
 
 import http from "k6/http";
@@ -13,8 +13,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.01, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(30000)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(3000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
