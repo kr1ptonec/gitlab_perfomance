@@ -19,7 +19,7 @@ export let successRate = new Rate("successful_requests")
 
 let scopes = ['projects', 'issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']
 let scopes_thresholds = {
-  "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD * 0.1}`],
+  "successful_requests": [`rate>0.8`],
   "http_reqs": [`count>=${rpsThresholds['count']}`],
 }
 scopes.forEach(scope => {
@@ -37,7 +37,7 @@ export function setup() {
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`RPS Threshold per Endpoint: ${rpsThresholds['mean_per_endpoint']}/s (${rpsThresholds['count_per_endpoint']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+  console.log(`Success Rate Threshold: 80%`)
 }
 
 export default function() {
