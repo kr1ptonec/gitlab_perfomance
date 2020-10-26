@@ -31,8 +31,8 @@ export function deleteGroup(groupId) {
 
 export function searchForGroup(groupName) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
-  let foundGroup = JSON.parse(res.body)[0];
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupName}`, params);
+  let foundGroup = JSON.parse(res.body);
   let groupId = foundGroup && foundGroup.id;  
   groupId ? console.log(`Group contaning '${groupName}' name has id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
   return groupId;
