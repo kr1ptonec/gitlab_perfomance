@@ -21,6 +21,13 @@ export function logError(res) {
   }
 }
 
+export function getEnvVersion() {
+  let ver_regex = /([0-9]+)/g;
+  let version = __ENV.ENVIRONMENT_VERSION.match(ver_regex);
+
+  return version.map(ver => parseInt(ver))
+}
+
 export function getRpsThresholds(modifier=1.0, endpoints=1) {
   let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
   let thresholds = {
