@@ -28,7 +28,7 @@ update-environment:
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
   trigger:
-    project: gitlab-org/quality/performance-environment-builder
+    project: gitlab-org/quality/gitlab-environment-toolkit
     branch: $ENVIRONMENT_BUILDER_BRANCH
     strategy: depend
   only:
@@ -45,7 +45,7 @@ stop-environment:
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
   trigger:
-    project: gitlab-org/quality/performance-environment-builder
+    project: gitlab-org/quality/gitlab-environment-toolkit
     branch: $ENVIRONMENT_BUILDER_BRANCH
     strategy: depend
   only:
