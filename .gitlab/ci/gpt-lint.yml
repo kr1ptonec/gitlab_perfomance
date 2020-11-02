@@ -3,7 +3,7 @@
 #########################
 check:rubocop:
   stage: check
-  image: ruby:2.6-alpine
+  image: ruby:2.7-alpine
   before_script:
     - apk add build-base
     - gem install bundler && bundle config without run && bundle install
