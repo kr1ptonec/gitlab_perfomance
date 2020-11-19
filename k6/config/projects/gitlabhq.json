@@ -1,6 +1,11 @@
 {
   "name": "gitlabhq",
-  "version": 1,
+  "metadata": {
+    "version": 1,
+    "merge_request_count": 3609,
+    "issue_count": 6722,
+    "pipelines_count": 11
+  },
   "branch": "10-0-stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",

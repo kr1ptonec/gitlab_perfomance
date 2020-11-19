@@ -139,7 +139,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.13 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.14 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -163,6 +163,7 @@ Options:
   -f, --force                      Force the data generation ignoring the existing data
   -u, --unattended                 Skip the data injection warning
   -c, --clean-up                   Clean up GPT data
+  -k, --skip-project-validation    Skip large project metadata validation
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
   -h, --help                       Show help message
 
@@ -279,7 +280,7 @@ We strongly recommend running the GPT Data Generator as close as possible physic
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.13 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.14 - opinionated test data for the GitLab Performance Tool
 The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
 Do you want to proceed? [Y/N]
 y
@@ -360,7 +361,7 @@ Note that the tool does need to make some temporary changes to the target GitLab
 
 The changes are as follows:
 
-* [Default adjourned delete period](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-adjourned-period-premium-only) - This setting will be changed to 0 when the tool is running to ensure it can remove any old data. Note that any delete actions done on data during this time elsewhere on the environment will be deleted immediately. As shown in the tool's output above it will state when the setting has been changed and then reverted.
+* [Default deletion delay](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) - This setting will be changed to 0 when the tool is running to ensure it can remove any old data. Note that any delete actions done on data during this time elsewhere on the environment will be deleted immediately. As shown in the tool's output above it will state when the setting has been changed and then reverted.
 * [Repository Storage Paths](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) - This setting will be changed by the tool to ensure large projects are stored evenly over your repository storage paths to ensure accurate performance test results. Note that any project creation or import during this time will be stored in to whatever storage path the tool has currently active. The tool's output will show when this happening and projects can be moved after if required.
 
 #### Advanced Setup with Custom Large Projects
@@ -382,7 +383,12 @@ First you will need to create the [Project Config File](..k6/config/projects). T
 ```json
 {
   "name": "gitlabhq",
-  "version": 1,
+  "metadata": {
+    "version": 1,
+    "merge_request_count": 3609,
+    "issue_count": 6722,
+    "pipelines_count": 11
+  },
   "branch": "10-0-stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
@@ -416,7 +422,11 @@ First you will need to create the [Project Config File](..k6/config/projects). T
 Details for each of the settings are as follows. You should aim to have each of these details present here and in the target environment otherwise the specific tests that require them will be skipped automatically:
 
 * `name` - Name of the Project that the GPT and Generator will use for the large project names.
-* `version` - Version of the Project Data that the GPT Data Generator will use. Each large project description will store this value to track Vertical data version. Version should be bumped when the large project export file was updated with the new data and you want to reimport this data.
+* `metadata` - Data that contains information about the Project. GPT Data Generator will use it to validate the imported large project.
+  * `version` - Version of the Project Data that the Generator will use. Each large project description will store this value to track Vertical data version. Version should be bumped when the large project export file was updated with the new data and you want to reimport this data.
+  * `merge_request_count` - Total count of merge requests in the Project.
+  * `issue_count` - Total count of issues in the Project.
+  * `pipelines_count` - Total count of pipelines in the Project.
 * `branch` - The name of a large branch available in the project. The size of the branch should be tuned to your environment's requirements.
 * `commit_sha` - The SHA reference of a large commit available in the project. The size of the commit should be tuned to your environment's requirements.
 * `commit_sha_signed` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
@@ -532,6 +542,37 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 ## Large Project repository storage is different than expected
 
 This error could occur due to the bug, [Repository Storages config can't be updated via application settings API](#repository-storages-config-cant-be-updated-via-application-settings-api), described above. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
+
+## Large Project metadata validation failed
+
+This error could occur due to an Import issue. Known Import bugs at this moment:
+
+* [Merge Requests sometimes don't get imported as part of a Project Import](https://gitlab.com/gitlab-org/gitlab/-/issues/271596)
+* [Decompressed archive size validator does not return for a long time when Importing a project](https://gitlab.com/gitlab-org/gitlab/-/issues/238189)
+* [Full list of the open import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters)
+
+Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node. After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
+
+```sh
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
+```
+
+Example of successful validation output:
+
+```sh
+| Vertical data: importing large projects for GPT...
+Group gpt already exists
+Group gpt/large_projects already exists
+Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
+Project gpt/large_projects/gitlabhq1 already exists
+Project version number matches version from the Project Config File.
+Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project import...
+
+| Vertical data: successfully generated after 0 seconds!
+█ GPT data generation finished after 0 seconds.
+```
+
+If you still see a Large Project validation error at this point, please look through the known Import issues listed above and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
 
 ## Group or Project is marked for deletion
 

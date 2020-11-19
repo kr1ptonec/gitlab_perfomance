@@ -24,9 +24,9 @@
     - echo "$GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
     - bin/run-gitlab-docker --image $GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0
     - sleep 60s
-    - ACCESS_TOKEN=$GPT_CHECK_DOCKER_ACCESS_TOKEN bin/generate-gpt-data -e $ENVIRONMENT_NAME.json --unattended --large-project-tarball $LARGE_PROJECT_TARBALL --root-group $ROOT_GROUP -s 5 -p 5
+    - ACCESS_TOKEN=$GPT_CHECK_DOCKER_ACCESS_TOKEN bin/generate-gpt-data -e $ENVIRONMENT_NAME.json --unattended --large-project-tarball $LARGE_PROJECT_TARBALL --root-group $ROOT_GROUP -s 5 -p 5 --skip-project-validation
     # Check that the Generator is idempotent
-    - ACCESS_TOKEN=$GPT_CHECK_DOCKER_ACCESS_TOKEN bin/generate-gpt-data -e $ENVIRONMENT_NAME.json --unattended --large-project-tarball $LARGE_PROJECT_TARBALL --root-group $ROOT_GROUP -s 5 -p 5
+    - ACCESS_TOKEN=$GPT_CHECK_DOCKER_ACCESS_TOKEN bin/generate-gpt-data -e $ENVIRONMENT_NAME.json --unattended --large-project-tarball $LARGE_PROJECT_TARBALL --root-group $ROOT_GROUP -s 5 -p 5 --skip-project-validation
     - ACCESS_TOKEN=$GPT_CHECK_DOCKER_ACCESS_TOKEN bin/generate-gpt-data -e $ENVIRONMENT_NAME.json --unattended --clean-up --root-group $ROOT_GROUP
 
 check:generator:
