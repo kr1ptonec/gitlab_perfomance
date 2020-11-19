@@ -9,17 +9,18 @@ require 'tty-spinner'
 require 'uri'
 
 class GPTTestData
-  attr_reader :root_group
+  attr_reader :root_group, :large_projects_validation_errors
 
   WaitForDeleteError = Class.new(StandardError)
-  IncorrectProjectRepoStorageError = Class.new(StandardError)
+  IncorrectProjectDataError = Class.new(StandardError)
   ProjectCheckError = Class.new(StandardError)
   GroupCheckError = Class.new(StandardError)
 
-  def initialize(gpt_data_version:, force:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:)
+  def initialize(gpt_data_version:, force:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:, skip_project_validation:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
     @force = force
     @unattended = unattended
+    @skip_project_validation = skip_project_validation
     @env_url = env_url.chomp('/')
     @env_api_url = URI.join(@env_url + '/', "api/v4")
     @headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
@@ -28,6 +29,7 @@ class GPTTestData
 
     @gitlab_version = GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
+    @large_projects_validation_errors = {}
   end
 
   # Shared
@@ -270,12 +272,52 @@ class GPTTestData
     GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
   end
 
-  def check_proj_repo_storage(proj_path:, storage:)
+  def validate_project_data(proj_path:, storage:, project_metadata:)
     proj_check_res = get_project(proj_path: proj_path)
     raise ProjectCheckError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
 
-    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'repository_storage')
-    raise IncorrectProjectRepoStorageError, "Large Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nProject details: #{project}\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected." unless storage == project['repository_storage']
+    GPTLogger.logger.info "Validating project '#{proj_path}' imported successfully..."
+    @large_projects_validation_errors[proj_path] = []
+    # Check that project was imported to the correct repo storage
+    # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
+    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
+
+    version = project_metadata['version']
+    unless project['description']&.match?(/^Version: #{version}/)
+      project_version = project['description']&.match(/Version: (.*)/)
+      version_prompt_message = project_version.nil? ? "version can't be determined." : "is a different version (#{version}) than configured (#{project_version[1]})."
+      version_error = "- Project #{version_prompt_message}"
+      GPTLogger.logger.warn Rainbow(version_error).yellow
+      @large_projects_validation_errors[proj_path] << version_error
+    end
+
+    unless storage == project['repository_storage']
+      storage_error = "- Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected."
+      GPTLogger.logger.warn Rainbow(storage_error).yellow
+      @large_projects_validation_errors[proj_path] << storage_error
+    end
+
+    return if @skip_project_validation
+
+    issue_count = project_metadata['issue_count']
+    check_project_entities_count(project: project, entity: 'issues', expected_count: issue_count)
+
+    mr_count = project_metadata['merge_request_count']
+    check_project_entities_count(project: project, entity: 'merge_requests', expected_count: mr_count)
+
+    pipelines_count = project_metadata['pipelines_count']
+    check_project_entities_count(project: project, entity: 'pipelines', expected_count: pipelines_count)
+  end
+
+  def check_project_entities_count(project:, entity:, expected_count:)
+    existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+    raise ProjectCheckError, "Project metadata '#{entity}' is mising in the Project Config file.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#configure-project-config-file." if expected_count.nil?
+
+    return if existing_entity_count >= expected_count
+
+    error_message = "- Project metadata validation failed: #{entity} count '#{existing_entity_count}' should be '#{expected_count}' or higher as specified in the Project Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-metadata-validation-failed."
+    GPTLogger.logger.warn Rainbow(error_message).yellow
+    @large_projects_validation_errors[project['path_with_namespace']] << error_message
   end
 
   def check_project_exists(proj_path:)
@@ -374,7 +416,8 @@ class GPTTestData
     @gitlab_version >= Semantic::Version.new('13.0.0') ? 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' : 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz'
   end
 
-  def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_version:)
+  def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)
+    project_version = project_metadata['version']
     check_repo_storage_settings_type
 
     proj_tarball_file = nil
@@ -387,14 +430,14 @@ class GPTTestData
       GPTLogger.logger.info "Checking if project #{new_project_name} already exists in #{proj_path}..."
       existing_project = check_project_exists(proj_path: proj_path)
       if existing_project
-        if existing_project['description']&.match?(/^Version: #{project_version}/)
-          GPTLogger.logger.info "Project version number matches version from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
+        validate_project_data(proj_path: proj_path, storage: gitaly_node, project_metadata: project_metadata)
+        if @large_projects_validation_errors[proj_path].empty?
+          GPTLogger.logger.info "Project metadata matches metadata from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
           next
         end
 
-        existing_project_version = existing_project['description']&.match(/Version: (.*)/)
-        version_prompt_message = existing_project_version.nil? ? "its version can't be determined." : "is a different version (#{project_version}) than configured (#{existing_project_version[1]})."
-        GPTCommon.show_warning_prompt("Large project #{existing_project['path_with_namespace']} already exists on environment but #{version_prompt_message}\nThe Generator will replace this project.") unless @force
+        prompt_message = "\nLarge project #{existing_project['path_with_namespace']} already exists on environment but with invalid data."
+        GPTCommon.show_warning_prompt("#{prompt_message}\nThe Generator will replace this project.") unless @force
 
         disable_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
         delete_project(project: existing_project)
@@ -421,9 +464,7 @@ class GPTTestData
         retry
       end
 
-      # Check that project was imported to the correct repo storage
-      # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
-      check_proj_repo_storage(proj_path: proj_path, storage: gitaly_node)
+      validate_project_data(proj_path: proj_path, storage: gitaly_node, project_metadata: project_metadata)
     end
   end
 end

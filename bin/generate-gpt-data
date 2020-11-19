@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.13'
+gpt_data_version = '1.0.14'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -41,6 +41,7 @@ opts = Optimist.options do
   opt :force, "Force the data generation ignoring the existing data", type: :flag, default: false
   opt :unattended, "Skip the data injection warning", type: :flag, default: false
   opt :clean_up, "Clean up GPT data", type: :flag, default: false
+  opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
   banner "\nEnvironment Variables:"
@@ -85,7 +86,7 @@ if opts[:environment]
 
   large_projects_data = JSON.parse(File.read(large_projects_data_file))
   opts[:large_project_name] ||= large_projects_data['name']
-  opts[:large_project_version] ||= large_projects_data['version']
+  opts[:large_project_metadata] ||= large_projects_data['metadata']
 end
 
 raise Rainbow("Some generate-gpt-data option(s) are not defined. Exiting...\nOptions: #{opts}").red if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
@@ -101,7 +102,7 @@ GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into 
 
 # Generate opinionated test data
 begin
-  gpt_test_data = GPTTestData.new(gpt_data_version: gpt_data_version, force: opts[:force], unattended: opts[:unattended], env_url: opts[:environment_url], storage_nodes: opts[:storage_nodes], max_wait_for_delete: opts[:max_wait_for_delete])
+  gpt_test_data = GPTTestData.new(gpt_data_version: gpt_data_version, force: opts[:force], unattended: opts[:unattended], env_url: opts[:environment_url], storage_nodes: opts[:storage_nodes], max_wait_for_delete: opts[:max_wait_for_delete], skip_project_validation: opts[:skip_project_validation])
 
   if opts[:clean_up]
     GPTCommon.show_warning_prompt("\nThe GPT Data Generator will clean up the data it previously generated on the environment.") unless opts[:unattended]
@@ -128,9 +129,20 @@ begin
     GPTLogger.logger.info Rainbow("\n| Vertical data: importing large projects for GPT...").color(230, 83, 35)
     root_group = gpt_test_data.create_group(group_name: opts[:root_group])
     large_projects_group = gpt_test_data.create_group(group_name: opts[:vert_group], parent_group: root_group)
-    gpt_test_data.create_vertical_test_data(project_tarball: opts[:large_project_tarball], large_projects_group: large_projects_group, project_name: opts[:large_project_name], project_version: opts[:large_project_version])
+    gpt_test_data.create_vertical_test_data(project_tarball: opts[:large_project_tarball], large_projects_group: large_projects_group, project_name: opts[:large_project_name], project_metadata: opts[:large_project_metadata])
+
     vertical_run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long, keep_zero: true)
-    GPTLogger.logger.info Rainbow("\n| Vertical data: successfully generated after #{vertical_run_time}!").green
+    if gpt_test_data.large_projects_validation_errors.values.all?(&:empty?)
+      GPTLogger.logger.info Rainbow("\n| Vertical data: successfully generated after #{vertical_run_time}!").green
+    else
+      GPTLogger.logger.warn(Rainbow("| Vertical data: generated with warnings after #{vertical_run_time}!").red)
+      gpt_test_data.large_projects_validation_errors.each do |project, errors|
+        next if errors.empty?
+
+        GPTLogger.logger.warn(Rainbow("\n• Project '#{project}' validation errors:").underline.red)
+        errors.each { |error| GPTLogger.logger.warn(error) }
+      end
+    end
   end
   run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long, keep_zero: true)
   GPTLogger.logger.info Rainbow("█ GPT data generation finished after #{run_time}.").green
