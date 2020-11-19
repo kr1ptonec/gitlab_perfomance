@@ -310,7 +310,7 @@ class GPTTestData
   end
 
   def check_project_entities_count(project:, entity:, expected_count:)
-    existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+    existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true, fail_on_error: false).headers.to_hash["X-Total"].to_i
     raise ProjectCheckError, "Project metadata '#{entity}' is mising in the Project Config file.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#configure-project-config-file." if expected_count.nil?
 
     return if existing_entity_count >= expected_count
