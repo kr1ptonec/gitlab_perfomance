@@ -155,6 +155,7 @@ module RunK6
     cmd += ['--config', options_file] if options_file
     cmd += ['--summary-time-unit', 'ms']
     cmd += ['--summary-export', test_summary_report_file]
+    cmd += ['--summary-trend-stats', 'avg,min,med,max,p(90),p(95)']
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += ['--insecure-skip-tls-verify']
     cmd += ['--http-debug'] if ENV['GPT_DEBUG']
@@ -244,6 +245,7 @@ module RunK6
       tp_result["RPS Result"] = [test_result['rps_result'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
       tp_result["TTFB Avg"] = test_result['ttfb_avg'] ? "#{test_result['ttfb_avg']}ms" : '-'
       tp_result["TTFB P90"] = [test_result['ttfb_p90'], test_result['ttfb_p90_threshold']].none?(&:nil?) ? "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)" : '-'
+      tp_result["TTFB P95"] = "#{test_result['ttfb_p95']}ms"
       tp_result["Req Status"] = [test_result['success_rate'], test_result['success_rate_threshold']].none?(&:nil?) ? "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)" : '-'
 
       test_result_str = test_result['result'] ? "Passed" : "FAILED"
