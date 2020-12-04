@@ -13,6 +13,7 @@ GEM
     chronic_duration (0.10.6)
       numerizer (~> 0.1.1)
     concurrent-ruby (1.1.6)
+    connection_pool (2.2.2)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     down (5.1.1)
@@ -91,6 +92,7 @@ PLATFORMS
 
 DEPENDENCIES
   chronic_duration
+  connection_pool
   down
   gitlab-styles
   http

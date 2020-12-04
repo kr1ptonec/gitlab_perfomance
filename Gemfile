@@ -21,4 +21,5 @@ group :run do
   gem 'rainbow'
   gem 'table_print'
   gem 'tty-spinner'
+  gem 'connection_pool'
 end

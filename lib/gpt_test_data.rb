@@ -1,6 +1,7 @@
 $LOAD_PATH.unshift File.expand_path('.', __dir__)
 
 require 'cgi'
+require 'connection_pool'
 require 'gpt_common'
 require 'http'
 require 'import_project'
@@ -30,6 +31,10 @@ class GPTTestData
     @gitlab_version = GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
     @large_projects_validation_errors = {}
+
+    @default_pool_size = ENV['GPT_POOL_SIZE'].nil? ? 10 : ENV['GPT_POOL_SIZE'].to_i
+    @default_pool_timeout = ENV['GPT_POOL_TIMEOUT'].nil? ? 60 : ENV['GPT_POOL_TIMEOUT'].to_i
+    Thread.report_on_exception = false
   end
 
   # Shared
@@ -201,54 +206,76 @@ class GPTTestData
   end
 
   def create_groups(group_prefix:, parent_group: nil, groups_count:)
-    GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}'" + (" under parent group '#{parent_group['full_path']}'" if parent_group)
+    GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}' under parent group '#{parent_group['full_path']}'"
     groups = []
     redo_count = 0
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-    HTTP.persistent @env_url do |http|
-      groups_count.times do |num|
-        group_name = "#{group_prefix}#{num + 1}"
-        grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
-        grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers, ssl_context: ctx)
-        if grp_check_res.status.success?
-          existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
-          groups << existing_group
-          print '*'
-          GPTLogger.logger(only_to_file: true).info "Group #{existing_group['full_path']} already exists"
-          next
-        else
-          grp_check_res.flush
-        end
-
-        grp_params = {
-          name: group_name,
-          path: group_name,
-          visibility: 'public',
-          description: @gpt_data_version_description
-        }
-        grp_params[:parent_id] = parent_group['id'] if parent_group
-        grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers, ssl_context: ctx)
-        unless grp_res.status.success?
-          print 'x'
-          GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{redo_count}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
-          grp_res.flush
-
-          redo_count += 1
-          sleep 1
-          redo unless redo_count == 5
-          raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
-        end
-
-        new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
-        groups << new_group
-        print '.'
-        redo_count = 0
-        GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
+    begin
+      # Limit total amount of created threads
+      # Otherwise creation of large number of groups will fail due to timeout
+      thr_iter = groups_count > 50 ? 50 : groups_count
+      threads_loop_count = groups_count / thr_iter
+      # Tuning pool size depending on environment size
+      pool_size = @storage_nodes.count * @default_pool_size
+      groups_pool = ConnectionPool.new(size: pool_size, timeout: @default_pool_timeout) do
+        HTTP.persistent(@env_url)
       end
+
+      # Generate groups thread batches
+      threads_loop_count.times do |thr_num|
+        threads = []
+        thr_iter.times do |num|
+          threads << Thread.new(thr_num, num) do
+            groups_pool.with do |http|
+              group_name = "#{group_prefix}#{thr_num * thr_iter + num + 1}"
+              grp_path = "#{parent_group['full_path']}/#{group_name}"
+              grp_check_res = http.get("#{@env_api_url.path}/groups/#{CGI.escape(grp_path)}", headers: @headers, ssl_context: ctx)
+              if grp_check_res.status.success?
+                existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
+                groups << existing_group
+                print '*'
+                GPTLogger.logger(only_to_file: true).info "Group #{existing_group['full_path']} already exists"
+                next
+              else
+                grp_check_res.flush
+              end
+
+              grp_params = {
+                name: group_name,
+                path: group_name,
+                parent_id: parent_group['id'],
+                visibility: 'public',
+                description: @gpt_data_version_description
+              }
+              grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers, ssl_context: ctx)
+              unless grp_res.status.success?
+                print 'x'
+                GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{redo_count}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
+                grp_res.flush
+
+                redo_count += 1
+                sleep 1
+                redo unless redo_count == 10
+                raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
+              end
+
+              new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
+              groups << new_group
+              print '.'
+              redo_count = 0
+              GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
+            end
+          end
+        end
+        threads.each(&:join)
+      end
+    rescue Timeout::Error
+      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#vertical-data-generation-timeout"
     end
+
     puts "\n"
     groups
   end
@@ -330,57 +357,74 @@ class GPTTestData
   end
 
   def create_projects(project_prefix:, subgroups:, projects_count:)
-    GPTLogger.logger.info "Creating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
+    return if subgroups.count.zero?
+
+    GPTLogger.logger.info "\nCreating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
     redo_count = 0
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-    HTTP.persistent @env_url do |http|
+    begin
+      # Tuning pool size depending on environment size
+      pool_size = @storage_nodes.count * @default_pool_size
+      projects_pool = ConnectionPool.new(size: pool_size, timeout: @default_pool_timeout) do
+        HTTP.persistent(@env_url)
+      end
+
       subgroups.each_with_index do |parent_group, i|
         projects_count_start = i * projects_count
+        threads = []
 
         projects_count.times do |num|
-          project_name = "#{project_prefix}#{projects_count_start + num + 1}"
-          proj_path = parent_group ? "#{parent_group['full_path']}/#{project_name}" : project_name
-          proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers, ssl_context: ctx)
-          if proj_check_res.status.success?
-            existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
-            projects << existing_project
-            print '*'
-            GPTLogger.logger(only_to_file: true).info "Project #{existing_project['path_with_namespace']} already exists"
-            next
-          else
-            proj_check_res.flush
+          threads << Thread.new(parent_group, projects_count_start, num) do
+            projects_pool.with do |http|
+              project_name = "#{project_prefix}#{projects_count_start + num + 1}"
+              proj_path = "#{parent_group['full_path']}/#{project_name}"
+              proj_check_res = http.get("#{@env_api_url.path}/projects/#{CGI.escape(proj_path)}", headers: @headers, ssl_context: ctx)
+              if proj_check_res.status.success?
+                existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
+                projects << existing_project
+                print '*'
+                GPTLogger.logger(only_to_file: true).info "Project #{existing_project['path_with_namespace']} already exists"
+                next
+              else
+                proj_check_res.flush
+              end
+
+              proj_params = {
+                name: project_name,
+                path: project_name,
+                namespace_id: parent_group['id'],
+                visibility: 'public',
+                description: @gpt_data_version_description
+              }
+              proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
+              unless proj_res.status.success?
+                print 'x'
+                GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{redo_count}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
+                proj_res.flush
+
+                redo_count += 1
+                sleep 1
+                redo unless redo_count == 10
+                raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
+              end
+
+              new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
+              projects << new_project
+              print '.'
+              redo_count = 0
+              GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
+            end
           end
-
-          proj_params = {
-            name: project_name,
-            path: project_name,
-            visibility: 'public',
-            description: @gpt_data_version_description
-          }
-          proj_params[:namespace_id] = parent_group['id'] if parent_group
-          proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
-          unless proj_res.status.success?
-            print 'x'
-            GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{redo_count}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
-            proj_res.flush
-
-            redo_count += 1
-            sleep 1
-            redo unless redo_count == 5
-            raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
-          end
-
-          new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
-          projects << new_project
-          print '.'
-          redo_count = 0
-          GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
         end
+        threads.each(&:join)
       end
+
+    rescue Timeout::Error
+      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#vertical-data-generation-timeout"
     end
     projects
   end
@@ -402,12 +446,20 @@ class GPTTestData
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
     GPTLogger.logger.info "Checking for existing projects under groups..."
-    sub_groups.map! do |sub_group|
+    sub_groups_without_projects = []
+    sub_groups.each do |sub_group|
       existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
-      sub_group = recreate_group(group: sub_group, parent_group: parent_group) if existing_projects_count > projects_count
-      sub_group
+      print '.'
+      if existing_projects_count.zero?
+        sub_groups_without_projects << sub_group
+      elsif existing_projects_count == projects_count
+        GPTLogger.logger(only_to_file: true).info "Subgroup '#{sub_group['full_path']}' already have the correct number of projects."
+        next
+      else
+        sub_groups_without_projects << recreate_group(group: sub_group, parent_group: parent_group)
+      end
     end
-    create_projects(project_prefix: project_prefix, subgroups: sub_groups, projects_count: projects_count)
+    create_projects(project_prefix: project_prefix, subgroups: sub_groups_without_projects, projects_count: projects_count)
   end
 
   #  Vertical
