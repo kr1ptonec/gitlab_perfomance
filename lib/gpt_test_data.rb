@@ -149,11 +149,11 @@ class GPTTestData
   ## Max Import Size
 
   def disable_max_import_size_setting
-    return if !check_setting_available?(setting: 'max_import_size') || @settings['max_import_size'].zero?
+    return unless check_setting_available?(setting: 'max_import_size')
 
-    GPTCommon.show_warning_prompt("GPT Data Generator will disable the GitLab Environment 'max_import_size' setting to allow for large project imports.\nWhile the GPT Data Generator  is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
+    GPTCommon.show_warning_prompt("GPT Data Generator will disable the GitLab Environment 'max_import_size' setting to allow for large project imports.\nWhile the GPT Data Generator is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
     GPTLogger.logger.info "Disabling Max Import Size limit on environment..."
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { max_import_size: 0 })
+    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { max_import_size: 10240 })
   end
 
   def restore_max_import_size_setting
