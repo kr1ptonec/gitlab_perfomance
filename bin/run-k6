@@ -17,7 +17,7 @@ require 'tmpdir'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_version = '2.3.0'
+gpt_version = '2.3.1'
 puts Rainbow("GitLab Performance Tool (GPT) v#{gpt_version} - Performance test runner for GitLab environments based on k6").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -39,6 +39,7 @@ opts = Optimist.options do
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should come from a User that has admin access for the project(s) to be tested and have all permissions set. (Default: nil)"
   banner "  GPT_DEBUG                Shows debug output when set to true. (Default: nil)"
   banner "  GPT_SKIP_RETRY           Skip failed test retry when set to true. (Default: nil)"
+  banner "  GPT_TTFB_P95             Add TTFB 95 to the test results output. (Default: nil)"
   banner "\nExamples:"
   banner "  Run all Tests with the 60s_200rps Options file against the 10k Environment:"
   banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json"
