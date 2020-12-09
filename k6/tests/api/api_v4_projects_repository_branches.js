@@ -2,7 +2,6 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches`
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/208738
 */
 
 import http from "k6/http";
@@ -10,9 +9,9 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-// Endpoint is below target threshold. Custom lower limit applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.2)
-export let ttfbThreshold = getTtfbThreshold(7500)
+// Endpoint was fixed in 13.7 issue#208738
+export let rpsThresholds = getRpsThresholds()
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
