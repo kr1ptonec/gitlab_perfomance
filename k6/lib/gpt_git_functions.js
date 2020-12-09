@@ -15,7 +15,7 @@ export function getRefsListGitPull(project) {
       "Pragma": "no-cache"
     }
   };
-  let response = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_api']}/${project['name']}.git/info/refs?service=git-upload-pack`, params);
+  let response = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}.git/info/refs?service=git-upload-pack`, params);
   return response;
 }
 
@@ -31,7 +31,7 @@ export function pullRefsData(project, firstRefSHA, secondRefSHA) {
     }
   };
   let body = `0054want ${firstRefSHA} multi_ack side-band-64k ofs-delta\n00000032have ${secondRefSHA}\n00000009done\n`;
-  let response = http.post(`${__ENV.ENVIRONMENT_URL}/${project['group_path_api']}/${project['name']}.git/git-upload-pack`, body, params);
+  let response = http.post(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}.git/git-upload-pack`, body, params);
   return response;
 }
 
@@ -71,7 +71,7 @@ export function getRefsListGitPush(authEnvUrl, project) {
       "Pragma": "no-cache"
     }
   };
-  let response = http.get(`${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
+  let response = http.get(`${authEnvUrl}/${project['group_path_web']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
   return response;
 }
 
@@ -84,8 +84,8 @@ export function pushRefsData(authEnvUrl, project) {
     }
   };
   let responses = http.batch([
-    ["POST", `${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_new_head, params],
-    ["POST", `${authEnvUrl}/${project['group_path_api']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params]
+    ["POST", `${authEnvUrl}/${project['group_path_web']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_new_head, params],
+    ["POST", `${authEnvUrl}/${project['group_path_web']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params]
   ]);
   return responses;
 }
