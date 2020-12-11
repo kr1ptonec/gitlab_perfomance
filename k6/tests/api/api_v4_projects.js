@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects?order_by=id&sort=asc and GET /projects?pagination=keyset&order_by=id&sort=asc`
-@description: [Get a list of all projects owned by user](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
+@description: [Get a list of all projects](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
 */
 
@@ -42,7 +42,7 @@ export default function() {
   group("API - Projects List", function() {
     endpoints.forEach(endpoint => {
       let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: endpoint } };
-      let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/${endpoint}&order_by=id&sort=asc&owned=true`, params);
+      let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/${endpoint}&order_by=id&sort=asc`, params);
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     })
   });
