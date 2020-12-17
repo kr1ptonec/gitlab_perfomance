@@ -9,7 +9,6 @@ require 'open3'
 require 'os'
 require 'gpt_prepare_test_data'
 require 'rainbow'
-require 'table_print'
 require 'tmpdir'
 
 module RunK6
@@ -221,49 +220,5 @@ module RunK6
     return nil if scores.length.zero?
 
     (scores.sum / scores.length).round(2)
-  end
-
-  def generate_results_summary(results_json:)
-    results_summary = <<~DOC
-      * Environment:                #{results_json['name'].capitalize}
-      * Environment Version:        #{results_json['version']} `#{results_json['revision']}`
-      * Option:                     #{results_json['option']}
-      * Date:                       #{results_json['date']}
-      * Run Time:                   #{ChronicDuration.output(results_json['time']['run'], format: :short, keep_zero: true)} (Start: #{results_json['time']['start']}, End: #{results_json['time']['end']})
-      * GPT Version:                v#{results_json['gpt_version']}
-    DOC
-    results_summary += "\n❯ Overall Results Score: #{results_json['overall_result_score']}%\n" unless results_json['overall_result_score'].nil?
-    results_summary
-  end
-
-  def generate_results_table(results_json:)
-    tp_results = results_json['test_results'].map do |test_result|
-      tp_result = {}
-
-      tp_result["Name"] = test_result['name'] || '-'
-      tp_result["RPS"] = test_result['rps_target'] ? "#{test_result['rps_target']}/s" : '-'
-      tp_result["RPS Result"] = [test_result['rps_result'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
-      tp_result["TTFB Avg"] = test_result['ttfb_avg'] ? "#{test_result['ttfb_avg']}ms" : '-'
-      tp_result["TTFB P90"] = [test_result['ttfb_p90'], test_result['ttfb_p90_threshold']].none?(&:nil?) ? "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)" : '-'
-      tp_result["TTFB P95"] = "#{test_result['ttfb_p95']}ms" if ENV['GPT_TTFB_P95']
-      tp_result["Req Status"] = [test_result['success_rate'], test_result['success_rate_threshold']].none?(&:nil?) ? "#{test_result['success_rate']}% (>#{test_result['success_rate_threshold']}%)" : '-'
-
-      test_result_str = test_result['result'] ? "Passed" : "FAILED"
-      test_result_str << '¹' unless test_result['issues'].nil?
-      test_result_str << '²' unless test_result['result']
-      tp_result["Result"] = test_result['result'] ? Rainbow(test_result_str).green : Rainbow(test_result_str).red
-
-      tp_result
-    end
-
-    tp.set(:max_width, 60)
-    TablePrint::Printer.table_print(tp_results)
-  end
-
-  def generate_results_footer(results_json:)
-    footer = ''
-    footer << "\n¹ Result covers endpoint(s) that have known issue(s). Threshold(s) have been adjusted to compensate." if results_json['test_results'].any? { |test_result| test_result['issues'] }
-    footer << "\n² Failure may not be clear from summary alone. Refer to the individual test's full output for further debugging." unless results_json['overall_result']
-    footer
   end
 end
