@@ -10,10 +10,10 @@ require 'optimist'
 require 'pathname'
 require 'rainbow'
 require 'run_k6'
-require 'table_print'
 require 'test_info'
 require 'time'
 require 'tmpdir'
+require 'result_writer'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
@@ -138,7 +138,7 @@ end
 
 # Output and save test results
 # JSON
-results_json = {
+results_hash = {
   "name" => env_vars['ENVIRONMENT_NAME'],
   "version" => env_vars['ENVIRONMENT_VERSION'],
   "revision" => env_vars['ENVIRONMENT_REVISION'],
@@ -156,27 +156,19 @@ results_json = {
   "overall_result_score" => aggregated_score,
   "test_results" => aggregated_results
 }
-results_json_file = File.join(results_dir, "#{results_file_prefix}_results.json")
-File.write(results_json_file, results_json.to_json)
 
-# STDOUT \ Text
-results_summary = RunK6.generate_results_summary(results_json: results_json)
-puts "\n█ Results summary\n\n#{results_summary}\n"
+result_writers = [
+  ResultWriter::Json,
+  ResultWriter::Csv,
+  ResultWriter::Txt
+].map { |w| w.new(results_dir, results_file_prefix) }
+result_files = [results_output_file] + result_writers.map(&:path)
+result_writers.each { |r| r.write(results_hash) }
 
-results_table = RunK6.generate_results_table(results_json: results_json)
-puts results_table
-
-results_footer = RunK6.generate_results_footer(results_json: results_json)
-puts Rainbow(results_footer).italic unless results_footer.empty?
-
-results_txt_file = File.join(results_dir, "#{results_file_prefix}_results.txt")
-# Write results to file but also remove any terminal ANSI codes
-File.write(results_txt_file, "#{results_summary}\n#{results_table}\n#{results_footer}".gsub(/\e\[([;\d]+)?m/, ''))
-
-puts "\n█ Results files\n\n#{results_output_file}\n#{results_json_file}\n#{results_txt_file}"
+puts "\n█ Results files\n\n#{result_files.join("\n")}"
 
 if opts[:influxdb_url]
-  influxdb_report, message = InfluxDB.write_data(opts[:influxdb_url], results_json)
+  influxdb_report, message = InfluxDB.write_data(opts[:influxdb_url], results_hash)
   warn Rainbow("\nFailed to upload test run statistics to InfluxDB URL #{opts[:influxdb_url]} - #{message}.").red unless influxdb_report
 end
 

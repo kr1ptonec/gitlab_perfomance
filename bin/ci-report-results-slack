@@ -10,6 +10,7 @@ require 'optimist'
 require 'pathname'
 require 'run_k6'
 require 'time'
+require 'result_writer'
 
 # Get default results dir path from the current file
 results_dir = Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
@@ -82,9 +83,8 @@ if results_file && File.extname(results_file) == '.json'
   result = @opts[:test_result] == "passed" || results_json['overall_result']
   message = prepare_message_text(result, results_json)
 
-  results_summary = RunK6.generate_results_summary(results_json: results_json)
-  results_table = RunK6.generate_results_table(results_json: results_json)
-  results_footer = RunK6.generate_results_footer(results_json: results_json)
+  results_sections = ResultWriter::Txt::Sections.new.generate(results_json)
+  results_summary, results_table, results_footer = results_sections.values_at(:summary, :table, :footer)
   content = "#{results_summary}\n#{results_table}"
   content << "\n#{results_footer}" unless results_footer.empty?
   # Remove any terminal ANSI codes
