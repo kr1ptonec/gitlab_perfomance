@@ -23,13 +23,14 @@ update-environment:
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: update
+    GET_BRANCH: $GET_BRANCH
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
     GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
   trigger:
-    project: gitlab-org/quality/gitlab-environment-toolkit
-    branch: $ENVIRONMENT_BUILDER_BRANCH
+    project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
+    branch: $GET_CONFIG_BRANCH
     strategy: depend
   only:
     variables:
@@ -40,13 +41,14 @@ stop-environment:
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: stop
+    GET_BRANCH: $GET_BRANCH
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
     GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
   trigger:
-    project: gitlab-org/quality/gitlab-environment-toolkit
-    branch: $ENVIRONMENT_BUILDER_BRANCH
+    project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
+    branch: $GET_CONFIG_BRANCH
     strategy: depend
   only:
     variables:
