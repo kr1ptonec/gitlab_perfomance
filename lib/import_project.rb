@@ -19,12 +19,14 @@ class ImportProject
 
   def setup_tarball(project_tarball:)
     # Check that the tarball file is valid
+
     if project_tarball.match?(URI::DEFAULT_PARSER.make_regexp(%w[http https ftp]))
       GPTLogger.logger.info "Tarball is remote, downloading..."
       proj_file = GPTCommon.download_file(url: project_tarball)
     else
       proj_file = project_tarball
     end
+
     raise Errno::ENOENT unless File.exist?(proj_file)
 
     proj_file

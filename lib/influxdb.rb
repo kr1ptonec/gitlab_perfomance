@@ -23,7 +23,8 @@ module InfluxDB
       gpt_version: results_json['gpt_version']
     }
     results_json['test_results'].map do |test_result|
-      %w[ttfb_avg ttfb_p90 ttfb_p95 rps_result success_rate score].map do |measurement|
+      measurements = %w[ttfb_avg ttfb_p90 ttfb_p95 rps_result success_rate score]
+      measurements.map do |measurement|
         prepare_request_body(measurement, tags.merge({ test_name: test_result['name'] }), test_result[measurement], tests_end_time)
       end.join("\n")
     end.join("\n")
