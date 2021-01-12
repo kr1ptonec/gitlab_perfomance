@@ -1,7 +1,7 @@
 /* global __ENV, __VU, __ITER */
 /*
 @endpoint: `POST /projects/:id/repository/commits`
-@description: [Create a commit with multiple files and actions](https://docs.gitlab.com/ee/api/commits.html#create-a-commit-with-multiple-files-and-actions)
+@description: Setup stage: Create group and project <br>Test: [Create a commit with multiple files and actions](https://docs.gitlab.com/ee/api/commits.html#create-a-commit-with-multiple-files-and-actions) <br>Teardown stage: Delete group
 @flags: unsafe
 */
 

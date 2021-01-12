@@ -1,7 +1,7 @@
 /* global __ENV, __VU, __ITER */
 /*
 @endpoint: `POST /projects/:id/repository/branches`
-@description: [Create a new branch in the repository](https://docs.gitlab.com/ee/api/branches.html#create-repository-branch)
+@description: Setup stage: Create group and project <br>Test: [Create a new branch in the repository](https://docs.gitlab.com/ee/api/branches.html#create-repository-branch) <br>Teardown stage: Delete group
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/196788
 @flags: unsafe
 */
