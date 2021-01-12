@@ -59,7 +59,7 @@ module GPTPrepareTestData
   def prepare_git_push_data(env_vars:)
     project_data = JSON.parse(env_vars["ENVIRONMENT_LARGE_PROJECTS"]).first
 
-    return false if project_data.dig('git_push_data').nil? || %w[branch_current_head_sha","branch_new_head_sha","branch_name"].all? { |subkey| project_data["git_push_data"].key?(subkey) }
+    return false if project_data['git_push_data'].nil? || %w[branch_current_head_sha","branch_new_head_sha","branch_name"].all? { |subkey| project_data["git_push_data"].key?(subkey) }
 
     branch_current_head = project_data["git_push_data"]["branch_current_head_sha"]
     branch_new_head = project_data["git_push_data"]["branch_new_head_sha"]

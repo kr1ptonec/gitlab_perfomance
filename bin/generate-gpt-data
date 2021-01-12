@@ -144,6 +144,7 @@ begin
       end
     end
   end
+
   run_time = ChronicDuration.output((Time.now - start_time).to_i, format: :long, keep_zero: true)
   GPTLogger.logger.info Rainbow("█ GPT data generation finished after #{run_time}.").green
 rescue Interrupt
@@ -152,11 +153,13 @@ rescue Interrupt
 rescue StandardError, HTTP::Error => e
   GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n#{e.exception}\n Traceback:#{e.backtrace}").red
 ensure
+
   unless gpt_test_data.nil?
     gpt_test_data.restore_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
     gpt_test_data.restore_max_import_size_setting unless ENV['SKIP_CHANGING_ENV_SETTINGS']
     gpt_test_data.restore_repo_storage_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
   end
+
   File.open(ENV['GPT_LOGGER_PATH'], 'a') { |f| f.write("\nGPT Data Generator: v#{gpt_data_version}") }
   puts "\n█ Logs: #{ENV['GPT_LOGGER_PATH']}" unless ENV['GPT_LOGGER_PATH'].nil?
 end

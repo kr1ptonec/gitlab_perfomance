@@ -48,4 +48,15 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 Metrics/AbcSize:
-  Max: 65.0
+  Max: 70.0
+
+Style/StringConcatenation:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: true
+  Max: 18
+
+Metrics/PerceivedComplexity:
+  Enabled: true
+  Max: 19

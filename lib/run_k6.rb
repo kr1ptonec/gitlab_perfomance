@@ -171,7 +171,7 @@ module RunK6
         output << line
         puts line
 
-        status = false if line.match?(/No data generated/)
+        status = false if line.include?('No data generated')
       end
       status = wait_thr.value.success? if status.nil?
     end
@@ -199,9 +199,9 @@ module RunK6
       when /http_reqs/
         results["rps_result"] = line.match(/(\d+(\.\d+)?)(\/s)/)[1].to_f.round(2).to_s
       when /Success Rate Threshold/
-        results["success_rate_threshold"] = line.match(/(\d+(\.\d+)?)\%/)[1]
+        results["success_rate_threshold"] = line.match(/(\d+(\.\d+)?)%/)[1]
       when /successful_requests/
-        results["success_rate"] = line.match(/(\d+(\.\d+)?)\%/)[1]
+        results["success_rate"] = line.match(/(\d+(\.\d+)?)%/)[1]
       end
     end
 

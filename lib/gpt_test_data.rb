@@ -113,6 +113,7 @@ class GPTTestData
 
   def generate_repo_storage_settings_payload(storages:)
     repo_storage_settings_payload = {}
+
     if check_setting_available?(setting: 'repository_storages_weighted')
       # (GitLab 13.1 and later) Hash of names of enabled storage paths with weights.
       # New projects are created in one of these stores, chosen by a weighted random selection.
@@ -125,6 +126,7 @@ class GPTTestData
       # New projects are created in one of these stores, chosen at random.
       repo_storage_settings_payload = { 'repository_storages[]': storages }
     end
+
     repo_storage_settings_payload
   end
 
@@ -450,6 +452,7 @@ class GPTTestData
     sub_groups.each do |sub_group|
       existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
       print '.'
+
       if existing_projects_count.zero?
         sub_groups_without_projects << sub_group
       elsif existing_projects_count == projects_count
@@ -483,6 +486,7 @@ class GPTTestData
       existing_project = check_project_exists(proj_path: proj_path)
       if existing_project
         validate_project_data(proj_path: proj_path, storage: gitaly_node, project_metadata: project_metadata)
+
         if @large_projects_validation_errors[proj_path].empty?
           GPTLogger.logger.info "Project metadata matches metadata from the Project Config File.\nExisting large project #{existing_project['path_with_namespace']} is valid. Skipping project import..."
           next
