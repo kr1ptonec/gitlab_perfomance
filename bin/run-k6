@@ -49,8 +49,6 @@ opts = Optimist.options do
   banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gitlab-performance-tool' : $PROGRAM_NAME} --environment 10k.json --options 60s_200rps.json --tests api_v4_groups_projects.js"
 end
 
-warn Rainbow("\nEnvironment Variable ACCESS_TOKEN has not been set. Various tests require this for authentication and they will be skipped for this run. See command help for more info...").yellow unless ENV['ACCESS_TOKEN']
-
 k6_path = RunK6.setup_k6
 
 # Variables
