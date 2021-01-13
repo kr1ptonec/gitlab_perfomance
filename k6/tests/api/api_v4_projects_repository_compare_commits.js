@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/compare?from=commit_sha1&to=commit_sha2`
 @description: [Compare commits](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/297497
 */
 
 import http from "k6/http";
@@ -9,8 +10,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(0.8)
+export let ttfbThreshold = getTtfbThreshold(1500)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
