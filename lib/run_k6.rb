@@ -48,14 +48,6 @@ module RunK6
     res.status.success? ? JSON.parse(res.body.to_s) : { "version" => "-", "revision" => "-" }
   end
 
-  def get_env_settings(env_url:)
-    return nil unless ENV['ACCESS_TOKEN']
-
-    headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
-    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/application/settings", headers: headers, fail_on_error: false)
-    res.status.success? ? JSON.parse(res.body.to_s) : {}
-  end
-
   def get_options_env_vars(options_file:)
     options_env_vars = {}
     options_file_vars = JSON.parse(File.read(options_file))

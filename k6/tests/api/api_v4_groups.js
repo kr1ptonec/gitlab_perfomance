@@ -28,7 +28,7 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Group Details", function() {
+  group("API - Groups List", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

@@ -9,7 +9,7 @@ import http from "k6/http";
 import { group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting, waitForGitSidekiqQueue } from "../../lib/gpt_git_functions.js";
+import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting, checkAdminAccess, waitForGitSidekiqQueue } from "../../lib/gpt_git_functions.js";
 
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
@@ -36,6 +36,8 @@ if (projects.length == 0) fail('No projects found with required keys for test. E
 projects = prepareGitPushData(projects)
 
 export function setup() {
+  checkAdminAccess();
+
   console.log('')
   console.log(`Git Protocol RPS: ${gitProtoRps}`)
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)

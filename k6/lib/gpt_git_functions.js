@@ -126,6 +126,13 @@ export function updateProjectPipelinesSetting(project, state) {
   /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting changed to ${state}`) : (logError(res), fail(`Error occured when attempting to change Project Pipelines setting.`));
 }
 
+export function checkAdminAccess() {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/application/settings`, params);
+
+  /20(0|1)/.test(res.status) ? console.log(`Access Token given does have required Admin access for this test. Continuing...`) : (logError(res), fail(`Access Token given does not have required Admin access for this test. Exiting...`));
+}
+
 export function waitForGitSidekiqQueue() {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res, queueSize;

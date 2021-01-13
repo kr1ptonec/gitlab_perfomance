@@ -13,17 +13,22 @@ Before running the GitLab Performance Tool, you'll need to setup the required te
 
 GPT as well as the GPT Data Generator supports GitLab versions **12.5 and higher**. If you need help testing an older version as part of a migration or upgrade, please contact [support](https://support.gitlab.com/hc/en-us/requests/new).
 
-## Creating a User
+## Creating an Admin User
 
 The first part of preparation is to create a user on the target environment. This user will be used for the setup of test data and for running the performance tests themselves with GPT.
 
 The user can be created in the normal way but with the following requirements:
 
 * The username can be set as desired with one exception: the username cannot be the same as the `root_group` name which is set in [Environment File](#preparing-the-environment-file)
-* It should be an Admin user
+* It should be an Admin user. We require an Admin user for the following reasons:
+  * GPT Data Generator requires to change some environment config to ensure test data is set up in the correct way, specifically so it can ensure data is spread across all Gitaly nodes.
+  * GPT needs to check the [target environment's settings via API](https://docs.gitlab.com/ee/api/settings.html) to check if some performance tests that are dependent on features being enabled can be run.
+  * GPT also utilizes the [Sidekiq Metrics](https://docs.gitlab.com/ee/api/sidekiq_metrics.html) API in certain cases to manage knock on effects of certain tests. Specifically it checks Sidekiq's job queue to ensure it has emptied before continuing as some tests can cause it to inflate significantly for a short period of time.
 * To ensure consistent test results the User should be new or have no data associated with it (i.e. no groups, projects, etc...)
 
 We recommend a new user is created for this process that can then just be deleted cleanly after. On test environments the main root user can be used.
+
+A non Admin user can be used if desired in a limited fashion. Please refer to the [Using a non Admin User](#using-a-non-admin-user) section.
 
 ## Generating an Access Token
 
@@ -41,7 +46,7 @@ To achieve consistent and comparable results GPT is designed primarily to be use
 
 All data will be generated under a group named `gpt` and split into 2 areas, Vertical and Horizontal:
 
-* Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Advanced Setup with Custom Large Projects](#advanced-setup-with-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
+* Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Using Custom Large Projects](#using-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
 * Horizontal: This area consists of a large number of subgroups that in turn have a large number of projects each. All of these subgroups are saved under the parent subgroup `gpt/many_groups_and_projects`
 
 To help visualize this here is a diagram of how the data looks:
@@ -116,7 +121,7 @@ Details for each of the settings are as follows. Some are also available to be c
   * `root_group` - The name of the Root Group for all the GitLab Performance Tool test data. (Default: `gpt`).
   * `large_projects` - Contains information about the "vertical" data.
     * `group` - The name of the Group that will contain the "vertical" data. (Default: `large_projects`).
-    * `project` -  Name of the Project Config file. This file contains information about the large project that will be imported by GPT Data Generator and tested by GPT ("vertical" data). For most users this can be left as the [default](environment_prep.md#setting-up-test-data-with-the-gpt-data-generator) (`gitlabhq`). To perform additional tests with custom large projects please refer to [Advanced Setup with Custom Large Projects](environment_prep.md#advanced-setup-with-custom-large-projects).
+    * `project` -  Name of the Project Config file. This file contains information about the large project that will be imported by GPT Data Generator and tested by GPT ("vertical" data). For most users this can be left as the [default](environment_prep.md#setting-up-test-data-with-the-gpt-data-generator) (`gitlabhq`). To perform additional tests with custom large projects please refer to [Using Custom Large Projects](environment_prep.md#using-custom-large-projects).
   * `many_groups_and_projects` - Contains information about the "horizontal" data.
     * `group` - The name of the Group that will contain the "horizontal" data. (Default: `many_groups_and_projects`).
     * `subgroups` - Number of subgroups that `group` have. The number of the subgroups should be tuned to your environment's requirements.
@@ -189,7 +194,7 @@ As standard with Docker you can mount several volumes to get your own config fil
 * root (`/`)
   * `/config` - For any additional config files (each in their own respective subfolder).
     * `/environments` - [Environment Config files](environment_prep.md##preparing-the-environment-file).
-    * `/projects` - [Project Config files](environment_prep.md#advanced-setup-with-custom-large-projects) (only required when you're using a custom Large Project).
+    * `/projects` - [Project Config files](environment_prep.md#using-custom-large-projects) (only required when you're using a custom Large Project).
   * `/results` - Contains any result files after test runs
 
 Here's an example of how you would run the Docker image with all pieces of config and results mounted (replacing placeholders as appropriate):
@@ -275,6 +280,16 @@ Two factors that can significantly affect the Generator's run time are the condi
 
 We strongly recommend running the GPT Data Generator as close as possible physically to the GitLab environment and in optimum network conditions. This is due to the generator performing heavy data operations and imports. If it's run in less than ideal conditions then the time it may take to complete may be increased significantly.
 
+#### Temporary Environment Settings Changes
+
+Note that the tool does need to make some temporary changes to the target GitLab Environment when running that are then reverted at the end. These are to ensure that the data is set up correctly.
+
+The changes are as follows:
+
+* [Default deletion delay](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) - This setting will be changed to 0 when the tool is running to ensure it can remove any old data. Note that any delete actions done on data during this time elsewhere on the environment will be deleted immediately. As shown in the tool's output above it will state when the setting has been changed and then reverted.
+* [Repository Storage Paths](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) - This setting will be changed by the tool to ensure large projects are stored evenly over your repository storage paths to ensure accurate performance test results. Note that any project creation or import during this time will be stored in to whatever storage path the tool has currently active. The tool's output will show when this happening and projects can be moved after if required.
+* [Max Import Size](https://docs.gitlab.com/ee/user/admin_area/settings/account_and_limit_settings.html#max-import-size) - This setting changes the max size of project import files. The Generator sets this to be high enough to ensure it can import the data it needs. The tool's output will show when this happening and projects can be moved after if required.
+
 #### GPT Data Generator Output
 
 The tool's output will look like the following:
@@ -355,16 +370,20 @@ http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq2
 █ Logs: /results/generate-gpt-data_10k.testbed.gitlab.net_2020-05-26_174330.log
 ```
 
-#### Temporary Environment Settings Changes
+#### Advanced Setup
 
-Note that the tool does need to make some temporary changes to the target GitLab Environment when running that are then reverted at the end. These are to ensure that the data is set up correctly.
+In this section we detail several advanced setup scenarios you can do with GPT.
 
-The changes are as follows:
+##### Using a non Admin user
 
-* [Default deletion delay](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) - This setting will be changed to 0 when the tool is running to ensure it can remove any old data. Note that any delete actions done on data during this time elsewhere on the environment will be deleted immediately. As shown in the tool's output above it will state when the setting has been changed and then reverted.
-* [Repository Storage Paths](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) - This setting will be changed by the tool to ensure large projects are stored evenly over your repository storage paths to ensure accurate performance test results. Note that any project creation or import during this time will be stored in to whatever storage path the tool has currently active. The tool's output will show when this happening and projects can be moved after if required.
+A non Admin user can be used in a limited fashion if desired but please note the following:
 
-#### Advanced Setup with Custom Large Projects
+* GPT Data Generator cannot be used with a non Admin user as it needs to [tweak environment config](#temporary-environment-settings-changes).
+* GPT can be used with a non Admin user but note it will run a reduced test set as several tests need admin access to either check the environments features or status.
+
+If a non Admin user is desired it needs to be at least a [`maintainer`](https://docs.gitlab.com/ee/user/permissions.html#project-members-permissions) of all the Groups and Projects generated by GPT Data Generator. This should be configurable by setting the new User to be a maintainer of the root group as configured in the [Environment File](#preparing-the-environment-file).
+
+##### Using Custom Large Projects
 
 The GitLab Performance Tool can also be used to run performance tests against a target GitLab environment with a different large project imported into each storage node as an advanced use case. To enable this GPT Data Generator can be changed to import the custom project instead of (or in addition to in subsequent runs) the default `gitlabhq` project along with GPT being configured to use data points from the project also.
 
@@ -376,7 +395,7 @@ For this use case you will need to do the following:
 1. [Configure Environment Config file](#configure-environment-config-file)
 1. [Setup Custom Test Data using the GPT Data Generator](#setup-custom-test-data-using-the-gpt-data-generator)
 
-##### Configure Project Config file
+###### Configure Project Config file
 
 First you will need to create the [Project Config File](..k6/config/projects). This file contains all the specific vertical test data points for the large project that is needed by GPT to perform its tests. The easiest way to do this is to copy the default [`gitlabhq.json`](../k6/config/projects/gitlabhq.json) and tweak it accordingly with your custom project details using example below as guidance:
 
@@ -453,7 +472,7 @@ Details for each of the settings are as follows. You should aim to have each of 
 
 Project config files typically should be saved to the `k6/config/projects` directory although you can save it elsewhere if desired. When the Project Config file is in place, you'll then need to specify its name (or file path) in the `large_project` setting of your [Environment Config file](#preparing-the-environment-file).
 
-##### Configure Environment Config file
+###### Configure Environment Config file
 
 The [Environment Config File](../k6/config/environments) will need to be tweaked to point both of the GPT tools to use the new project, specifically the `gpt_data > large_projects` section:
 
@@ -472,7 +491,7 @@ The [Environment Config File](../k6/config/environments) will need to be tweaked
 
 For this use case the `project` setting should be changed to the name of the Project Config file.
 
-##### Setup Custom Test Data using the GPT Data Generator
+###### Setup Custom Test Data using the GPT Data Generator
 
 Finally to import the data itself you will need to have the project's [export tarball file](https://docs.gitlab.com/ee/user/project/settings/import_export.html#exporting-a-project-and-its-data) available. When ready you can then set up all of the test data, with custom project, as follows:
 
