@@ -21,7 +21,7 @@ The user can be created in the normal way but with the following requirements:
 
 * The username can be set as desired with one exception: the username cannot be the same as the `root_group` name which is set in [Environment File](#preparing-the-environment-file)
 * It should be an Admin user. We require an Admin user for the following reasons:
-  * GPT Data Generator requires to change some environment config to ensure test data is set up in the correct way, specifically so it can ensure data is spread across all Gitaly nodes.
+  * GPT Data Generator requires to change some environment config to ensure test data is set up in the correct way, specifically so it can ensure data is spread across all Gitaly storages.
   * GPT needs to check the [target environment's settings via API](https://docs.gitlab.com/ee/api/settings.html) to check if some performance tests that are dependent on features being enabled can be run.
   * GPT also utilizes the [Sidekiq Metrics](https://docs.gitlab.com/ee/api/sidekiq_metrics.html) API in certain cases to manage knock on effects of certain tests. Specifically it checks Sidekiq's job queue to ensure it has emptied before continuing as some tests can cause it to inflate significantly for a short period of time.
 * To ensure consistent test results the User should be new or have no data associated with it (i.e. no groups, projects, etc...)
@@ -46,7 +46,7 @@ To achieve consistent and comparable results GPT is designed primarily to be use
 
 All data will be generated under a group named `gpt` and split into 2 areas, Vertical and Horizontal:
 
-* Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Using Custom Large Projects](#using-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
+* Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment, e.g. Gitaly Sharded or Gitaly Cluster) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Using Custom Large Projects](#using-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
 * Horizontal: This area consists of a large number of subgroups that in turn have a large number of projects each. All of these subgroups are saved under the parent subgroup `gpt/many_groups_and_projects`
 
 To help visualize this here is a diagram of how the data looks:
@@ -89,7 +89,7 @@ Typically all that's needed to be done for this file is to copy one of the exist
     "config": {
       "latency": "0"
     },
-    "storage_nodes": ["default", "storage2"]
+    "storage_nodes": ["default"]
   },
   "gpt_data": {
     "root_group": "gpt",
@@ -116,7 +116,7 @@ Details for each of the settings are as follows. Some are also available to be c
   * `user` - The name of the user prepared as part of the [Creating a User](#creating-a-user) step.
   * `config`- Additional details about the environment that are used to adjust test results accordingly.
     * `latency` - The network latency (in ms) between where the Tool will be running and the environment. (Environment variable: `ENVIRONMENT_LATENCY`)
-  * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Node](https://docs.gitlab.com/ee/administration/gitaly/). If you have multiple nodes, you should list them in full to ensure that the test data is spread across all storage nodes evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
+  * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Shard](https://docs.gitlab.com/ee/administration/gitaly/) node or [Gitaly Cluster](https://docs.gitlab.com/ee/administration/gitaly/praefect.html). If you have multiple Gitaly Shards or Clusters, you should list them in full to ensure that the test data is spread across all storages evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
 * The test data for the GitLab Performance Tool(`gpt_data`). You should aim to have each of these details present here and in the target environment otherwise the specific tests that require them will be skipped automatically:
   * `root_group` - The name of the Root Group for all the GitLab Performance Tool test data. (Default: `gpt`).
   * `large_projects` - Contains information about the "vertical" data.
@@ -129,7 +129,7 @@ Details for each of the settings are as follows. Some are also available to be c
     * `projects` - Number of projects that each subgroup have. The number of the projects should be tuned to your environment's requirements.
     * `project_prefix` - Prefix that the projects use. (Default: `gpt-project-`).
 
-For a new environment the following settings will typically only need to be changed: `name`, `url`, `user` and `storage_nodes`. Environment config files typically should be saved to the `k6/config/environments` directory although you can save it elsewhere if desired.
+**For a new environment the following settings will typically only need to be changed: `name`, `url`, `user` and `storage_nodes`. Environment config files typically should be saved to the `k6/config/environments` directory although you can save it elsewhere if desired.**
 
 **Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/master/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
 
@@ -256,7 +256,7 @@ The Generator requires access by default to the internet to download required fi
 For environments that don't have internet access you'll need to download the default large project import file then in its path via the `--large-project-tarball` option. The file to use is dependent on your GitLab environment's version. To download the correct file select the link from below as instructed:
 
 * [For GitLab environments with versions `13.0.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz)
-* [For GitLab environments with versions lower than `13.0.0`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz)
+* [For GitLab environments with versions between `12.5.0` and `12.10.0`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz)
 
 With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
@@ -296,78 +296,43 @@ The tool's output will look like the following:
 
 ```txt
 GPT Data Generator v1.0.16 - opinionated test data for the GitLab Performance Tool
-The GPT Data Generator will inject the data into the specified group `gpt` on http://10k.testbed.gitlab.net. Note that this may take some time.
-Do you want to proceed? [Y/N]
-y
-
-Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
-
+Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
-
-For the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.
-
-While the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.
-The original setting will be restored after the the tool is finished.
-Do you want to proceed? [Y/N]
-y
 Creating group gpt/many_groups_and_projects
-Updating GitLab Application Repository Storage setting
-Updating application settings: {:repository_storages=>["default", "storage2"]}
 Creating 250 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
 ..........................................................................................................................................................................................................................................................
+Checking for existing projects under groups...
+............................................................................................................................................................................................
+..............................................................
 Creating 10 projects each under 250 subgroups with name prefix 'gpt-project-'
 ....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
-<-> Horizontal data: successfully generated!
-
-For the creation of `vertical` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of a large project in each Storage node specifically. As such, it will change this setting to point to each node as set in the `storage_nodes` option and then create the project sequentially.
-
-While the Generator is doing this any other projects created or imported during this time will also be confined to the currently active Storage node.
-The original setting will be restored after the the script is finished.
-Do you want to proceed? [Y/N]
-y
+<-> Horizontal data: successfully generated after 4 minutes 21 seconds!
 
 | Vertical data: importing large projects for GPT...
-Creating group gpt/large_projects
+Group gpt already exists
+Group gpt/large_projects already exists
 Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
-Updating GitLab Application Repository Storage setting
-Updating application settings: {:repository_storages=>"default"}
+Disabling Max Import Size limit on environment...
+Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
-Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
-
+Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
-{"id"=>1025, "description"=>nil, "name"=>"gitlabhq1", "name_with_namespace"=>"gpt / large_projects / gitlabhq1", "path"=>"gitlabhq1", "path_with_namespace"=>"gpt/large_projects/gitlabhq1", "created_at"=>"2020-05-26T20:08:49.943Z", "import_status"=>"scheduled", "correlation_id"=>"nKxTHXLIJr4", "failed_relations"=>[]}
 
-Project tarball has successfully uploaded and started to be imported with ID '1025'
-Waiting until Project '1025' has imported successfully............................................................................................................................................................................................................................................................................................................
-Project has successfully imported in 27 minutes 45 seconds:
+Project tarball has successfully uploaded and started to be imported with ID '2536'
+Waiting until Project '2536' has imported successfully................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+Project has successfully imported in 40 minutes 40 seconds:
 http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
+Validating project 'gpt/large_projects/gitlabhq1' imported successfully...
 
-Checking if project gitlabhq2 already exists in gpt/large_projects/gitlabhq2...
-Updating GitLab Application Repository Storage setting
-Updating application settings: {:repository_storages=>"storage2"}
-Starting import of Project 'gitlabhq2' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+| Vertical data: successfully generated after 40 minutes 55 seconds!
+█ GPT data generation finished after 49 minutes 16 seconds.
 
-Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.1.0-pre 59122560c7b
-
-Importing project gitlabhq1...
-Note that this may take some time to upload a file to the target environment.
-{"id"=>1026, "description"=>nil, "name"=>"gitlabhq2", "name_with_namespace"=>"gpt / large_projects / gitlabhq2", "path"=>"gitlabhq2", "path_with_namespace"=>"gpt/large_projects/gitlabhq2", "created_at"=>"2020-05-26T20:08:49.943Z", "import_status"=>"scheduled", "correlation_id"=>"nKAdHXLIJr3", "failed_relations"=>[]}
-
-Project tarball has successfully uploaded and started to be imported with ID '1026'
-Waiting until Project '1026' has imported successfully............................................................................................................................................................................................................................................................................................................
-Project has successfully imported in 22 minutes 45 seconds:
-http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq2
-
-| Vertical data: successfully generated!
-█ GPT data generation finished after 57 minutes 2 seconds.
-
-█ Logs: /results/generate-gpt-data_10k.testbed.gitlab.net_2020-05-26_174330.log
+█ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2021-01-14_132605.log
 ```
 
 #### Advanced Setup
@@ -550,12 +515,12 @@ Due to an [application bug](https://gitlab.com/gitlab-org/gitlab/-/issues/227408
 For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Generator essentially imports our test large project into each Gitaly (storage) node as configured. Due to the above bug if you need to test against the affected versions then this process will need to be done manually as follows:
 
 1. List all [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment under the `storage_nodes` setting in the [Environment Config file](#preparing-the-environment-file) following the documentation. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment. As an example, suppose we have 2 storage nodes `"storage_nodes": ["default", "storage2"]`.
-1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly node itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
+1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly Shard itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
 1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the correct GitLab FOSS Project Tarball specifying these options:
-    * Download the correct GitLab FOSS Project Tarball file. For GitLab environments running on `13.0.0` or higher [`gitlabhq_export_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz) should be used and for all other environments [`gitlabhq_export.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz)
+    * Download the correct GitLab FOSS Project Tarball file. For GitLab environments running on `13.0.0` or higher it's [`gitlabhq_export_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz) should be used. For GitLab environments running on versions between `12.5.0` and `12.10.0` it's [`gitlabhq_export.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz).
     * Select the `gpt/large_projects` group for "Project URL"
     * Enter project name in "Project slug" following this structure `<PROJECT NAME><STORAGE NODE SEQUENCE NUMBER>`. In our example it would be `gitlabhq1` for the `default` node and `gitlabhq2` for `storage2` node.
-1. After this has been completed for every Gitaly node listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
+1. After this has been completed for every Gitaly storage listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
     * To verify that vertical data was imported correctly head to **Admin Area > Overview > Projects**. Click on each imported project and ensure it has a correct `Gitaly storage name`. In our example `gitlabhq1` should be on `default` gitaly storage and `gitlabhq2` should be on `storage2`.
 
 ## Large Project repository storage is different than expected
