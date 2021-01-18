@@ -14,7 +14,7 @@ import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData
 export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(600)
+export let ttfbThreshold = getTtfbThreshold(1000)
 export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
