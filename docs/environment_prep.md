@@ -144,7 +144,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.16 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -295,7 +295,7 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.16 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
@@ -523,19 +523,60 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 1. After this has been completed for every Gitaly storage listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
     * To verify that vertical data was imported correctly head to **Admin Area > Overview > Projects**. Click on each imported project and ensure it has a correct `Gitaly storage name`. In our example `gitlabhq1` should be on `default` gitaly storage and `gitlabhq2` should be on `storage2`.
 
-## Large Project repository storage is different than expected
+## Group or Project is marked for deletion
 
-This error could occur due to the bug, [Repository Storages config can't be updated via application settings API](#repository-storages-config-cant-be-updated-via-application-settings-api), described above. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
+Depending on the target GitLab environment's tier and settings there may be a [delayed deletion function enabled](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) for Groups and \ or Projects. When this is the case they will not be deleted immediately and will do so after the configured period.
 
-## Large Project metadata validation failed
+The Generator will check for this when it's working through inserting or cleaning up data and call this out accordingly with appropriate advice depending on the context. If you're needing the data to be deleted quicker
+then it can be done manually via the [GitLab Admin Area](https://docs.gitlab.com/ee/user/admin_area/). This will also need to be done specifically if you're looking to clean up
+and then reinsert the data straight after (or as an alternative the group \ project name can be changed).
 
-This error could occur due to an Import issue. Known Import bugs at this moment:
+## Horizontal data generation timeout
 
-* [Merge Requests sometimes don't get imported as part of a Project Import](https://gitlab.com/gitlab-org/gitlab/-/issues/271596)
-* [Decompressed archive size validator does not return for a long time when Importing a project](https://gitlab.com/gitlab-org/gitlab/-/issues/238189)
-* [Full list of the open import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters)
+Groups and / or Projects can sometimes fail to be created due to response timeout from the target GitLab environment.
 
-Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node. After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
+GPT Data Generator uses [threads](https://ruby-doc.org/core-2.7.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
+
+If you're regularly seeing timeout errors increasing the connection timeout by setting the `GPT_POOL_TIMEOUT` environment variable in seconds may help. Another option could be to decrease the pool size via the  `GPT_POOL_SIZE` environment variable from the default value to 1 to disable running concurrent requests.
+
+## Large Project import issues
+
+The GPT Data generator uses the [GitLab Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) to import the large project tarball to the target GitLab environment. Typically if this import fails it's very likely due to an issue with the target GitLab environment or network and not an issue with the Generator.
+
+In this section we'll detail how to troubleshoot various common import failures. If the error you are seeing isn't covered in this section please contact [support]((https://about.gitlab.com/support/)) via the standard channels to investigate the environment issue.
+
+### Import looks to have hanged
+
+Import process time depends on the size of the project. With the standard GPT data the large project should only take around 40-60 minutes. If it takes more time than that debugging the problem depends on where the import process got stuck:
+
+* If it's stuck on `Uploading project tarball to the target environment Import API...` it means that the [`POST` request to Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) has taken too long. It could be caused by Location and Network issues:
+  * Please ensure you are running the GPT Data Generator [as close as possible physically to the target GitLab environment](#location-and-network-conditions).
+  * Outside of the above standard network checks should be undertaken between the box running GPT Data Generator and the target environment to ensure there's a good connection.
+* If it's stuck on `Waiting until Project '<X>' has imported successfully...` it means that the [`POST` request to Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) was successful and project import is in progress. If you navigate to the target environment, you should be able to see the project listed in GitLab as importing. As such, there may be a problem happening in the import process. To help debug if there is an issue:
+  * Explore the [Target GitLab environment's logs](https://docs.gitlab.com/ee/administration/logs.html) to see if there is a problem being reported. Import typically happens on the [Sidekiq](https://docs.gitlab.com/ee/administration/logs.html#sidekiq-logs) and [Gitaly](https://docs.gitlab.com/ee/administration/logs.html#gitaly-logs) nodes so these logs should be prioritised. If you find an error or if you need further help investigating the import failure please go through the available [support options](https://about.gitlab.com/support/).
+  * As an additional check you can try to import a project manually via [Import UI](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) to ensure that import is working directly on the target environment. If it works manually, please refer to [these instructions](#repository-storages-config-cant-be-updated-via-application-settings-api) to import large projects via UI.
+  * We have some smaller project tarballs that we use for these kind of debugging purposes that shouldn't take as long to complete importing. For GitLab versions between `12.8.0` and `12.10.0` there's [`small-project_12.8.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/small-project_12.8.0.tar.gz) and for GitLab versions `13.0.0` or higher there's [`small-project_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/small-project_13.0.0.tar.gz).
+
+### Import has failed
+
+An outright import failure very likely indicates there's an issue with the target GitLab environment (i.e. imports are generally failing in the environment no matter the method used). Debugging the failure depends on where the import process failed. GPT Data Generator will report the error it receives from the environment as follows:
+
+* `Project import request has failed with the following error` appears when the [`POST` request to Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) itself was unsuccessful. This is the first part of the import process where the tarball is uploaded and the import process started.
+* `Project has failed to import` means that the [`POST` request to Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) was successful and GitLab started to import the project, but the import process has failed after.
+
+Both issues are caused by the application problems with the target GitLab environment that need further investigation:
+
+* Explore the [Target GitLab environment's logs](https://docs.gitlab.com/ee/administration/logs.html) to see if there is a problem being reported. Import typically happens on the [Sidekiq](https://docs.gitlab.com/ee/administration/logs.html#sidekiq-logs) and [Gitaly](https://docs.gitlab.com/ee/administration/logs.html#gitaly-logs) nodes so these logs should be prioritised. If you find an error or if you need further help investigating the import failure please go through the available [support options](https://about.gitlab.com/support/).
+
+### Project metadata validation has failed
+
+GPT Data Generator will validate the project after to ensure it's imported fully. If there's an issue with the project Generator will report the problem accordingly.
+
+If for some reason the import has failed it may be due to a known import issue. A list of current [import issues can be found here](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters).
+
+Unfortunately when this happens the project will need to be reimported. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
+
+After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
 
 ```sh
 docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
@@ -557,19 +598,3 @@ Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project i
 ```
 
 If you still see a Large Project validation error at this point, please look through the known Import issues listed above and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
-
-## Group or Project is marked for deletion
-
-Depending on the target GitLab environment's tier and settings there may be a [delayed deletion function enabled](https://docs.gitlab.com/ee/user/admin_area/settings/visibility_and_access_controls.html#default-deletion-delay) for Groups and \ or Projects. When this is the case they will not be deleted immediately and will do so after the configured period.
-
-The Generator will check for this when it's working through inserting or cleaning up data and call this out accordingly with appropriate advice depending on the context. If you're needing the data to be deleted quicker
-then it can be done manually via the [GitLab Admin Area](https://docs.gitlab.com/ee/user/admin_area/). This will also need to be done specifically if you're looking to clean up
-and then reinsert the data straight after (or as an alternative the group \ project name can be changed).
-
-## Vertical data generation timeout
-
-Groups and / or Projects can sometimes fail to be created due to response timeout from the target GitLab environment.
-
-GPT Data Generator uses [threads](https://ruby-doc.org/core-2.7.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
-
-If you're regularly seeing timeout errors increasing the connection timeout by setting the `GPT_POOL_TIMEOUT` environment variable in seconds may help. Another option could be to decrease the pool size via the  `GPT_POOL_SIZE` environment variable from the default value to 1 to disable running concurrent requests.

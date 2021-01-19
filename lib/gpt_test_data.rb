@@ -275,7 +275,7 @@ class GPTTestData
         threads.each(&:join)
       end
     rescue Timeout::Error
-      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#vertical-data-generation-timeout"
+      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
 
     puts "\n"
@@ -321,7 +321,7 @@ class GPTTestData
     end
 
     unless storage == project['repository_storage']
-      storage_error = "- Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-repository-storage-is-different-than-expected."
+      storage_error = "- Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api."
       GPTLogger.logger.warn Rainbow(storage_error).yellow
       @large_projects_validation_errors[proj_path] << storage_error
     end
@@ -344,7 +344,7 @@ class GPTTestData
 
     return if existing_entity_count >= expected_count
 
-    error_message = "- Project metadata validation failed: #{entity} count '#{existing_entity_count}' should be '#{expected_count}' or higher as specified in the Project Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#large-project-metadata-validation-failed."
+    error_message = "- Project metadata validation failed: #{entity} count '#{existing_entity_count}' should be '#{expected_count}' or higher as specified in the Project Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#project-metadata-validation-has-failed."
     GPTLogger.logger.warn Rainbow(error_message).yellow
     @large_projects_validation_errors[project['path_with_namespace']] << error_message
   end
@@ -426,7 +426,7 @@ class GPTTestData
       end
 
     rescue Timeout::Error
-      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#vertical-data-generation-timeout"
+      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
     projects
   end
@@ -507,12 +507,12 @@ class GPTTestData
       begin
         retries ||= 0
         import_project.import_project(proj_tarball_file: proj_tarball_file, project_name: new_project_name, namespace: large_projects_group['full_path'], storage_name: gitaly_node, project_description: project_description, with_cleanup: false)
-      rescue GPTCommon::RequestError => e
+      rescue GPTCommon::RequestError, ImportProject::ProjectImportError => e
         # Sometimes when project was deleted and responses with 404, it's still being deleted in background
         # We need to wait and retry to import
         raise e unless e.message.include?("The project is still being deleted. Please try again later.")
 
-        GPTLogger.logger.warn(Rainbow("Project #{new_project_name} is still in the process of being deleted.\nRetrying in 5 seconds...").yellow)
+        GPTLogger.logger.warn(Rainbow("Project #{new_project_name} is still in the process of being deleted.\nRetrying in 5 seconds...\n").yellow)
         retries += 1
         raise e if retries > @max_wait_for_delete
 
