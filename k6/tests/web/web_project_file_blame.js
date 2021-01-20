@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blame/master/:file_path`
 @description: Web - Project File Blame Page. <br>Controllers: `Projects::BlameController#show`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/220950, https://gitlab.com/gitlab-org/gitlab/-/issues/225174
 @flags: dash_url
 */

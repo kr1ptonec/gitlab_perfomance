@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid`
 @description: [Get information about a single merge request](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

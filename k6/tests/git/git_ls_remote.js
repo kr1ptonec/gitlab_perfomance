@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project.git/info/refs?service=git-upload-pack`
 @description: Git Refs List via HTTPS. <br>Controllers: `Repositories::GitHttpController#info_refs`</br>
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

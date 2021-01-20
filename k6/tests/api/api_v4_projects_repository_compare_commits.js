@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/compare?from=commit_sha1&to=commit_sha2`
 @description: [Compare commits](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/297497
 */
 

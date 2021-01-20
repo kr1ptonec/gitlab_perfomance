@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/variables`
 @description: Setup stage: Create group, project and multiple project variables <br>Test: [List project variables](https://docs.gitlab.com/ee/api/project_level_variables.html#list-project-variables) <br>Teardown stage: Delete group
+@gpt_data_version: 1
 @flags: unsafe
 */
 

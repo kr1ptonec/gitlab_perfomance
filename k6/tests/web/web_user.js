@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:user`
 @description: Web - User Page <br>Controllers: `UsersController#show`,`UsersController#calendar.json`</br>
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

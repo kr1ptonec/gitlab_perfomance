@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/languages`
 @description: [Get languages used in a project with percentage value](https://docs.gitlab.com/ee/api/projects.html#languages)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs`
 @description: Web - Project Merge Request Changes Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::DiffsController#diffs_metadata.json`, `Projects::MergeRequests::DiffsController#diffs_batch.json`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229164
 @gitlab_version: 12.8.0
 @flags: dash_url

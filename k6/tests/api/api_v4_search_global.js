@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /search?scope=*`
 @description: [Global Search API](https://docs.gitlab.com/ee/api/search.html#global-search-api)
+@gpt_data_version: 1
 @gitlab_settings: { "elasticsearch_indexing": true, "elasticsearch_search": true }
 @flags: search
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229627

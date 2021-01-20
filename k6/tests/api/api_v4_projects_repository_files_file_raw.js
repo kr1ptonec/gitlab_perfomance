@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/files/:file_path/raw?ref=master`
 @description: [Get raw file from repository](https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

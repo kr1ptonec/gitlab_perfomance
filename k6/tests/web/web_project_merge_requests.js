@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/merge_requests`
 @description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
+@gpt_data_version: 1
 @flags: dash_url
 */
 

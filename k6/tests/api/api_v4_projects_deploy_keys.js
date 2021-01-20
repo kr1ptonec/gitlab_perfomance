@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/deploy_keys`
 @description: [Get a list of a project’s deploy keys](https://docs.gitlab.com/ee/api/deploy_keys.html#list-project-deploy-keys)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

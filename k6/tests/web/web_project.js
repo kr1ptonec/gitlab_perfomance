@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project`
 @description: Web - Project Page. <br>Controllers: `ProjectsController#show`, `Projects::BlobController#show`</br>
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

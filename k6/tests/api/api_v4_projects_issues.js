@@ -3,6 +3,7 @@
 @endpoint: `GET /projects/:id/issues`
 @description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

@@ -314,7 +314,7 @@ class GPTTestData
     version = project_metadata['version']
     unless project['description']&.match?(/^Version: #{version}/)
       project_version = project['description']&.match(/Version: (.*)/)
-      version_prompt_message = project_version.nil? ? "version can't be determined." : "is a different version (#{version}) than configured (#{project_version[1]})."
+      version_prompt_message = project_version.nil? ? "version can't be determined." : "has a different version (#{project_version[1]}) than required (#{version})."
       version_error = "- Project #{version_prompt_message}"
       GPTLogger.logger.warn Rainbow(version_error).yellow
       @large_projects_validation_errors[proj_path] << version_error
@@ -468,7 +468,7 @@ class GPTTestData
   #  Vertical
 
   def select_default_large_project_tarball
-    @gitlab_version >= Semantic::Version.new('13.0.0') ? 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' : 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export.tar.gz'
+    @gitlab_version >= Semantic::Version.new('13.0.0') ? 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' : 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz'
   end
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)

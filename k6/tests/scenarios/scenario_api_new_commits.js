@@ -2,6 +2,7 @@
 /*
 @endpoint: `POST /projects/:id/repository/commits`
 @description: Setup stage: Create group and project <br>Test: [Create a commit with multiple files and actions](https://docs.gitlab.com/ee/api/commits.html#create-a-commit-with-multiple-files-and-actions) <br>Teardown stage: Delete group
+@gpt_data_version: 1
 @flags: unsafe
 */
 

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha`
 @description: [Get a specific commit identified by the commit hash](https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

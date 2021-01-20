@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/files/:file_path/blame`
 @description: [Get blame information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-blame-from-repository)
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217570
 */
 

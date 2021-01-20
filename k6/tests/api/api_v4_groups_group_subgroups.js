@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /groups/:id/subgroups`
 @description: [List a group’s subgroups](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-subgroups)
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211504
 */
 

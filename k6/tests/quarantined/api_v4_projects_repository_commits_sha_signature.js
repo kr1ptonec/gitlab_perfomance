@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha/signature`
 @description: [Get GPG signature of a commit](https://docs.gitlab.com/ee/api/commits.html#get-gpg-signature-of-a-commit)
+@gpt_data_version: 1
 @gitlab_version: 11.9.0
 @issue: https://gitlab.com/gitlab-org/quality/performance/-/issues/233
 */

@@ -2,6 +2,7 @@
 /*
 @endpoint: `POST /projects/:id/issues`
 @description: Setup stage: Create group and project <br>Test: [Creates a new project issue](https://docs.gitlab.com/ee/api/issues.html#new-issue) <br>Teardown stage: Delete group
+@gpt_data_version: 1
 @flags: unsafe
 */
 

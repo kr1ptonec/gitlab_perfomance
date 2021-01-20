@@ -37,6 +37,7 @@ module TestInfo
       info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
       info[:flags] = get_test_tag_value(test_file, 'flags')
       info[:gitlab_settings] = get_test_tag_value(test_file, 'gitlab_settings')
+      info[:gpt_data_version] = get_test_tag_value(test_file, 'gpt_data_version')
 
       info_list << info
     end
@@ -88,6 +89,23 @@ module TestInfo
         warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by target GitLab environment due to required environment setting '#{setting}' not being set to '#{value}'. Skipping...").yellow
         return false
       end
+    end
+
+    true
+  end
+
+  def test_supported_by_gpt_data?(test_file, gpt_data_version)
+    test_required_gpt_data = get_test_tag_value(test_file, 'gpt_data_version')
+    return false if test_required_gpt_data.nil? || test_required_gpt_data.empty?
+
+    if test_required_gpt_data && gpt_data_version == '-'
+      warn Rainbow("GPT test data version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GPT test data version '#{test_required_gpt_data}' and up. Check that the test data was setup correctly using the GPT Data Generator. Skipping...").yellow
+      return false
+    end
+
+    if test_required_gpt_data > gpt_data_version
+      warn Rainbow("Test '#{File.basename(test_file)}' isn't supported by GPT test data version '#{gpt_data_version}' on the target GitLab environment. Requires '#{test_required_gpt_data}' and up. Please update test data using the latest GPT Data Generator. Skipping...").yellow
+      return false
     end
 
     true

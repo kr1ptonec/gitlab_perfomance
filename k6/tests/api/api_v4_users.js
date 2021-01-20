@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /users`
 @description: [List users](https://docs.gitlab.com/ee/api/users.html#list-users)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

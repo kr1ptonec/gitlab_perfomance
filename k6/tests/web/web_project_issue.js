@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/issues/:issue_iid`
 @description: Web - Project Issue Page. <br>Controllers: `Projects::IssuesController#show`, `Projects::IssuesController#discussions`, `Projects::IssuesController#related_branches`, `Projects::IssuesController#can_create_branch` </br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211377
 @flags: dash_url
 */

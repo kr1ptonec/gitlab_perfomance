@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id`
 @description: [Get single project](https://docs.gitlab.com/ee/api/projects.html#get-single-project)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

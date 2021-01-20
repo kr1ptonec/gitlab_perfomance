@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project.git/info/refs?service=git-receive-pack` <br> `POST /:group/:project.git/git-receive-pack` </br>
 @description: Git push commit(s) via HTTPS. <br> Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md
+@gpt_data_version: 1
 @flags: unsafe
 */
 

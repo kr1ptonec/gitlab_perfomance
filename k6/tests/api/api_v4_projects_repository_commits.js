@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/commits`
 @description: [Get a list of repository commits in a project](https://docs.gitlab.com/ee/api/commits.html#list-repository-commits)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

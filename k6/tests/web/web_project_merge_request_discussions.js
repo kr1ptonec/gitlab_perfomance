@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid`
 @description: Web - Project Merge Request Discussions Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::ContentController#widget.json`, `Projects::MergeRequestsController#discussions.json`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209784
 @gitlab_version: 12.2.0
 @flags: dash_url
