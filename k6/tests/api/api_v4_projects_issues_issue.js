@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/issues/:issue_iid`
 @description: [Get a single project issue](https://docs.gitlab.com/ee/api/issues.html#single-issue)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

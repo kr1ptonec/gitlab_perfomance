@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/commits/:branch`
 @description: Web - Project Commits Page. <br>Controllers: `CommitsController#show`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211709
 */
 

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project.git/info/refs?service=git-upload-pack` <br> `POST /:group/:project.git/git-upload-pack` </br>
 @description: Git Pull via HTTPS to pull from master having another branch locally. <br> Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_pull.md
+@gpt_data_version: 1
 */
 
 import { group } from "k6";

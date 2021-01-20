@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path`
 @description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/247878
 */
 

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha/diff`
 @description: [Get the diff of a commit in a project](https://docs.gitlab.com/ee/api/commits.html#get-the-diff-of-a-commit)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:search?group_id=:id`
 @description: Web - Group Search <br>Controllers: `SearchController#show`,`SearchController#count`</br>
+@gpt_data_version: 1
 @gitlab_settings: { "elasticsearch_indexing": true, "elasticsearch_search": true }
 @flags: search
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/254966

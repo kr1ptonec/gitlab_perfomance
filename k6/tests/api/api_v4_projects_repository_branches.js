@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches`
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

@@ -2,6 +2,7 @@
 /*
 @endpoint: `POST /groups/:id/variables`
 @description: Setup stage: Create group <br>Test: [Creates a new group variable](https://docs.gitlab.com/ee/api/group_level_variables.html#create-variable) <br>Teardown stage: Delete group
+@gpt_data_version: 1
 @flags: unsafe
 */
 

@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/pipelines`
 @description: [List project pipelines](https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

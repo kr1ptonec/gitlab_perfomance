@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /groups`
 @description: [List groups](https://docs.gitlab.com/ee/api/groups.html#list-groups)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

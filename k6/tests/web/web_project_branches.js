@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group/:project/branches`
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211710
 @flags: dash_url
 */

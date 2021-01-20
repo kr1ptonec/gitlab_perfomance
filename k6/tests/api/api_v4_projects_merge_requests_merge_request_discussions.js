@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/discussions`
 @description: [Gets a list of all discussion items for a single merge request](https://docs.gitlab.com/ee/api/discussions.html#list-project-merge-request-discussion-items)
+@gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/221071
 */
 

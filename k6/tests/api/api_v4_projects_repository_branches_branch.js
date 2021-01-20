@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches/:branch`
 @description: [Get a single project repository branch](https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch)
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

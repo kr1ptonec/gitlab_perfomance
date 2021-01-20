@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /:group`
 @description: Web - Group Page. <br>Controllers: `GroupsController#show`, `Groups::ChildrenController#index`</br>
+@gpt_data_version: 1
 */
 
 import http from "k6/http";

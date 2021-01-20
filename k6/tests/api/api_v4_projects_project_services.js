@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/services`
 @description: [List project services](https://docs.gitlab.com/ee/api/services.html#list-all-available-services)
+@gpt_data_version: 1
 @gitlab_version: 12.7.0
 */
 

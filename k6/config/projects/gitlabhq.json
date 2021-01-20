@@ -1,7 +1,7 @@
 {
   "name": "gitlabhq",
   "metadata": {
-    "version": 1,
+    "version": 2,
     "merge_request_count": 3609,
     "issue_count": 6722,
     "pipelines_count": 11
