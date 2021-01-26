@@ -78,7 +78,8 @@ module RunK6
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.99'
     env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '500'
 
-    env_vars['GIT_ENDPOINT_THROUGHPUT'] = ENV['GIT_ENDPOINT_THROUGHPUT'].dup || '0.1'
+    env_vars['GIT_PULL_ENDPOINT_THROUGHPUT'] = ENV['GIT_PULL_ENDPOINT_THROUGHPUT'].dup || '0.1'
+    env_vars['GIT_PUSH_ENDPOINT_THROUGHPUT'] = ENV['GIT_PUSH_ENDPOINT_THROUGHPUT'].dup || '0.02'
     env_vars['WEB_ENDPOINT_THROUGHPUT'] = ENV['WEB_ENDPOINT_THROUGHPUT'].dup || '0.1'
     env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.01'
 
@@ -100,7 +101,7 @@ module RunK6
     GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, test_excludes: [], quarantined:, scenarios:, unsafe:, env_vars: {})
+  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, test_excludes: [], env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
