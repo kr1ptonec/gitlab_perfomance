@@ -69,6 +69,9 @@ export function getRefsListGitPush(authEnvUrl, project) {
       "Accept": "*/*",
       "Accept-Encoding": "deflate, gzip",
       "Pragma": "no-cache"
+    },
+    tags: {
+      endpoint: 'get-refs-git-receive-pack'
     }
   };
   let response = http.get(`${authEnvUrl}/${project['group_path_web']}/${project['name']}.git/info/refs?service=git-receive-pack`, params);
@@ -81,6 +84,9 @@ export function pushRefsData(authEnvUrl, project) {
     headers: {
       "Accept": "application/x-git-receive-pack-result",
       "Content-Type": "application/x-git-receive-pack-request"
+    },
+    tags: {
+      endpoint: 'post-git-receive-pack'
     }
   };
   let responses = http.batch([

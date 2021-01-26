@@ -10,9 +10,9 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPull, pullRefsData, getRefSHAs } from "../../lib/gpt_git_functions.js";
 
-export let gitProtoRps = adjustRps(__ENV.GIT_ENDPOINT_THROUGHPUT)
-export let gitProtoStages = adjustStageVUs(__ENV.GIT_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.GIT_ENDPOINT_THROUGHPUT)
+export let gitProtoRps = adjustRps(__ENV.GIT_PULL_ENDPOINT_THROUGHPUT)
+export let gitProtoStages = adjustStageVUs(__ENV.GIT_PULL_ENDPOINT_THROUGHPUT)
+export let rpsThresholds = getRpsThresholds(__ENV.GIT_PULL_ENDPOINT_THROUGHPUT)
 export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
