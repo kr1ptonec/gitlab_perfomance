@@ -12,6 +12,7 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
+import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let scopes = ['projects', 'issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs', 'notes']
 
@@ -19,7 +20,7 @@ export let endpointCount = scopes.length * 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(2000)
+export let ttfbThreshold = getTtfbThreshold(3000)
 export let successRate = new Rate("successful_requests")
 
 export let scopes_thresholds = {
@@ -55,10 +56,12 @@ export default function() {
     let project = selectRandom(projects);
 
     scopes.forEach(scope => {
-      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&search=${project['search'][scope]}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}, redirects: 0});
+      let searchTerm = (scope == 'milestones') ? getRandomSearchTerm(project['search']['milestones'],1) : (scope == 'users') ? getRandomSearchTerm(project['search']['users'],1) : getRandomSearchTerm(project['search'][scope],3);
+
+      let res = http.get(`${__ENV.ENVIRONMENT_URL}/search?scope=${scope}&search=${searchTerm}`, {tags: {endpoint: scope, controller: 'SearchController', action: 'show'}, redirects: 0});
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
 
-      let counts_res = http.batch(scopes.map(count_scope => ["GET", `${__ENV.ENVIRONMENT_URL}/search/count?scope=${count_scope}&project_id=${project['id']}&search=${project['search'][scope]}`, null, { tags: { endpoint: `${count_scope}_count`, controller: 'SearchController', action: 'count' }, redirects: 0 }]));
+      let counts_res = http.batch(scopes.map(count_scope => ["GET", `${__ENV.ENVIRONMENT_URL}/search/count?scope=${count_scope}&project_id=${project['id']}&search=${searchTerm}`, null, { tags: { endpoint: `${count_scope}_count`, controller: 'SearchController', action: 'count' }, redirects: 0 }]));
       counts_res.forEach(res => {
         /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
       });

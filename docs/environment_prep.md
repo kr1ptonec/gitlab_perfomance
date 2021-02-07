@@ -390,14 +390,14 @@ First you will need to create the [Project Config File](..k6/config/projects). T
   "mr_commits_iid": "10495",
   "mr_discussions_iid": "6958",
   "search": {
-    "projects": "gitlab",
-    "issues": "gitlab",
-    "commits": "fix",
-    "merge_requests": "the",
-    "milestones": "2.6",
-    "blobs": "test",
-    "users": "root",
-    "notes": "test"
+    "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],
+    "issues": ["gitlab", "bot", "push", "repo", "error", "database", "issue"],
+    "commits": ["fix", "add", "gitlab", "update", "remove", "test", "project"],
+    "merge_requests": ["the", "test", "gitlab", "project", "merge", "user", "login"],
+    "milestones": ["2.6","3.1", "4.0", "5.2", "6.0", "7.12", "8.0"],
+    "blobs": ["test", "the", "and", "gitlab", "for", "while", "add"],
+    "users": ["root", "test", "john", "doe", "jane", "gitlab", "bot"],
+    "notes": ["test", "gitlab", "the", "and", "merge", "user", "issue"]
   },
   "issue_iid": "4218"
 }
@@ -426,13 +426,13 @@ Details for each of the settings are as follows. You should aim to have each of 
   * `branch_name` - Existing branch name.
 * `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `mr_discussions_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of discussions / comments. The size of the MR discussions should be tuned to your environment's requirements.
-* `search` - A list of search terms to used against [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (this needs to be configured on the environment specifically). Each item is what term to search with for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time.
-  * `projects` - [Projects Scope](https://docs.gitlab.com/ee/api/search.html#scope-projects) search term.
-  * `issues` - [Issues Scope](https://docs.gitlab.com/ee/api/search.html#scope-issues) search term.
-  * `commits` - [Commits Scope](https://docs.gitlab.com/ee/api/search.html#scope-commits-starter) search term.
-  * `merge_requests` - [Merge Requests Scope](https://docs.gitlab.com/ee/api/search.html#scope-merge_requests) search term.
-  * `milestones` - [Milestones Scope](https://docs.gitlab.com/ee/api/search.html#scope-milestones) search term.
-  * `users` - [Users Scope](https://docs.gitlab.com/ee/api/search.html#scope-users) search term.
+* `search` - A list of search terms to used against [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (this needs to be configured on the environment specifically). Each item is an array of seach words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
+  * `projects` - [Projects Scope](https://docs.gitlab.com/ee/api/search.html#scope-projects) search term array.
+  * `issues` - [Issues Scope](https://docs.gitlab.com/ee/api/search.html#scope-issues) search term array.
+  * `commits` - [Commits Scope](https://docs.gitlab.com/ee/api/search.html#scope-commits-starter) search term array.
+  * `merge_requests` - [Merge Requests Scope](https://docs.gitlab.com/ee/api/search.html#scope-merge_requests) search term array.
+  * `milestones` - [Milestones Scope](https://docs.gitlab.com/ee/api/search.html#scope-milestones) search term array.
+  * `users` - [Users Scope](https://docs.gitlab.com/ee/api/search.html#scope-users) search term array.
 * `issue_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of an issue available in the project that has a large number of discussions / comments. The size of the issue discussions should be tuned to your environment's requirements.
 
 Project config files typically should be saved to the `k6/config/projects` directory although you can save it elsewhere if desired. When the Project Config file is in place, you'll then need to specify its name (or file path) in the `large_project` setting of your [Environment Config file](#preparing-the-environment-file).
