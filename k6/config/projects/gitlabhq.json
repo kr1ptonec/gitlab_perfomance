@@ -23,14 +23,14 @@
   "mr_commits_iid": "10495",
   "mr_discussions_iid": "6958",
   "search": {
-    "projects": "gitlab",
-    "issues": "gitlab",
-    "commits": "fix",
-    "merge_requests": "the",
-    "milestones": "2.6",
-    "blobs": "test",
-    "users": "root",
-    "notes": "test"
+    "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],
+    "issues": ["gitlab", "bot", "push", "repo", "error", "database", "issue"],
+    "commits": ["fix", "add", "gitlab", "update", "remove", "test", "project"],
+    "merge_requests": ["the", "test", "gitlab", "project", "merge", "user", "login"],
+    "milestones": ["2.6","3.1", "4.0", "5.2", "6.0", "7.12", "8.0"],
+    "blobs": ["test", "the", "and", "gitlab", "for", "while", "add"],
+    "users": ["root", "test", "john", "doe", "jane", "gitlab", "bot"],
+    "notes": ["test", "gitlab", "the", "and", "merge", "user", "issue"]
   },
   "issue_iid": "4218"
 }
