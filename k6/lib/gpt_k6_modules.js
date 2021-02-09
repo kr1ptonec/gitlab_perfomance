@@ -1,7 +1,9 @@
-/*global __ENV : true  */
+/*global __ENV, __VU : true  */
 import { fail } from "k6";
 
 export function logError(res) {
+  // Only log errors for the first 5 VUs to prevent spam
+  if (__VU > 5) return;
   if ( typeof logError.last == 'undefined' ) logError.last = '';
 
   let error;
