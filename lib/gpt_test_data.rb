@@ -17,9 +17,8 @@ class GPTTestData
   ProjectCheckError = Class.new(StandardError)
   GroupCheckError = Class.new(StandardError)
 
-  def initialize(gpt_data_version:, force:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:, skip_project_validation:)
+  def initialize(gpt_data_version:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:, skip_project_validation:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
-    @force = force
     @unattended = unattended
     @skip_project_validation = skip_project_validation
     @env_url = env_url.chomp('/')
@@ -493,7 +492,7 @@ class GPTTestData
         end
 
         prompt_message = "\nLarge project #{existing_project['path_with_namespace']} already exists on environment but with invalid data."
-        GPTCommon.show_warning_prompt("#{prompt_message}\nThe Generator will replace this project.") unless @force
+        GPTCommon.show_warning_prompt("#{prompt_message}\nThe Generator will replace this project.") unless @unattended
 
         disable_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
         delete_project(project: existing_project)
