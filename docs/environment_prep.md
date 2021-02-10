@@ -165,8 +165,8 @@ Options:
   --large-project-name=<s>         Name for large project to import.
   --large-project-tarball=<s>      Location of custom large project tarball to import. Can be local or remote.
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
-  -f, --force                      Force the data generation ignoring the existing data
-  -u, --unattended                 Skip the data injection warning
+  -u, --unattended                 Skip all user prompts and run through generation automatically.
+  -f, --force                      Alternative flag for unattended. Skip all user prompts and run through generation automatically.
   -c, --clean-up                   Clean up GPT data
   -k, --skip-project-validation    Skip large project metadata validation
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
