@@ -141,6 +141,7 @@ begin
 
         GPTLogger.logger.warn(Rainbow("\n• Project '#{project}' validation errors:").underline.red)
         errors.each { |error| GPTLogger.logger.warn(error) }
+        exit 1
       end
     end
   end
@@ -149,9 +150,10 @@ begin
   GPTLogger.logger.info Rainbow("█ GPT data generation finished after #{run_time}.").green
 rescue Interrupt
   GPTLogger.logger.warn Rainbow("Caught the interrupt. Stopping.").yellow
-  exit
+  exit 130
 rescue StandardError, HTTP::Error => e
   GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n#{e.exception}\n Traceback:#{e.backtrace}").red
+  exit 1
 ensure
 
   unless gpt_test_data.nil?
