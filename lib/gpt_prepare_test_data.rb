@@ -14,9 +14,9 @@ module GPTPrepareTestData
     Array.new(large_projects_count) do |i|
       project = {
         'name' => "#{large_projects_data['name']}#{i + 1}",
-        'group_path_api' => large_projects_group,
-        'group_path_web' => CGI.unescape(large_projects_group),
-        'encoded_path' => "#{large_projects_group}%2F#{large_projects_data['name']}#{i + 1}"
+        'encoded_group_path' => large_projects_group,
+        'encoded_path' => "#{large_projects_group}%2F#{large_projects_data['name']}#{i + 1}",
+        'unencoded_path' => "#{CGI.unescape(large_projects_group)}/#{large_projects_data['name']}#{i + 1}"
       }
       large_projects_data.merge(project)
     end.to_json
@@ -24,18 +24,18 @@ module GPTPrepareTestData
 
   def prepare_horizontal_json_data(env_file_vars:)
     many_gr_and_proj = env_file_vars['gpt_data']['many_groups_and_projects']
-    many_gr_and_proj_group_path_api = "#{env_file_vars['gpt_data']['root_group']}%2F#{many_gr_and_proj['group']}"
-    many_gr_and_proj_group_path_web = "#{env_file_vars['gpt_data']['root_group']}/#{many_gr_and_proj['group']}"
+    many_gr_and_proj_encoded_group_path = "#{env_file_vars['gpt_data']['root_group']}%2F#{many_gr_and_proj['group']}"
+    many_gr_and_proj_unencoded_group_path = "#{env_file_vars['gpt_data']['root_group']}/#{many_gr_and_proj['group']}"
     required_keys = %w[group subgroups subgroup_prefix projects project_prefix]
 
     return {}.to_json unless required_keys.all? { |required_key| many_gr_and_proj.key?(required_key) }
 
-    subgroups_path_api = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj_group_path_api}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
+    encoded_subgroups_path = 1.upto(many_gr_and_proj['subgroups']).map do |i|
+      "#{many_gr_and_proj_encoded_group_path}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
     end
 
     subgroups_path_web = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj_group_path_web}/#{many_gr_and_proj['subgroup_prefix']}#{i}"
+      "#{many_gr_and_proj_unencoded_group_path}/#{many_gr_and_proj['subgroup_prefix']}#{i}"
     end
 
     # N projects in each subgroup
@@ -44,9 +44,9 @@ module GPTPrepareTestData
     end
 
     {
-      'group_path_api' => many_gr_and_proj_group_path_api,
-      'group_path_web' => many_gr_and_proj_group_path_web,
-      'subgroups_path_api' => subgroups_path_api,
+      'encoded_group_path' => many_gr_and_proj_encoded_group_path,
+      'unencoded_group_path' => many_gr_and_proj_unencoded_group_path,
+      'encoded_subgroups_path' => encoded_subgroups_path,
       'subgroups_path_web' => subgroups_path_web,
       'projects' => projects
     }.to_json

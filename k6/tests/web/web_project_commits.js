@@ -28,7 +28,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web']);
+export let projects = getLargeProjects(['name', 'unencoded_path']);
 
 export function setup() {
   console.log('')
@@ -43,7 +43,7 @@ export default function() {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/commits/master`, null, {tags: {endpoint: 'commits', controller: 'Projects::CommitsController', action: 'show'}, redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/commits/master`, null, {tags: {endpoint: 'commits', controller: 'Projects::CommitsController', action: 'show'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

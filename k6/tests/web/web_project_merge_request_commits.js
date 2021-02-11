@@ -32,7 +32,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web']);
+export let projects = getLargeProjects(['name', 'unencoded_path']);
 
 export function setup() {
   console.log('')
@@ -44,7 +44,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, 'merge_requests')
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'merge_requests')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
@@ -54,8 +54,8 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'commits', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}, redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'commits', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

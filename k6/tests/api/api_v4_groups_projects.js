@@ -22,7 +22,7 @@ export let options = {
   }
 };
 
-export let subgroups = getManyGroupsOrProjects(['subgroups_path_api']);
+export let subgroups = getManyGroupsOrProjects(['encoded_subgroups_path']);
 
 export function setup() {
   console.log('')

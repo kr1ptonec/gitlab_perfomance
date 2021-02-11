@@ -28,7 +28,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web', 'file_blame_path']);
+export let projects = getLargeProjects(['name', 'unencoded_path', 'file_blame_path']);
 
 export function setup() {
   console.log('')
@@ -39,7 +39,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `blame/master/${checkProject['file_blame_path']}`)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, `blame/master/${checkProject['file_blame_path']}`)
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
@@ -48,7 +48,7 @@ export default function(data) {
   group("Web - Project File Blame Page", function() {
     let project = selectRandom(projects);
     let params = { tags: { endpoint: 'blame', controller: 'Projects::BlameController', action: 'show' }, responseType: 'none', redirects: 0 };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

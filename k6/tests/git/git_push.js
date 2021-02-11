@@ -92,7 +92,7 @@ export function teardown() {
         "Content-Type": "application/x-git-receive-pack-request"
       }
     };
-    http.post(`${authEnvUrl}/${project['group_path_web']}/${project['name']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
+    http.post(`${authEnvUrl}/${project['unencoded_path']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
     // Reenable Pipelines in the Project
     updateProjectPipelinesSetting(project, true);
   });

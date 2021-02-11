@@ -34,7 +34,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web', 'commit_sha']);
+export let projects = getLargeProjects(['name', 'unencoded_path', 'commit_sha']);
 
 export function setup() {
   console.log('')
@@ -45,7 +45,7 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['group_path_web']}/${checkProject['name']}`, `commit/${checkProject['commit_sha']}`)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, `commit/${checkProject['commit_sha']}`)
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
@@ -54,9 +54,9 @@ export default function(data) {
   group("Web - Commit Details Page", function() {
     let project = selectRandom(projects);
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}`, null, { tags: { endpoint: 'commit', controller: 'Projects::CommitController', action: 'show' }, responseType: 'none', redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/branches`, null, { tags: { endpoint: 'branches', controller: 'Projects::CommitController', action: 'branches' }, responseType: 'none', redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/${data.endpointPath}/merge_requests.json`, null, { tags: { endpoint: 'merge_requests.json', controller: 'Projects::CommitController', action: 'merge_requests.json' }, responseType: 'none', redirects: 0 }]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}`, null, { tags: { endpoint: 'commit', controller: 'Projects::CommitController', action: 'show' }, responseType: 'none', redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/branches`, null, { tags: { endpoint: 'branches', controller: 'Projects::CommitController', action: 'branches' }, responseType: 'none', redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/merge_requests.json`, null, { tags: { endpoint: 'merge_requests.json', controller: 'Projects::CommitController', action: 'merge_requests.json' }, responseType: 'none', redirects: 0 }]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
