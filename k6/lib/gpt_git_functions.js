@@ -53,7 +53,7 @@ export function getRefSHAs(project) {
 
 export function getLargeBranchName(project) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}`, params);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/merge_requests/${project['mr_commits_iid']}`, params);
   let branchName = JSON.parse(res.body)['target_branch'];
   branchName ? console.debug(`Branch with a lot of commits: ${branchName}`) : fail("Branch not found");
   return branchName;
@@ -98,7 +98,7 @@ export function pushRefsData(authEnvUrl, project) {
 
 export function checkCommitExists(project, commit_sha) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/repository/commits/${commit_sha}`, params);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/repository/commits/${commit_sha}`, params);
   /20(0|1)/.test(res.status) ? console.log(`Commit #${commit_sha} exists`) : (logError(res), fail(`Commit #${commit_sha} does not exist or user doesn't have developer access to the project. Failing the git push test. ⚠️ Please refer to documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md`));
 }
 
@@ -128,7 +128,7 @@ export function updateProjectPipelinesSetting(project, state) {
     formdata = { jobs_enabled: state }
   }
 
-  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}`, formdata, params);
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}`, formdata, params);
   /20(0|1)/.test(res.status) ? console.log(`Project Pipelines setting changed to ${state}`) : (logError(res), fail(`Error occured when attempting to change Project Pipelines setting.`));
 }
 

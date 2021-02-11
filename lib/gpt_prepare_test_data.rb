@@ -15,7 +15,8 @@ module GPTPrepareTestData
       project = {
         'name' => "#{large_projects_data['name']}#{i + 1}",
         'group_path_api' => large_projects_group,
-        'group_path_web' => CGI.unescape(large_projects_group)
+        'group_path_web' => CGI.unescape(large_projects_group),
+        'encoded_path' => "#{large_projects_group}%2F#{large_projects_data['name']}#{i + 1}"
       }
       large_projects_data.merge(project)
     end.to_json

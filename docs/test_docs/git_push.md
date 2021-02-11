@@ -95,7 +95,7 @@ If we want to test git push for new branch `new_unique_branch_name`:
 
 #### How does it work
 
-Packfile that is being sent to `receive-pack` has a similar [structure](https://git-scm.com/docs/pack-protocol/2.6.0#_reference_update_request_and_packfile_transfer):
+Packfile that is being sent to `receive-pack` has a similar [structure](https://git-scm.com/docs/pack-protocol#_reference_update_request_and_packfile_transfer):
 ```
 len(pkt-line)+ oldhead(0 means a new one) + newhead(existing_commit_sha) + packProtocolCapabilities + pktFlushStr + PACK + git binary data
 ```
@@ -104,13 +104,13 @@ The beginning of the request body(in case of "Git push new branch from the exist
 ```
 009b0000000000000000000000000000000000000000 d3016d86a9c0855d94e2da53b9512974a7795b8f refs/heads/git-pushtest report-status side-band-64k agent=git/2.22.00000
 ```
-* `009b` - [pkt-line](https://git-scm.com/docs/pack-protocol/2.6.0#_pkt_line_format) length(hex value)
+* `009b` - [pkt-line](https://git-scm.com/docs/pack-protocol#_pkt_line_format) length(hex value)
 * `0000000000000000000000000000000000000000` - The current head commit SHA. 0 means that there was no old head commit and we want to create a new branch. In "Git push commits to the existing branch" there will be a current head SHA of the branch.
 * `d3016d86a9c0855d94e2da53b9512974a7795b8f` - The new head commit SHA that will be set for the specified branch.
 * `refs/heads/git-pushtest` - Branch name
 * `report-status side-band-64k agent=git/2.22.0` - [Pack protocol capabilities](https://git-scm.com/docs/protocol-capabilities/2.22.2)
 
-The information above should be combined with binary data. A packfile [MUST be sent](https://git-scm.com/docs/pack-protocol/2.6.0#_reference_update_request_and_packfile_transfer) if either create or update command is used, even if the server already has all the necessary objects. Since we're using existing commits, we can use any pack binary data, it will be ignored by Git anyway. We utilize [hardcoded binary data](../../k6/tests/git/push_data/binary_data.bundle) for this purpose. 
+The information above should be combined with binary data. A packfile [MUST be sent](https://git-scm.com/docs/pack-protocol#_reference_update_request_and_packfile_transfer) if either create or update command is used, even if the server already has all the necessary objects. Since we're using existing commits, we can use any pack binary data, it will be ignored by Git anyway. We utilize [hardcoded binary data](../../k6/tests/git/push_data/binary_data.bundle) for this purpose. 
 
 In case you want to create a packfile manually use [`git bundle`](https://git-scm.com/docs/git-bundle):
 

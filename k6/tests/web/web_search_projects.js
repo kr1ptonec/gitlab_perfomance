@@ -39,7 +39,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['search']);
+export let projects = getLargeProjects(['encoded_path', 'search']);
 
 export function setup() {
   console.log('')
@@ -53,7 +53,7 @@ export function setup() {
   projects.forEach(project => {
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}`);
     project['group_id'] = JSON.parse(res.body)['group_id'];
-    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}`);
+    res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}`);
     project['id'] = JSON.parse(res.body)['id'];
   });
 }

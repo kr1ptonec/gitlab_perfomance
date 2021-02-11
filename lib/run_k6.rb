@@ -138,7 +138,7 @@ module RunK6
     tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
     large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
-    large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['group_path_api']}%2F#{large_project_data['name']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
+    large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
     large_project_description = JSON.parse(large_project_res.body.to_s)['description']
     gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
     tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
