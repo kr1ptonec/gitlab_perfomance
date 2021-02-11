@@ -35,7 +35,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'encoded_path', 'group_path_web', 'pipeline_sha']);
+export let projects = getLargeProjects(['name', 'encoded_path', 'unencoded_path', 'pipeline_sha']);
 
 export function setup() {
   console.log('')
@@ -55,10 +55,10 @@ export default function(projects) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines/${project.pipelineId}`, null, {tags: {endpoint: '/pipeline', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines/${project.pipelineId}.json`, null, {tags: {endpoint: '/pipeline.json', controller: 'Projects::PipelinesController', action: 'show.json'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines/${project.pipelineId}/status.json`, null, {tags: {endpoint: '/pipeline/status.json', controller: 'Projects::PipelinesController', action: 'status'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/pipelines/${project.pipelineId}/tests/summary.json`, null, {tags: {endpoint: '/pipeline/tests/summary.json', controller: 'Projects::Pipelines::TestsController', action: 'tests/summary.json'}, redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}`, null, {tags: {endpoint: '/pipeline', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}.json`, null, {tags: {endpoint: '/pipeline.json', controller: 'Projects::PipelinesController', action: 'show.json'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}/status.json`, null, {tags: {endpoint: '/pipeline/status.json', controller: 'Projects::PipelinesController', action: 'status'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}/tests/summary.json`, null, {tags: {endpoint: '/pipeline/tests/summary.json', controller: 'Projects::Pipelines::TestsController', action: 'tests/summary.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

@@ -48,13 +48,13 @@ export default function() {
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=projects&search=${getRandomSearchTerm(project['search']['projects'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'projects' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=issues&search=${getRandomSearchTerm(project['search']['issues'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'issues' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=commits&search=${getRandomSearchTerm(project['search']['commits'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'commits' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=merge_requests&search=${getRandomSearchTerm(project['search']['merge_requests'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'merge_requests' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=milestones&search=${getRandomSearchTerm(project['search']['milestones'],1)}`, null, Object.assign({}, params, { tags: { endpoint: 'milestones' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=users&search=${getRandomSearchTerm(project['search']['users'],1)}`, null, Object.assign({}, params, { tags: { endpoint: 'users' } })],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['group_path_api']}/search?scope=blobs&search=${getRandomSearchTerm(project['search']['blobs'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=projects&search=${getRandomSearchTerm(project['search']['projects'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'projects' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=issues&search=${getRandomSearchTerm(project['search']['issues'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'issues' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=commits&search=${getRandomSearchTerm(project['search']['commits'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'commits' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=merge_requests&search=${getRandomSearchTerm(project['search']['merge_requests'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'merge_requests' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=milestones&search=${getRandomSearchTerm(project['search']['milestones'],1)}`, null, Object.assign({}, params, { tags: { endpoint: 'milestones' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=users&search=${getRandomSearchTerm(project['search']['users'],1)}`, null, Object.assign({}, params, { tags: { endpoint: 'users' } })],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/v4/groups/${project['encoded_group_path']}/search?scope=blobs&search=${getRandomSearchTerm(project['search']['blobs'],3)}`, null, Object.assign({}, params, { tags: { endpoint: 'blobs' } })],
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

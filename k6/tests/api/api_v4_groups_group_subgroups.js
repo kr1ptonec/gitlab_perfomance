@@ -22,7 +22,7 @@ export let options = {
   }
 };
 
-export let horizDataGroup = getManyGroupsOrProjects(['group_path_api']);
+export let horizDataGroup = getManyGroupsOrProjects(['encoded_group_path']);
 
 export function setup() {
   console.log('')

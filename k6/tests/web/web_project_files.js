@@ -30,7 +30,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_web', 'dir_path']);
+export let projects = getLargeProjects(['name', 'unencoded_path', 'dir_path']);
 
 export function setup() {
   console.log('')
@@ -45,12 +45,12 @@ export default function() {
   group("Web - Project Files Tree", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/tree/master/${project['dir_path']}`, {tags: {endpoint: 'tree', controller: 'Projects::TreeController', action: 'show'}, redirects: 0});
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/tree/master/${project['dir_path']}`, {tags: {endpoint: 'tree', controller: 'Projects::TreeController', action: 'show'}, redirects: 0});
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
 
     let logsTreeRes = null
     for (let i = 0; i <= 100; i+=25) {
-      logsTreeRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['group_path_web']}/${project['name']}/refs/master/logs_tree/${project['dir_path']}?format=json&offset=${i}`, {tags: {endpoint: 'logs_tree', controller: 'Projects::RefsController', action: 'logs_tree.json'}, redirects: 0});
+      logsTreeRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/refs/master/logs_tree/${project['dir_path']}?format=json&offset=${i}`, {tags: {endpoint: 'logs_tree', controller: 'Projects::RefsController', action: 'logs_tree.json'}, redirects: 0});
       /20(0|1)/.test(logsTreeRes.status) ? successRate.add(true) : (successRate.add(false), logError(logsTreeRes));
     }
   });

@@ -29,7 +29,7 @@ export let options = {
   stages: webProtoStages
 };
 
-export let horizDataGroup = getManyGroupsOrProjects(['group_path_web']);
+export let horizDataGroup = getManyGroupsOrProjects(['unencoded_group_path']);
 
 export function setup() {
   console.log('')
