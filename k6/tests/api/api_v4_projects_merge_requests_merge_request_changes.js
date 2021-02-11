@@ -22,7 +22,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group_path_api', 'mr_commits_iid']);
+export let projects = getLargeProjects(['encoded_path', 'mr_commits_iid']);
 
 export function setup() {
   console.log('')
@@ -36,7 +36,7 @@ export default function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, responseType: 'none' };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/merge_requests/${project['mr_commits_iid']}/changes`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/merge_requests/${project['mr_commits_iid']}/changes`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

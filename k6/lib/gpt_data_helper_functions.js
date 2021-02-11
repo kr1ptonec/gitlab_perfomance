@@ -1,3 +1,4 @@
+/*global __ENV : true  */
 import http from "k6/http";
 import { fail } from "k6";
 
@@ -24,4 +25,16 @@ export function checkProjEndpointDash(projectUrl, endpointPath) {
   }
 
   fail(`Failed to determine if Endpoint URL '${projectUrl}/${endpointPath}' is correct or uses a dash on GitLab Environment. Exiting...`);
+}
+
+// Pipelines //
+/* Pipeline IDs will differ per environment depending on previous pipelines.
+Function retrieves specific pipeline ID by associated commit SHA. */
+export function getPipelineId(projectId, pipelineSHA) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/pipelines?sha=${pipelineSHA}`, params);
+  let foundPipeline = JSON.parse(res.body)[0]; // get the first search result
+  let pipelineId = foundPipeline && foundPipeline["id"];
+  pipelineId ? console.log(`Pipeline with SHA '${pipelineSHA}' has id=${pipelineId}`) : console.log(`No pipelines containing SHA: '${pipelineSHA}'`);
+  return pipelineId;
 }

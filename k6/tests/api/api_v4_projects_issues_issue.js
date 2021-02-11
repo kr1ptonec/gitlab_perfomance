@@ -21,7 +21,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['name', 'group_path_api', 'issue_iid']);
+export let projects = getLargeProjects(['encoded_path', 'issue_iid']);
 
 export function setup() {
   console.log('')
@@ -35,7 +35,7 @@ export default function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['group_path_api']}%2F${project['name']}/issues/${project['issue_iid']}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/issues/${project['issue_iid']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

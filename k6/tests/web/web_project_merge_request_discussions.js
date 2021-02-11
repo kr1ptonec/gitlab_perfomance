@@ -12,7 +12,7 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-import { checkProjEndpointDash } from "../../lib/gpt_web_functions.js";
+import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let endpointCount = 3
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)

@@ -25,7 +25,7 @@ export let options = {
   stages: gitProtoStages
 };
 
-export let projects = getLargeProjects(['name', 'group_path_api']);
+export let projects = getLargeProjects(['name', 'group_path_web']);
 
 export function setup() {
   console.log('')
