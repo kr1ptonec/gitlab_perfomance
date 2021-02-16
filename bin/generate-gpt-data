@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.18'
+gpt_data_version = '1.0.19'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -40,7 +40,8 @@ opts = Optimist.options do
   opt :storage_nodes, "Repository storages that will be used to import vertical data.", short: :none, type: :strings
   opt :unattended, "Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :force, "Alternative flag for unattended. Skip all user prompts and run through generation automatically.", type: :flag, default: false
-  opt :clean_up, "Clean up GPT data", type: :flag, default: false
+  opt :clean_up, "Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.", type: :flag, default: false
+  opt :clean_up_mode, "Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set.", short: :m, type: :string, default: 'none'
   opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
@@ -106,10 +107,26 @@ begin
   gpt_test_data = GPTTestData.new(gpt_data_version: gpt_data_version, unattended: unattended, env_url: opts[:environment_url], storage_nodes: opts[:storage_nodes], max_wait_for_delete: opts[:max_wait_for_delete], skip_project_validation: opts[:skip_project_validation])
 
   if opts[:clean_up]
-    GPTCommon.show_warning_prompt("\nThe GPT Data Generator will clean up the data it previously generated on the environment.") unless unattended
     root_group = gpt_test_data.check_group_exists(grp_path: opts[:root_group])
-    gpt_test_data.delete_group(group: root_group) if root_group
-    GPTLogger.logger.info Rainbow("\nData clean up completed successfully!").green
+    abort('No Root group found') unless root_group
+
+    group_to_delete = case opts[:clean_up_mode].downcase
+                      when 'horizontal'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:group]}")
+                      when 'vertical'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vert_group]}")
+                      else
+                        root_group
+                      end
+
+    unless group_to_delete
+      GPTLogger.logger.warn Rainbow('No group found. Exiting...').yellow
+      exit
+    end
+
+    GPTCommon.show_warning_prompt("\nThe GPT Data Generator will clean up the data it previously generated in '#{group_to_delete['full_path']}' group on the environment.") unless unattended
+    gpt_test_data.delete_group(group: group_to_delete)
+    GPTLogger.logger.info Rainbow("\n'#{group_to_delete['full_path']}' group data clean up completed successfully!").green
     exit
   end
 
