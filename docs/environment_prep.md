@@ -144,7 +144,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [reg
 The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.19 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -167,7 +167,8 @@ Options:
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
   -u, --unattended                 Skip all user prompts and run through generation automatically.
   -f, --force                      Alternative flag for unattended. Skip all user prompts and run through generation automatically.
-  -c, --clean-up                   Clean up GPT data
+  -c, --clean-up                   Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.
+  -m, --clean-up-mode=<s>          Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set. (Default: none)
   -k, --skip-project-validation    Skip large project metadata validation
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
   -h, --help                       Show help message
@@ -295,7 +296,7 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.19 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
@@ -494,6 +495,12 @@ The Generator can also be used to delete the root group by passing the `--clean-
 
 ```sh
 docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+```
+
+In addition to this it's possible to only delete one of the subsets of data (Vertical or Horizontal). This can be done by passing the `--clean-up-mode` param with either of the values `vertical` or `horizontal` respectively in addition to `--clean-up`. Below is an example of how to clean up only horizontal data:
+
+```sh
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
 ```
 
 # Troubleshooting
