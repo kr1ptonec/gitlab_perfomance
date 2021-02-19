@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/changes`
 @description: [Get single MR changes](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-changes)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/225322
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322117
 @gpt_data_version: 1
 */
 
