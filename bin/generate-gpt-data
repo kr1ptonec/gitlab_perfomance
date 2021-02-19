@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.19'
+gpt_data_version = '1.0.20'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -41,7 +41,7 @@ opts = Optimist.options do
   opt :unattended, "Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :force, "Alternative flag for unattended. Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :clean_up, "Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.", type: :flag, default: false
-  opt :clean_up_mode, "Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set.", short: :m, type: :string, default: 'none'
+  opt :clean_up_mode, "Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
   opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
