@@ -139,9 +139,9 @@ When the environment config file is in place the [GPT Data Generator](../bin/gen
 
 #### Docker (Recommended)
 
-The recommended way to run the GPT Data Generator is with our Docker image, [registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator](https://gitlab.com/gitlab-org/quality/performance/container_registry), which can also be used in [airgapped environments](#airgapped-environments).
+The recommended way to run the GPT Data Generator is with our Docker image, [gitlab/gpt-data-generator](https://gitlab.com/gitlab-org/quality/performance/container_registry), which can also be used in [airgapped environments](#airgapped-environments).
 
-The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
+The full options for running the tool can be seen by getting the help output via `docker run -it gitlab/gpt-data-generator --help`:
 
 ```txt
 GPT Data Generator v1.0.20 - opinionated test data for the GitLab Performance Tool
@@ -179,15 +179,15 @@ nil)
 
 Examples:
   Generate horizontal and vertical data using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json
+    docker run -it gitlab/gpt-data-generator --environment 10k.json
   Generate only horizontal using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --horizontal --no-vertical
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --horizontal --no-vertical
   Generate only vertical data using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --vertical
   Generate only horizontal data with 10 subgroups and 100 projects in each:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
+    docker run -it gitlab/gpt-data-generator --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
   Generate only vertical data using custom project tarball path:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
 ```
 
 As standard with Docker you can mount several volumes to get your own config files into the container and results out. The image provides several specific mount points for you to do this as detailed below:
@@ -201,7 +201,7 @@ As standard with Docker you can mount several volumes to get your own config fil
 Here's an example of how you would run the Docker image with all pieces of config and results mounted (replacing placeholders as appropriate):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 Typically you will only need to run the tool directly without any options. Doing this will create all the data that GPT requires and then be ready to go. In addition to this GPT Data Generator is idempotent meaning you can run it again in the future when the test data may have changed and the tool will make the specific changes as required.
@@ -262,7 +262,7 @@ For environments that don't have internet access you'll need to download the def
 With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_13.0.0.tar.gz
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_13.0.0.tar.gz
 ```
 
 ##### Environments running behind a Proxy
@@ -272,7 +272,7 @@ For environments that do have internet access but through a http proxy the Gener
 With our recommended way of running Generator via Docker you'll need to pass this environment variable in directly in the command, for example:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -e PROXY_URL=<URL> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it -e ACCESS_TOKEN=<TOKEN> -e PROXY_URL=<URL> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 #### Location and Network conditions
@@ -464,7 +464,7 @@ For this use case the `project` setting should be changed to the name of the Pro
 Finally to import the data itself you will need to have the project's [export tarball file](https://docs.gitlab.com/ee/user/project/settings/import_export.html#exporting-a-project-and-its-data) available. When ready you can then set up all of the test data, with custom project, as follows:
 
 ```sh
-docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
+docker run -it gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
 ```
 
 Some notes you should consider on the above:
@@ -494,13 +494,13 @@ Both of these can easily be deleted by an admin user with data specifically easi
 The Generator can also be used to delete the root group by passing the `--clean-up` param:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
 ```
 
 In addition to this it's possible to only delete one of the subsets of data (Vertical or Horizontal). This can be done by passing the `--clean-up-mode` param with either of the values `vertical` or `horizontal` respectively in addition to `--clean-up`. Below is an example of how to clean up only horizontal data:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
 ```
 
 # Troubleshooting
@@ -529,6 +529,7 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
     * Download the correct GitLab FOSS Project Tarball file. For GitLab environments running on `13.0.0` or higher it's [`gitlabhq_export_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz). For GitLab environments running on versions between `12.5.0` and `12.10.0` it's [`gitlabhq_export.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz).
     * Select the `gpt/large_projects` group for "Project URL"
     * Enter project name in "Project slug" following this structure `<PROJECT NAME><STORAGE NODE SEQUENCE NUMBER>`. In our example it would be `gitlabhq1` for the `default` node and `gitlabhq2` for `storage2` node.
+1. Update [descriptions](https://docs.gitlab.com/ee/user/project/settings/#general-project-settings) for the imported projects with `Version: 1`. Before running the tests, GPT automatically checks that the target project has expected GPT data version by parsing the project description.
 1. After this has been completed for every Gitaly storage listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
     * To verify that vertical data was imported correctly head to **Admin Area > Overview > Projects**. Click on each imported project and ensure it has a correct `Gitaly storage name`. In our example `gitlabhq1` should be on `default` gitaly storage and `gitlabhq2` should be on `storage2`.
 
@@ -588,7 +589,7 @@ Unfortunately when this happens the project will need to be reimported. Please d
 After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
+docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
 ```
 
 Example of successful validation output:
