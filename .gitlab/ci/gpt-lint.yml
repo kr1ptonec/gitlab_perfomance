@@ -41,3 +41,19 @@ check:eslint:
   except:
     - schedules
     - tags
+
+check:markdown:
+  stage: check
+  image: node:alpine
+  script:
+    - npm install markdownlint-cli --global
+    - markdownlint --config .markdownlint.yml docs
+  only:
+    refs:
+      - master
+      - merge_requests
+    changes:
+      - docs/*
+  except:
+    - schedules
+    - tags
