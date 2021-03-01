@@ -3,7 +3,7 @@
 @endpoint: `GET /:group/:project/branches`
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211710
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322737
 @flags: dash_url
 */
 
@@ -16,8 +16,8 @@ import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(800)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
