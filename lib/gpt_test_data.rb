@@ -47,7 +47,7 @@ class GPTTestData
       check_deleted_entity = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/#{entity_endpoint}", headers: @headers, fail_on_error: false, retry_on_error: true)
 
       if !JSON.parse(check_deleted_entity.body.to_s)&.dig('marked_for_deletion_on').nil?
-        GPTLogger.logger.warn Rainbow("Delete request successfully scheduled. It will be removed after the time as defined by the environment's deletion delay settings. \nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#group-or-project-is-marked-for-deletion").yellow
+        GPTLogger.logger.warn Rainbow("Delete request successfully scheduled. It will be removed after the time as defined by the environment's deletion delay settings. \nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#group-or-project-is-marked-for-deletion").yellow
         break
       elsif check_deleted_entity.status.code == 404
         GPTLogger.logger.info "Delete successful"
@@ -96,7 +96,7 @@ class GPTTestData
     # This is an additional safeguard in case env is on 13.2-pre versions where the fix is in place after `13.2.0-pre a3ee515ecc`
     return if check_setting_available?(setting: 'repository_storages_weighted') || @gitlab_version < Semantic::Version.new('13.1.0') || @gitlab_version > Semantic::Version.new('13.2.2')
 
-    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage settings changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
+    abort(Rainbow("Target GitLab environment v#{@gitlab_version} is affected by an issue that prevents Repository Storage settings changes via API.\nDue to this we recommend you update the environment to version '13.2.2' or higher to proceed or import large projects manually.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api.\n").yellow)
   end
 
   def compare_repo_storage_settings(setting:)
@@ -189,7 +189,7 @@ class GPTTestData
     grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
     grp_check_res = check_group_exists(grp_path: grp_path)
 
-    GPTLogger.logger.warn Rainbow("\nGroup #{grp_path} has been scheduled to be deleted as per the environment's settings. If this is not expected it's recommended you confirm this on the GitLab environment and adjust directly where required.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#group-or-project-is-marked-for-deletion\n").yellow unless grp_check_res&.dig('marked_for_deletion_on').nil?
+    GPTLogger.logger.warn Rainbow("\nGroup #{grp_path} has been scheduled to be deleted as per the environment's settings. If this is not expected it's recommended you confirm this on the GitLab environment and adjust directly where required.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#group-or-project-is-marked-for-deletion\n").yellow unless grp_check_res&.dig('marked_for_deletion_on').nil?
     return grp_check_res unless grp_check_res.nil?
 
     GPTLogger.logger.info "Creating group #{grp_path}"
@@ -274,7 +274,7 @@ class GPTTestData
         threads.each(&:join)
       end
     rescue Timeout::Error
-      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
+      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
 
     puts "\n"
@@ -320,7 +320,7 @@ class GPTTestData
     end
 
     unless storage == project['repository_storage']
-      storage_error = "- Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api."
+      storage_error = "- Project repository storage '#{project['repository_storage']}' is different than expected '#{storage}' specified in Environment Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#repository-storages-config-cant-be-updated-via-application-settings-api."
       GPTLogger.logger.warn Rainbow(storage_error).yellow
       @large_projects_validation_errors[proj_path] << storage_error
     end
@@ -339,11 +339,11 @@ class GPTTestData
 
   def check_project_entities_count(project:, entity:, expected_count:)
     existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true, fail_on_error: false).headers.to_hash["X-Total"].to_i
-    raise ProjectCheckError, "Project metadata '#{entity}' is mising in the Project Config file.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#configure-project-config-file." if expected_count.nil?
+    raise ProjectCheckError, "Project metadata '#{entity}' is mising in the Project Config file.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#configure-project-config-file." if expected_count.nil?
 
     return if existing_entity_count >= expected_count
 
-    error_message = "- Project metadata validation failed: #{entity} count '#{existing_entity_count}' should be '#{expected_count}' or higher as specified in the Project Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#project-metadata-validation-has-failed."
+    error_message = "- Project metadata validation failed: #{entity} count '#{existing_entity_count}' should be '#{expected_count}' or higher as specified in the Project Config file.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#project-metadata-validation-has-failed."
     GPTLogger.logger.warn Rainbow(error_message).yellow
     @large_projects_validation_errors[project['path_with_namespace']] << error_message
   end
@@ -425,7 +425,7 @@ class GPTTestData
       end
 
     rescue Timeout::Error
-      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
+      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/#{ENV['GPT_DOCS_VERSION']}/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
     projects
   end
