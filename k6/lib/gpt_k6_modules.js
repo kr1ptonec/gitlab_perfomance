@@ -80,6 +80,14 @@ export function getLargeProjects(keys=[]) {
 export function getManyGroupsOrProjects(key) {
   let group_with_projects = JSON.parse(__ENV.ENVIRONMENT_MANY_GROUPS_AND_PROJECTS);
 
+  // Prepare subgroups data
+  group_with_projects['encoded_subgroups_path'] = [];
+  group_with_projects['subgroups_path_web'] = [];
+  for (let i = 1; i <= group_with_projects['subgroups_count']; i++) {
+    group_with_projects['encoded_subgroups_path'].push(`${group_with_projects['encoded_group_path']}%2F${group_with_projects['subgroup_prefix']}${i}`);
+    group_with_projects['subgroups_path_web'].push(`${group_with_projects['unencoded_group_path']}/${group_with_projects['subgroup_prefix']}${i}`);
+  }
+
   if (!Object.prototype.hasOwnProperty.call(group_with_projects, key)) fail(`Missing Project Config Data: No options in Environment config were found with the following required data - ${key}. Update your Environment Config file to have all data for 'many_groups_and_projects' setting and rerun. Refer to docs for more info. Exiting...`);
 
   return group_with_projects[key];
