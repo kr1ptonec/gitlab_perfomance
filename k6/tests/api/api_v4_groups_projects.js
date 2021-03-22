@@ -11,8 +11,8 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(0.1)
-export let ttfbThreshold = getTtfbThreshold(7000)
+export let rpsThresholds = getRpsThresholds(0.5)
+export let ttfbThreshold = getTtfbThreshold(3000)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
