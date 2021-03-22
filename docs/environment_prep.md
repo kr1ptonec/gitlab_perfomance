@@ -375,6 +375,7 @@ First you will need to create the [Project Config File](..k6/config/projects). T
     "pipelines_count": 11
   },
   "branch": "10-0-stable",
+  "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
   "compare_commits_sha": ["aec887ab", "5bfb7558"],
@@ -414,6 +415,7 @@ Details for each of the settings are as follows. You should aim to have each of 
   * `issue_count` - Total count of issues in the Project.
   * `pipelines_count` - Total count of pipelines in the Project.
 * `branch` - The name of a large branch available in the project. The size of the branch should be tuned to your environment's requirements.
+* `branch_search` - Term to be used for searching Branches. You should aim to have this return a good number of different branches in the results that would be representative of your environment's requirements.
 * `commit_sha` - The SHA reference of a large commit available in the project. The size of the commit should be tuned to your environment's requirements.
 * `commit_sha_signed` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
 * `compare_commits_sha` - The SHA references of two commits on the same branch that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the commits should be tuned to your environment's requirements.
@@ -429,7 +431,7 @@ Details for each of the settings are as follows. You should aim to have each of 
 * `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
 * `mr_discussions_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of discussions / comments. The size of the MR discussions should be tuned to your environment's requirements.
-* `search` - A list of search terms to used against [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (this needs to be configured on the environment specifically). Each item is an array of seach words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
+* `search` - A list of search terms to used against [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (this needs to be configured on the environment specifically). Each item is an array of search words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
   * `projects` - [Projects Scope](https://docs.gitlab.com/ee/api/search.html#scope-projects) search term array.
   * `issues` - [Issues Scope](https://docs.gitlab.com/ee/api/search.html#scope-issues) search term array.
   * `commits` - [Commits Scope](https://docs.gitlab.com/ee/api/search.html#scope-commits-starter) search term array.
