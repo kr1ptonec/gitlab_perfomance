@@ -30,25 +30,13 @@ module GPTPrepareTestData
 
     return {}.to_json unless required_keys.all? { |required_key| many_gr_and_proj.key?(required_key) }
 
-    encoded_subgroups_path = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj_encoded_group_path}%2F#{many_gr_and_proj['subgroup_prefix']}#{i}"
-    end
-
-    subgroups_path_web = 1.upto(many_gr_and_proj['subgroups']).map do |i|
-      "#{many_gr_and_proj_unencoded_group_path}/#{many_gr_and_proj['subgroup_prefix']}#{i}"
-    end
-
-    # N projects in each subgroup
-    projects = 1.upto(many_gr_and_proj['subgroups'] * many_gr_and_proj['projects']).map do |i|
-      "#{many_gr_and_proj['project_prefix']}#{i}"
-    end
-
     {
       'encoded_group_path' => many_gr_and_proj_encoded_group_path,
       'unencoded_group_path' => many_gr_and_proj_unencoded_group_path,
-      'encoded_subgroups_path' => encoded_subgroups_path,
-      'subgroups_path_web' => subgroups_path_web,
-      'projects' => projects
+      'subgroups_count' => many_gr_and_proj['subgroups'],
+      'subgroup_prefix' => many_gr_and_proj['subgroup_prefix'],
+      'projects_count' => many_gr_and_proj['projects'],
+      'project_prefix' => many_gr_and_proj['project_prefix']
     }.to_json
   end
 

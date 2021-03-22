@@ -7,13 +7,14 @@
     "pipelines_count": 11
   },
   "branch": "10-0-stable",
+  "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
   "compare_commits_sha": ["aec887ab", "5bfb7558"],
   "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "file_raw_path": "doc%2fapi%2fprojects%2emd",
   "file_rendered_path": "CHANGELOG%2emd",
-  "file_source_path": "fixtures%2femojis%2findex%2ejson",  
+  "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "dir_path": "spec%2Flib%2Fgitlab",
   "git_push_data": {
     "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
