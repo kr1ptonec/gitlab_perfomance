@@ -1,6 +1,6 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/branches`
+@endpoint: `GET /:group/:project/branches/all?search`
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322737
@@ -16,7 +16,7 @@ import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(800)
+export let ttfbThreshold = getTtfbThreshold(900)
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -45,10 +45,10 @@ export function setup() {
 }
 
 export default function(data) {
-  group("Web - Project Branches Page", function() {
+  group("Web - Project Branches Search Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/all`, { redirects: 0 });
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/all?search=${project['branch_search']}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
