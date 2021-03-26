@@ -1,9 +1,8 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /:group/:project/branches/all?search`
-@description: Web - Project Branches Search Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
+@endpoint: `GET /:group/:project/issues/all?search`
+@description: Web - Project Issues Search Page. <br>Controllers: `Projects::IssuesController#index`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322737
 @flags: dash_url
 */
 
@@ -12,11 +11,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
+import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(900)
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -39,16 +39,16 @@ export function setup() {
 
   // Check if endpoint path has a dash \ redirect
   let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'branches')
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'issues')
   console.log(`Endpoint path is '${endpointPath}'`)
   return { endpointPath };
 }
 
 export default function(data) {
-  group("Web - Project Branches Search Page", function() {
+  group("Web - Project Issues Search Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/all?search=${project['branch_search']}`, { redirects: 0 });
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}?scope=all&state=all?search=${getRandomSearchTerm(project['search']['issues'],3)}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
