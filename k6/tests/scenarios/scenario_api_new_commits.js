@@ -12,10 +12,13 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { createGroup, createProject, createBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
+export let thresholds = {
+  'ttfb': { 'latest': 700 }
+};
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(700)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

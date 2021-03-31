@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/commits`
 @description: [Get a list of merge request commits](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-commits)
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/31321
 @gpt_data_version: 1
 */
 
@@ -10,8 +11,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let thresholds = {
+  'rps': { '12.5.0': 0.1 },
+  'ttfb': { '12.5.0': 10000 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

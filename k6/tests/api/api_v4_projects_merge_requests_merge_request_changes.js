@@ -3,6 +3,7 @@
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/changes`
 @description: [Get single MR changes](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-changes)
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/225322
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/225322
 @gpt_data_version: 1
 */
 
@@ -11,9 +12,13 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(0.1)
-export let ttfbThreshold = getTtfbThreshold(12000)
-export let successRate = new Rate("successful_requests")
+export let thresholds = {
+  'rps': { '13.6.0': 0.1, 'latest': 0.2 },
+  'ttfb': { '13.6.0': 12000, 'latest': 9000 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps']);
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb']);
+export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],

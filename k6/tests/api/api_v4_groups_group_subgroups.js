@@ -3,7 +3,6 @@
 @endpoint: `GET /groups/:id/subgroups`
 @description: [List a group’s subgroups](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-subgroups)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211504
 */
 
 import http from "k6/http";
@@ -12,7 +11,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

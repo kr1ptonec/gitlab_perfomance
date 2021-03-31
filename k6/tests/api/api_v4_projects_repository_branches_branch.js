@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/repository/branches/:branch`
 @description: [Get a single project repository branch](https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch)
+@previous_issues: https://gitlab.com/gitlab-org/gitaly/-/issues/2108
 @gpt_data_version: 1
 */
 
@@ -10,8 +11,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let thresholds = {
+  'rps': { '12.6.0': 0.5 },
+  'ttfb': { '12.6.0': 3000 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
