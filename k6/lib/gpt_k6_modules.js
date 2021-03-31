@@ -1,6 +1,8 @@
 /*global __ENV, __VU : true  */
 import { fail } from "k6";
 
+// ------------------------- Common --------------------------------------------
+
 export function logError(res) {
   // Only log errors for the first 5 VUs to prevent spam
   if (__VU > 5) return;
@@ -23,27 +25,68 @@ export function logError(res) {
   }
 }
 
-export function getEnvVersion() {
-  let ver_regex = /([0-9]+)/g;
-  let version = __ENV.ENVIRONMENT_VERSION.match(ver_regex);
+export function parseVersion(version) {
+  let verRegex = /([0-9]+)/g;
+  let parsedVersion = version.match(verRegex);
 
-  return version.map(ver => parseInt(ver))
+  return parsedVersion.map(ver => parseInt(ver))
 }
 
-export function getRpsThresholds(modifier=1.0, endpoints=1) {
-  let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER
-  let thresholds = {
-    count: (parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer).toFixed(0),
-    mean: (parseFloat(__ENV.OPTION_RPS) * modifier * buffer).toFixed(2),
-    count_per_endpoint: ((parseFloat(__ENV.OPTION_RPS_COUNT) * modifier * buffer) / endpoints).toFixed(0),
-    mean_per_endpoint: ((parseFloat(__ENV.OPTION_RPS) * modifier * buffer) / endpoints).toFixed(2)
+export function versionIsLowerThanEnvVersion(version) {
+  let envVersion = parseVersion(__ENV.ENVIRONMENT_VERSION);
+  let targetVersion = parseVersion(version);
+
+  return envVersion[0] > targetVersion[0] || (envVersion[0] == targetVersion[0] && envVersion[1] >= targetVersion[1]);
+}
+
+// ------------------------- Thresholds ----------------------------------------
+
+/*
+Thresholds structure:
+{
+  'rps': { 'gitlabVer1': 0.2, 'gitlabVer2': 0.7, 'latest': 0.8 },
+  'ttfb': { 'gitlabVer1': 5000, 'gitlabVer2': 2000, 'latest': 1200 },
+}
+where 'gitlabVer' is the version where the test performance has changed due to application code changes.
+'gitlabVer' should always be ordered by the version increase (ASC).
+*/
+export function getCurrentVersionThreshold(defaultThreshold, thresholds) {
+  let threshold = null
+
+  // Backward compatibility to support numbers or strings for threshold
+  if ((Object.getOwnPropertyNames(thresholds).length === 0 ) || (typeof thresholds === 'string')) {
+    threshold = isNaN(thresholds) ? defaultThreshold : thresholds;
+  } else {
+    for (var version in thresholds) {
+      // Use historical threshold if threshold version is bigger than env version
+      if ((version != 'latest') && (!versionIsLowerThanEnvVersion(version))) {
+        threshold = thresholds[version];
+        break;
+      } else {
+        threshold = thresholds['latest'] == null ? defaultThreshold : thresholds['latest'];
+      }
+    } 
   }
+
+  return threshold;
+}
+
+export function getRpsThresholds(rpsThresholds={}, endpoints=1) {
+  let rpsModifier = getCurrentVersionThreshold(1, rpsThresholds);
+  let buffer = __ENV.RPS_THRESHOLD_MULTIPLIER;
+  let thresholds = {
+    count: (parseFloat(__ENV.OPTION_RPS_COUNT) * rpsModifier * buffer).toFixed(0),
+    mean: (parseFloat(__ENV.OPTION_RPS) * rpsModifier * buffer).toFixed(2),
+    count_per_endpoint: ((parseFloat(__ENV.OPTION_RPS_COUNT) * rpsModifier * buffer) / endpoints).toFixed(0),
+    mean_per_endpoint: ((parseFloat(__ENV.OPTION_RPS) * rpsModifier * buffer) / endpoints).toFixed(2)
+  };
   return thresholds;
 }
 
-export function getTtfbThreshold(ttfbBase=__ENV.TTFB_THRESHOLD) {
+export function getTtfbThreshold(ttfbThresholds={}) {
+  let ttfbThreshold = getCurrentVersionThreshold(__ENV.TTFB_THRESHOLD, ttfbThresholds);
   let latency = parseInt(__ENV.ENVIRONMENT_LATENCY) || 0;
-  return parseInt(ttfbBase) + latency;
+  return parseInt(ttfbThreshold) + latency;
 }
 
 export function adjustRps(modifier=1.0) {
@@ -58,6 +101,8 @@ export function adjustStageVUs(modifier=1.0) {
   });
   return stages;
 }
+
+// ------------------------- Test Data -----------------------------------------
 
 export function checkProjectKeys(project, keys) {
   return keys.every(key => Object.prototype.hasOwnProperty.call(project, key));

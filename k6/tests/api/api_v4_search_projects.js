@@ -14,9 +14,13 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
+export let thresholds = {
+  'rps': { 'latest': 0.4 },
+  'ttfb': { 'latest': 11000 },
+};
 export let endpointCount = 6
-export let rpsThresholds = getRpsThresholds(0.3, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(15000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 
 let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs']

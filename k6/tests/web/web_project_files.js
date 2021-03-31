@@ -4,6 +4,7 @@
 @description: Web - Project Files Tree. <br>Controllers: `Projects::TreeController#show`, `Projects::BlobController#show.json`, `Projects::RefsController#logs_tree.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366, https://gitlab.com/gitlab-org/gitlab/-/issues/222685
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/222685
 */
 
 import http from "k6/http";
@@ -11,11 +12,15 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
+export let thresholds = {
+  'rps': { '13.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.75, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { '13.0.0': 1000 }
+};
 export let endpointCount = 6
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.75, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(1000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

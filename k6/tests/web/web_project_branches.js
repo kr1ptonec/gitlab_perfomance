@@ -4,6 +4,7 @@
 @description: Web - Project Branches Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322737
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/211710
 @flags: dash_url
 */
 
@@ -13,10 +14,13 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'ttfb': { '13.9.0': 1500, 'latest': 800 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(800)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

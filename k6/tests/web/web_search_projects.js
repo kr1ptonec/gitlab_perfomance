@@ -16,11 +16,14 @@ import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let scopes = ['issues', 'commits', 'merge_requests', 'milestones', 'users', 'blobs', 'notes']
 
+export let thresholds = {
+  'ttfb': { 'latest': 3000 }
+};
 export let endpointCount = scopes.length * 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(3000)
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 
 export let scopes_thresholds = {

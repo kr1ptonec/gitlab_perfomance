@@ -2,8 +2,8 @@
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/discussions`
 @description: [Gets a list of all discussion items for a single merge request](https://docs.gitlab.com/ee/api/discussions.html#list-project-merge-request-discussion-items)
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/32455, https://gitlab.com/gitlab-org/gitlab/-/issues/221071
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/221071
 */
 
 import http from "k6/http";
@@ -11,8 +11,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(0.8)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let thresholds = {
+  'rps': { '12.10.0': 0.2, '13.9.0': 0.7 },
+  'ttfb': { '12.10.0': 5000, '13.9.0': 1500 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

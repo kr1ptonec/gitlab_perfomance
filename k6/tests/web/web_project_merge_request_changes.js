@@ -4,6 +4,7 @@
 @description: Web - Project Merge Request Changes Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::DiffsController#diffs_metadata.json`, `Projects::MergeRequests::DiffsController#diffs_batch.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229164
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/209786, https://gitlab.com/gitlab-org/gitlab/-/issues/295237
 @gitlab_version: 12.8.0
 @flags: dash_url
 */
@@ -14,11 +15,15 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'rps': { '13.2.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, '13.10.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { '13.2.0': 5000, '13.10.0': 4000, 'latest': 1000 }
+};
 export let endpointCount = 7
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(4000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
