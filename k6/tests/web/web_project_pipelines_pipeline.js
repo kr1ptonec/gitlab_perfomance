@@ -4,13 +4,14 @@
 @description: Web - Project Pipeline Page. <br>Controllers: `Projects::PipelinesController#show`, `Projects::PipelinesController#show.json`, `Projects::Pipelines::TestsController#summary`, `Projects::PipelinesController#status`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/320928
+@flags: dash_url
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
-import { getPipelineId } from "../../lib/gpt_data_helper_functions.js";
+import { checkProjEndpointDash, getPipelineId } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
   'ttfb': { 'latest': 2500 }
@@ -48,20 +49,25 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
+  // Check if endpoint path has a dash \ redirect
+  let checkProject = selectRandom(projects)
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines')
+  console.log(`Endpoint path is '${endpointPath}'`)
+  
   // Get pipeline ID from pipeline SHA
   projects.forEach(project => { project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']); });
-  return projects;
+  return { projects, endpointPath };
 }
 
-export default function(projects) {
+export default function(data) {
   group("Web - Project Pipelines Page", function() {
-    let project = selectRandom(projects);
+    let project = selectRandom(data.projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}`, null, {tags: {endpoint: '/pipeline', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}.json`, null, {tags: {endpoint: '/pipeline.json', controller: 'Projects::PipelinesController', action: 'show.json'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}/status.json`, null, {tags: {endpoint: '/pipeline/status.json', controller: 'Projects::PipelinesController', action: 'status'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/pipelines/${project.pipelineId}/tests/summary.json`, null, {tags: {endpoint: '/pipeline/tests/summary.json', controller: 'Projects::Pipelines::TestsController', action: 'tests/summary.json'}, redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, {tags: {endpoint: '/pipeline', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, {tags: {endpoint: '/pipeline.json', controller: 'Projects::PipelinesController', action: 'show.json'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, {tags: {endpoint: '/pipeline/status.json', controller: 'Projects::PipelinesController', action: 'status'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, {tags: {endpoint: '/pipeline/tests/summary.json', controller: 'Projects::Pipelines::TestsController', action: 'tests/summary.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
