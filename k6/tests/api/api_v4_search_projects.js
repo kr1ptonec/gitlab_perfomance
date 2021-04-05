@@ -16,7 +16,7 @@ import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let thresholds = {
   'rps': { 'latest': 0.4 },
-  'ttfb': { 'latest': 11000 },
+  'ttfb': { 'latest': 13000 },
 };
 export let endpointCount = 6
 export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
