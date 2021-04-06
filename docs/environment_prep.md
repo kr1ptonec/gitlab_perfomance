@@ -144,7 +144,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [git
 The full options for running the tool can be seen by getting the help output via `docker run -it gitlab/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.20 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.21 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -296,7 +296,7 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.20 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.21 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
@@ -549,7 +549,12 @@ Groups and / or Projects can sometimes fail to be created due to response timeou
 
 GPT Data Generator uses [threads](https://ruby-doc.org/core-2.7.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
 
-If you're regularly seeing timeout errors increasing the connection timeout by setting the `GPT_POOL_TIMEOUT` environment variable in seconds may help. Another option could be to decrease the pool size via the  `GPT_POOL_SIZE` environment variable from the default value to 1 to disable running concurrent requests.
+If you're regularly seeing timeout or 500 errors this may likely be the environment struggling under the strain of creating so many groups or projects at once. The following settings configure the behavior of the Generator and it may be useful to change these if you frequently see errors as described:
+
+* `GPT_GENERATOR_POOL_SIZE` - The number of concurrent thread processes the Generator will use when generating. Set to `10` by default. Set lower if you frequently see timeout or 500 errors.
+* `GPT_GENERATOR_POOL_TIMEOUT` - How long each process will wait for a response from the environment in seconds. Set to `60` by default. Set higher if seeing frequent timeout errors.
+* `GPT_GENERATOR_RETRY_COUNT` - The amount of times the process will retry creating data if it failed. Set to `10` by default. Set higher if you continue to see 500 errors infrequently.
+* `GPT_GENERATOR_RETRY_WAIT` - The number of seconds the process will wait between each retry. Set to `1` by default. Set this higher if you continue to see 500 errors infrequently. Can be used with or instead of `GPT_GENERATOR_RETRY_COUNT`.
 
 ## Large Project import issues
 
