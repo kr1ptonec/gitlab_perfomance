@@ -31,8 +31,10 @@ class GPTTestData
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
     @large_projects_validation_errors = {}
 
-    @default_pool_size = ENV['GPT_POOL_SIZE'].nil? ? 10 : ENV['GPT_POOL_SIZE'].to_i
-    @default_pool_timeout = ENV['GPT_POOL_TIMEOUT'].nil? ? 60 : ENV['GPT_POOL_TIMEOUT'].to_i
+    @default_pool_size = ENV['GPT_GENERATOR_POOL_SIZE'].nil? ? 10 : ENV['GPT_GENERATOR_POOL_SIZE'].to_i
+    @default_pool_timeout = ENV['GPT_GENERATOR_POOL_TIMEOUT'].nil? ? 60 : ENV['GPT_GENERATOR_POOL_TIMEOUT'].to_i
+    @default_retry_count = ENV['GPT_GENERATOR_RETRY_COUNT'].nil? ? 10 : ENV['GPT_GENERATOR_POOL_TIMEOUT'].to_i
+    @default_retry_wait = ENV['GPT_GENERATOR_RETRY_WAIT'].nil? ? 1 : ENV['GPT_GENERATOR_POOL_TIMEOUT'].to_i
     Thread.report_on_exception = false
   end
 
@@ -209,7 +211,7 @@ class GPTTestData
   def create_groups(group_prefix:, parent_group: nil, groups_count:)
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}' under parent group '#{parent_group['full_path']}'"
     groups = []
-    redo_count = 0
+    retry_counter = 0
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -254,19 +256,19 @@ class GPTTestData
               grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers, ssl_context: ctx)
               unless grp_res.status.success?
                 print 'x'
-                GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{redo_count}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
+                GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{retry_counter}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
                 grp_res.flush
 
-                redo_count += 1
-                sleep 1
-                redo unless redo_count == 10
+                retry_counter += 1
+                sleep @default_retry_wait
+                redo unless retry_counter == @default_retry_count
                 raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
               end
 
               new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
               groups << new_group
               print '.'
-              redo_count = 0
+              retry_counter = 0
               GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
             end
           end
@@ -274,7 +276,7 @@ class GPTTestData
         threads.each(&:join)
       end
     rescue Timeout::Error
-      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
+      raise GroupCheckError, "Groups failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_GENERATOR_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
 
     puts "\n"
@@ -362,7 +364,7 @@ class GPTTestData
 
     GPTLogger.logger.info "\nCreating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
-    redo_count = 0
+    retry_counter = 0
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -404,19 +406,19 @@ class GPTTestData
               proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
               unless proj_res.status.success?
                 print 'x'
-                GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{redo_count}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
+                GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{retry_counter}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
                 proj_res.flush
 
-                redo_count += 1
-                sleep 1
-                redo unless redo_count == 10
+                retry_counter += 1
+                sleep @default_retry_wait
+                redo unless retry_counter == @default_retry_count
                 raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
               end
 
               new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
               projects << new_project
               print '.'
-              redo_count = 0
+              retry_counter = 0
               GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
             end
           end
@@ -425,7 +427,7 @@ class GPTTestData
       end
 
     rescue Timeout::Error
-      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
+      raise ProjectCheckError, "Projects failed to be created due to response timeout from the target GitLab environment after #{@default_pool_timeout} seconds.\nConsider increasing timeout by passing 'GPT_GENERATOR_POOL_TIMEOUT' environment variable.\nTo troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#horizontal-data-generation-timeout"
     end
     projects
   end
