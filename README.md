@@ -15,7 +15,11 @@ Documentation on how to use the tool can be found in the [`docs/`](/docs/README.
 
 **Note:** These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-master/README.md).
 
-## GitLab Test Results
+## Test Details
+
+To get more detailed information about the current test list that is run by GPT you can refer to the [Current Test Details wiki page](https://gitlab.com/gitlab-org/quality/performance/wikis/current-test-details).
+
+## Test Results
 
 The GitLab Quality team uses this Tool in frequent automated pipelines to continuously measure the performance of GitLab. The results are uploaded to this project's wiki and made available for anyone to see:
 
