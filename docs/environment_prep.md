@@ -390,8 +390,9 @@ First you will need to create the [Project Config File](..k6/config/projects). T
     "branch_name": "12-1-auto-deploy-20190714"
   },
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
-  "mr_commits_iid": "10495",
+  "mr_commits_iid": "5081",
   "mr_discussions_iid": "6958",
+  "mr_changes_iid": "8785",
   "search": {
     "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],
     "issues": ["gitlab", "bot", "push", "repo", "error", "database", "issue"],
@@ -428,9 +429,10 @@ Details for each of the settings are as follows. You should aim to have each of 
   * `branch_current_head_sha` - The head commit of the `branch_name` branch.
   * `branch_new_head_sha` - Any commit SHA that older then `branch_current_head_sha` on the `branch_name` branch.
   * `branch_name` - Existing branch name.
-* `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
+* `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `mr_discussions_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of discussions / comments. The size of the MR discussions should be tuned to your environment's requirements.
+* `mr_changes_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of changes. The size of the MR changes should be tuned to your environment's requirements.
 * `search` - A list of search terms to used against [Search through GitLab](https://docs.gitlab.com/ee/user/search/) and [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (the latter needs to be configured on the environment specifically). Each item is an array of search words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
   * `projects` - [Projects Scope](https://docs.gitlab.com/ee/api/search.html#scope-projects) search term array.
   * `issues` - [Issues Scope](https://docs.gitlab.com/ee/api/search.html#scope-issues) search term array.
