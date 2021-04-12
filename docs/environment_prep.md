@@ -69,10 +69,20 @@ graph LR
     end
 ```
 
-In this section we'll detail how to use the GPT Data Generator to set up the test data on your GitLab Environment broken down into two parts:
+In this section we'll detail how to use the GPT Data Generator to set up the test data on your GitLab Environment.
 
-1. [Preparing the Environment Config File](#preparing-the-environment-file)
-1. [Running the GPT Data Generator tool](#running-the-gpt-data-generator-tool)
+### Check that the Environment is ready
+
+Before using GPT Data Generator against your environment it's strongly recommended to check and confirm your environment is in working order and ready to have data generated.
+
+There are various ways this can be achieved but for the purposes of the Generator one key way to check if the environment is ready is to attempt a [Project Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html) and verify its success as this process touches all of the critical components of a GitLab setup.
+
+For convenience here are two potential ways that you can easily do a Project Import and verify the environment is ready to have Generator run against it:
+
+* Create a project from the `Sample GitLab Project` [template](https://docs.gitlab.com/ee/user/project/working_with_projects.html#project-templates) - Creating a project from a template uses the same Import mechanism behind the scenes. If this project's creation is a success and matches the [source](https://gitlab.com/gitlab-org/sample-data-templates/sample-gitlab-project) in terms of not only source code but also Issues and MRs then this suggests the environment is ready.
+* As an alternative you can also do a project import directly and verify after that it has been successful. If you don't have a project export to hand you can use this [small project template](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/small-project_13.0.0.tar.gz) instead. Once imported it should have 2 files, 1 Issue and 1 MR created and if this is what appears then this suggests the environment is ready.
+
+If any issues are found in either the above checks - from creation through to validating everything has imported correctly - then this suggests there's an issue with the Environment that should be addressed before running Generator.
 
 ### Preparing the Environment File
 
