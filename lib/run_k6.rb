@@ -138,9 +138,15 @@ module RunK6
     tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
     large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
-    large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
-    large_project_description = JSON.parse(large_project_res.body.to_s)['description']
-    gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
+    begin
+      large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: true)
+      large_project_description = JSON.parse(large_project_res.body.to_s)['description']
+      gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
+    rescue GPTCommon::RequestError => e
+      raise "\nLarge Project request has failed with the error:\n#{e}\nPlease ensure that Large Project exists at this location '#{large_project_data['unencoded_path']}'\nExiting..."
+    rescue TypeError, NoMethodError
+      raise "\nLarge Project's description can't be parsed.\nPlease check if there are any problems with the target environment. If the environment is confirmed working but the problem persists, please run the GPT Data Generator to reimport the Large Project.\nExiting..."
+    end
     tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
 
     tests
