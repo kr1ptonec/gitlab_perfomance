@@ -154,7 +154,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [git
 The full options for running the tool can be seen by getting the help output via `docker run -it gitlab/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.21 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.22 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -306,7 +306,7 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.21 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.22 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
