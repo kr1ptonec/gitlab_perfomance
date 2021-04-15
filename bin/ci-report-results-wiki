@@ -42,7 +42,7 @@ def get_comparision_data(results)
 
   results.each_with_index do |result, result_num|
     result['test_results'].each do |test_result|
-      results_comparision_data[test_result["name"]] ||= Hash[results_comparision_versions.collect { |version| [version, "-"] }]
+      results_comparision_data[test_result["name"]] ||= results_comparision_versions.to_h { |version| [version, "-"] }
       results_comparision_data[test_result["name"]]['target'] ||= "#{test_result['ttfb_p90_threshold']}ms"
 
       test_result_score = ((test_result['ttfb_p90'].to_f / ttfb_overall_target) * 100)
