@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let thresholds = {
   'rps': { '13.1.0': 0.2, '13.4.0': 0.4, 'latest': 0.6 },
-  'ttfb': { '13.1.0': 5000, '13.4.0': 2000, 'latest': 700 },
+  'ttfb': { '13.1.0': 5000, '13.4.0': 2000, 'latest': 1000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
