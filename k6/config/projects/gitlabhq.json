@@ -10,7 +10,7 @@
   "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
-  "compare_commits_sha": ["aec887ab", "5bfb7558"],
+  "compare_branches": ["12-2-stable", "12-1-stable"],
   "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "file_raw_path": "doc%2fapi%2fprojects%2emd",
   "file_rendered_path": "CHANGELOG%2emd",

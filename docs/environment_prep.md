@@ -388,7 +388,7 @@ First you will need to create the [Project Config File](..k6/config/projects). T
   "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
-  "compare_commits_sha": ["aec887ab", "5bfb7558"],
+  "compare_branches": ["12-2-stable", "12-1-stable"],
   "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "file_raw_path": "doc%2fapi%2fprojects%2emd",
   "file_rendered_path": "CHANGELOG%2emd",
@@ -429,7 +429,7 @@ Details for each of the settings are as follows. You should aim to have each of 
 * `branch_search` - Term to be used for searching Branches. You should aim to have this return a good number of different branches in the results that would be representative of your environment's requirements.
 * `commit_sha` - The SHA reference of a large commit available in the project. The size of the commit should be tuned to your environment's requirements.
 * `commit_sha_signed` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
-* `compare_commits_sha` - The SHA references of two commits on the same branch that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the commits should be tuned to your environment's requirements.
+* `compare_branches` - The names of two branches that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the branches should be tuned to your environment's requirements.
 * `file_blame_path` - The relative path to a file in your project that is itself large and also has a large showable File Blame history.
 * `file_raw_path` - The relative path to a moderate sized file in your project that would be will be downloaded at scale. Ensure this file isn't too big or the test will likely max out the available network speeds.
 * `file_rendered_path` - The relative path to a large sized file in your project that would be shown rendered, e.g. a markdown file.
