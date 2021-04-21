@@ -1,9 +1,9 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /projects/:id/repository/compare?from=commit_sha1&to=commit_sha2`
-@description: [Compare commits](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
+@endpoint: `GET /projects/:id/repository/compare?from=branch1&to=branch2`
+@description: [Compare branches](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/297497
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/327763
 */
 
 import http from "k6/http";
@@ -12,8 +12,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': 0.7 },
-  'ttfb': { 'latest': 3000 },
+  'rps': { 'latest': 0.3 },
+  'ttfb': { 'latest': 5000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
@@ -26,7 +26,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['encoded_path', 'compare_commits_sha']);
+export let projects = getLargeProjects(['encoded_path', 'compare_branches']);
 
 export function setup() {
   console.log('')
@@ -34,12 +34,13 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 }
+
 export default function() {
-  group("API - Project Repository Compare Commits", function() {
+  group("API - Project Repository Compare Branches", function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/repository/compare?from=${project['compare_commits_sha'][0]}&to=${project['compare_commits_sha'][1]}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/repository/compare?from=${project['compare_branches'][0]}&to=${project['compare_branches'][1]}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
