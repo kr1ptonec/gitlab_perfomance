@@ -90,7 +90,10 @@ if opts[:environment]
   opts[:large_project_metadata] ||= large_projects_data['metadata']
 end
 
-raise Rainbow("Some generate-gpt-data option(s) are not defined. Exiting...\nOptions: #{opts}").red if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
+if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
+  empty_options = opts.reject { |key, _| key == :large_project_tarball }.filter_map { |opt, value| opt if value.nil? }
+  raise "These GPT Data Generator option(s) are not defined: '#{empty_options.join(', ')}'. Exiting..."
+end
 
 # GPT logger setup
 start_time = Time.now

@@ -3,7 +3,7 @@
 @endpoint: `GET /:group/:project/tree/master`
 @description: Web - Project Files Tree. <br>Controllers: `Projects::TreeController#show`, `Projects::BlobController#show.json`, `Projects::RefsController#logs_tree.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366, https://gitlab.com/gitlab-org/gitlab/-/issues/222685
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/222685
 */
 
@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 
 export let thresholds = {
   'rps': { '13.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.75, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { '13.0.0': 1000 }
+  'ttfb': { '13.0.0': 1000, 'latest': 800 }
 };
 export let endpointCount = 6
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
