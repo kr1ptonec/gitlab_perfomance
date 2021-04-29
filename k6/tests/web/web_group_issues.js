@@ -41,7 +41,7 @@ export function setup() {
 }
 export default function(data) {
   group("Web - Project Issues Page", function() {
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/groups/${__ENV.ENVIRONMENT_ROOT_GROUP}/${data.endpointPath}?scope=all&state=all`, { redirects: 0 });
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/groups/${__ENV.ENVIRONMENT_ROOT_GROUP}/${data.endpointPath}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

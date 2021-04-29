@@ -52,7 +52,7 @@ export default function(data) {
   group("Web - Project Branches Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/all`, { redirects: 0 });
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
