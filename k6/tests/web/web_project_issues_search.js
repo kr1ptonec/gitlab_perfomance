@@ -48,7 +48,7 @@ export default function(data) {
   group("Web - Project Issues Search Page", function() {
     let project = selectRandom(projects);
 
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}?scope=all&state=all?search=${getRandomSearchTerm(project['search']['issues'],3)}`, { redirects: 0 });
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}?scope=all&state=opened?search=${getRandomSearchTerm(project['search']['issues'],3)}`, { redirects: 0 });
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

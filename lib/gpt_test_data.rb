@@ -404,6 +404,7 @@ class GPTTestData
                 description: @gpt_data_version_description,
                 emails_disabled: true,
                 builds_access_level: 'disabled',
+                wiki_access_level: 'disabled',
                 initialize_with_readme: true
               }
               proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
