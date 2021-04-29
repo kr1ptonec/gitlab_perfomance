@@ -4,6 +4,7 @@
 @description: Web - Project Repository Compare Branches page. <br>Controllers: `Projects::CompareController#show`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/327764
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/merge_requests/59162
 @flags: dash_url
 */
 
@@ -14,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.05 },
-  'ttfb': { 'latest': 14000 },
+  'rps': { '13.6.0': 0.05, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.05 },
+  'ttfb': { '13.6.0': 14000, 'latest': 7500 },
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)

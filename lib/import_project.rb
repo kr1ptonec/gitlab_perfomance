@@ -47,7 +47,7 @@ class ImportProject
 
   def import_project_request(proj_tarball_file:, project_name:, namespace:, storage_name:, project_description:)
     GPTLogger.logger.info "Importing project #{project_name}...\nNote that this may take some time to upload a file to the target environment."
-    GPTLogger.logger.info Rainbow("If project import takes more than an hour please refer to the troubleshooting docs https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#import-looks-to-have-hanged.").blue
+    GPTLogger.logger.info Rainbow("If project import takes more than an hour please refer to the troubleshooting docs https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#import-looks-to-have-hanged.\nStart time: #{Time.now.strftime('%H:%M:%S %Y-%m-%d %Z')}").blue
     proj_url = "#{@env_api_url}/projects/import"
     proj_params = {
       file: HTTP::FormData::File.new(proj_tarball_file),
