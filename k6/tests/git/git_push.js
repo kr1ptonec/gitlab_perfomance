@@ -7,7 +7,7 @@
 */
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { sleep, group, fail } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting, checkAdminAccess, waitForGitSidekiqQueue } from "../../lib/gpt_git_functions.js";
@@ -83,6 +83,7 @@ export default function () {
       successRate.add(false)
     }
   });
+  sleep(10);
 }
 
 export function teardown() {
