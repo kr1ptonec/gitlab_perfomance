@@ -443,6 +443,14 @@ class GPTTestData
     wait_for_delete(entity_endpoint: "projects/#{project['id']}")
   end
 
+  # Packages
+
+  def upload_packages(package_name:, project:)
+    GPTLogger.logger.info "Uploading #{package_name} as a Maven package..."
+    mvn_pckgs_url = "#{@env_api_url}/projects/#{project['id']}/packages/maven/#{project['path_with_namespace']}/#{package_name}"
+    GPTCommon.make_http_request(method: 'put', url: mvn_pckgs_url, headers: @headers)
+  end
+
   # Horizontal
 
   def create_horizontal_test_data(root_group:, parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
