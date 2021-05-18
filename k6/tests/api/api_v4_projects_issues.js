@@ -2,7 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/issues`
 @description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
 @gpt_data_version: 1
 */
 
@@ -12,8 +12,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': 0.6 },
-  'ttfb': { 'latest': 2000 },
+  'rps': { '13.12.0': 0.6 },
+  'ttfb': { '13.12.0': 2000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
