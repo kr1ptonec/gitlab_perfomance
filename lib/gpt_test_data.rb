@@ -219,7 +219,7 @@ class GPTTestData
     begin
       # Limit total amount of created threads
       # Otherwise creation of large number of groups will fail due to timeout
-      thr_iter = groups_count > 50 ? 50 : groups_count
+      thr_iter = groups_count > @default_pool_size ? @default_pool_size : groups_count
       threads_loop_count = groups_count / thr_iter
       # Tuning pool size depending on environment size
       pool_size = @storage_nodes.count * @default_pool_size
@@ -376,8 +376,10 @@ class GPTTestData
         HTTP.persistent(@env_url)
       end
 
-      subgroups.each_with_index do |parent_group, i|
-        projects_count_start = i * projects_count
+      subgroups.each do |parent_group|
+        # Use subgroup number as a base number for child projects
+        subgroup_num = parent_group['name'].split('-')[-1].to_i
+        projects_count_start = projects_count * (subgroup_num - 1)
         threads = []
 
         projects_count.times do |num|

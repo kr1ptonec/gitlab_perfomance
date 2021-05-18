@@ -75,6 +75,8 @@ module GPTCommon
     GPTLogger.logger.info "Updating application settings: #{settings}"
     res = GPTCommon.make_http_request(method: 'put', url: "#{env_url}/api/v4/application/settings", params: settings, headers: headers, fail_on_error: false)
     raise "Request has failed:\n#{res.status} - #{JSON.parse(res.body.to_s)}\nPlease ensure admin ACCESS_TOKEN is used." if res.status.client_error? || res.status.server_error?
+
+    sleep 1 # Wait for a setting change to propagate
   end
 
   def show_warning_prompt(warn_text)
