@@ -15,7 +15,7 @@ import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
   'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
-  'ttfb': { 'latest': 1500 }
+  'ttfb': { 'latest': 1750 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -26,10 +26,10 @@ export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:commits}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{endpoint:show}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{endpoint:commits.json}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:commits}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{endpoint:show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{endpoint:commits.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
@@ -58,7 +58,7 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'commits', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'show', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {

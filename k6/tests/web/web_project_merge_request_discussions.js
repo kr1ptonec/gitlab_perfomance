@@ -15,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.7 },
-  'ttfb': { 'latest': 5000 }
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
+  'ttfb': { 'latest': 7500 }
 };
 export let endpointCount = 3
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -27,11 +27,11 @@ export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:merge_request}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{endpoint:show}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{endpoint:discussions.json}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{endpoint:widget.json}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:merge_request}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{endpoint:show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{endpoint:discussions.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{endpoint:widget.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
@@ -61,7 +61,7 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'merge_request', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}`, null, {tags: {endpoint: 'show', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json`, null, {tags: {endpoint: 'discussions.json', controller: 'Projects::MergeRequestsController', action: 'discussions.json'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/widget.json`, null, {tags: {endpoint: 'widget.json', controller: 'Projects::MergeRequests::ContentController', action: 'widget.json'}, redirects: 0}]
     ]);
