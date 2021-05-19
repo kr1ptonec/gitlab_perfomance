@@ -400,8 +400,8 @@ First you will need to create the [Project Config File](..k6/config/projects). T
     "branch_name": "12-1-auto-deploy-20190714"
   },
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
-  "mr_commits_iid": "5081",
-  "mr_discussions_iid": "6958",
+  "mr_commits_iid": "4954",
+  "mr_discussions_iid": "8785",
   "mr_changes_iid": "8785",
   "search": {
     "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],

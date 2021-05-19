@@ -3,8 +3,8 @@
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs`
 @description: Web - Project Merge Request Changes Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequests::DiffsController#diffs_metadata.json`, `Projects::MergeRequests::DiffsController#diffs_batch.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229164
-@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/209786, https://gitlab.com/gitlab-org/gitlab/-/issues/295237
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229164, https://gitlab.com/gitlab-org/gitlab/-/issues/331421
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/209786
 @gitlab_version: 12.8.0
 @flags: dash_url
 */
@@ -17,7 +17,7 @@ import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
   'rps': { '13.2.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, '13.10.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.5, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { '13.2.0': 5000, '13.10.0': 4000, 'latest': 1250 }
+  'ttfb': { '13.2.0': 5000, '13.10.0': 4000, 'latest': 1500 }
 };
 export let endpointCount = 7
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -28,11 +28,11 @@ export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:diffs}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{endpoint:show}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{endpoint:diffs_metadata.json}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{endpoint:diffs_batch.json}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:diffs}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{endpoint:show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{endpoint:diffs_metadata.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{endpoint:diffs_batch.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
@@ -62,7 +62,7 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_changes_iid']}/diffs`, null, {tags: {endpoint: 'diffs', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_changes_iid']}/diffs`, null, {tags: {endpoint: 'show', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_changes_iid']}/diffs_metadata.json?`, null, {tags: {endpoint: 'diffs_metadata.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_metadata.json'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_changes_iid']}/diffs_batch.json?w=0&per_page=20&page=1`, null, {tags: {endpoint: 'diffs_batch.json', controller: 'Projects::MergeRequests::DiffsController', action: 'diffs_batch.json'}, redirects: 0}],
     ]);
