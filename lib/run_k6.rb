@@ -15,28 +15,29 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.31.1'
+    k6_version = ENV['K6_VERSION'] || '0.32.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
     end
 
+    raise "CPU type #{OS.host_cpu} is unsupported. Supported CPU types are x86 or Arm (64 bit)." unless OS.host_cpu.match?(/x86_64|aarch64/)
+
+    cpu_arch = OS.host_cpu == 'aarch64' ? 'arm64' : 'amd64'
     if OS.linux?
-      k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux#{OS.bits}.tar.gz"
+      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux-#{cpu_arch}.tar.gz"
       warn Rainbow("k6 not found or different version detected. Downloading k6 v#{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.mac?
-      k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-mac.zip"
+      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-macos-#{cpu_arch}.zip"
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('unzip', '-j', '-o', k6_archive.path, '-d', File.dirname(k6_archive.path))
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
-    elsif OS.windows?
-      raise "k6 not found or wrong version detected. Please install k6 version #{k6_version} on your machine and ensure it's found on the PATH"
     end
 
     File.join(File.dirname(k6_archive.path), 'k6')
