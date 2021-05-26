@@ -4,19 +4,25 @@ module GPTPrepareTestData
   extend self
 
   def prepare_vertical_json_data(k6_dir:, env_file_vars:)
-    large_projects_group = "#{env_file_vars['gpt_data']['root_group']}%2F#{env_file_vars['gpt_data']['large_projects']['group']}"
+    is_large_project_custom = !env_file_vars['gpt_data']['large_projects']['root_group'].nil?
+    warn Rainbow("GPT is running against a custom large project '#{env_file_vars['gpt_data']['large_projects']}'.").yellow if is_large_project_custom
+
+    large_projects_root_group = is_large_project_custom ? env_file_vars['gpt_data']['large_projects']['root_group'] : env_file_vars['gpt_data']['root_group']
+    large_project_parent_group = env_file_vars['gpt_data']['large_projects']['group']
+    large_projects_group = large_project_parent_group.to_s.empty? ? large_projects_root_group : "#{large_projects_root_group}%2F#{large_project_parent_group}"
     large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
     large_projects_data_file = Dir.glob(["#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/projects/#{large_project_file_name}.json", "#{k6_dir}/config/projects/#{large_project_file_name}.json", large_project_file_name])[0]
     raise "Project Config file '#{large_project_file_name}' not found as given or in default folder. Exiting..." if large_projects_data_file.nil?
 
     large_projects_data = JSON.parse(File.read(large_projects_data_file))
-    large_projects_count = env_file_vars['environment']['storage_nodes'].size
+    large_projects_count = is_large_project_custom ? 1 : env_file_vars['environment']['storage_nodes'].size
     Array.new(large_projects_count) do |i|
+      large_project_name = is_large_project_custom ? large_projects_data['name'] : "#{large_projects_data['name']}#{i + 1}"
       project = {
-        'name' => "#{large_projects_data['name']}#{i + 1}",
+        'name' => large_project_name,
         'encoded_group_path' => large_projects_group,
-        'encoded_path' => "#{large_projects_group}%2F#{large_projects_data['name']}#{i + 1}",
-        'unencoded_path' => "#{CGI.unescape(large_projects_group)}/#{large_projects_data['name']}#{i + 1}"
+        'encoded_path' => "#{large_projects_group}%2F#{large_project_name}",
+        'unencoded_path' => "#{CGI.unescape(large_projects_group)}/#{large_project_name}"
       }
       large_projects_data.merge(project)
     end.to_json

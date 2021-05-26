@@ -361,7 +361,11 @@ If a non Admin user is desired it needs to be at least a [`maintainer`](https://
 
 ##### Using Custom Large Projects
 
-The GitLab Performance Tool can also be used to run performance tests against a target GitLab environment with a different large project imported into each storage node as an advanced use case. To enable this GPT Data Generator can be changed to import the custom project instead of (or in addition to in subsequent runs) the default `gitlabhq` project along with GPT being configured to use data points from the project also.
+The GitLab Performance Tool can also be used to run performance tests against a target GitLab environment with a different large project as an advanced use case:
+
+* If project already exists on environment it can be used as a custom performance target.
+* If project doesn't exist on environment it can imported with the GPT Data Generator into each storage node.
+  * To enable this Generator can be changed to import the custom project instead of (or in addition to in subsequent runs) the default `gitlabhq` project along with GPT being configured to use data points from the project also.
 
 Note though that in this use case it won't be as useful for validating that the GitLab environment itself is performing to expectations but rather how the specific project performs in GitLab. This is because validation of the environment's performance is confirmed by comparing like for like test results, hence the need for opinionated test data. It's therefore recommended that any testing with custom large projects is always done in addition to tests with the [default opinionated data](#setting-up-test-data-with-the-gpt-data-generator).
 
@@ -458,7 +462,7 @@ Project config files typically should be saved to the `k6/config/projects` direc
 
 The [Environment Config File](../k6/config/environments) will need to be tweaked to point both of the GPT tools to use the new project, specifically the `gpt_data > large_projects` section:
 
-```txt
+```json
 {
   [...]
   "gpt_data": {
@@ -472,6 +476,29 @@ The [Environment Config File](../k6/config/environments) will need to be tweaked
 ```
 
 For this use case the `project` setting should be changed to the name of the Project Config file.
+
+If you are planning to run GPT against a project that *already exists* on the target GitLab environment the `gpt_data` section needs to be tweaked further:
+
+```json
+{
+  [...]
+  "gpt_data": {
+    "root_group": "gpt",
+    "skip_check_version": "true",
+    "large_projects": {
+      "root_group": "root_group",
+      "group": "large_projects",
+      "project": "custom_existing_project"
+    },
+  [...]  
+}
+```
+
+* `"skip_check_version": "true"` disables GPT data version check.
+* `gpt_data > large_projects > root_group` overwrites `gpt_data > root_group` for the custom large project and contains its root group.
+  * If the custom large project path has only one group like `group/custom_large_proj` omit the `"group"` setting or leave it blank.
+
+Note that in this case when the custom large project already exists on the target GitLab environment the next step [Setup Custom Test Data using the GPT Data Generator](#setup-custom-test-data-using-the-gpt-data-generator) can be skipped and you can start running the GPT.
 
 ###### Setup Custom Test Data using the GPT Data Generator
 

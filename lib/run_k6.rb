@@ -21,7 +21,7 @@ module RunK6
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
     end
 
-    raise "CPU type #{OS.host_cpu} is unsupported. Supported CPU types are x86 or Arm (64 bit)." unless OS.host_cpu.match?(/x86_64|aarch64/)
+    raise "CPU type #{OS.host_cpu} is unsupported. Supported CPU types are x86 or Arm (64 bit)." unless OS.host_cpu.match?(/x86_64|aarch64|arm/)
 
     cpu_arch = OS.host_cpu == 'aarch64' ? 'arm64' : 'amd64'
     if OS.linux?
@@ -74,6 +74,7 @@ module RunK6
     env_vars['ENVIRONMENT_ROOT_GROUP'] = env_file_vars['gpt_data']['root_group']
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
+    env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] = env_file_vars['gpt_data']['skip_check_version']
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.99'
@@ -148,7 +149,7 @@ module RunK6
     rescue TypeError, NoMethodError
       raise "\nLarge Project's description can't be parsed.\nPlease check if there are any problems with the target environment. If the environment is confirmed working but the problem persists, please run the GPT Data Generator to reimport the Large Project.\nExiting..."
     end
-    tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
+    tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) } unless env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] == 'true'
 
     tests
   end

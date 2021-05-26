@@ -109,7 +109,7 @@ rescue NoMethodError => e
   warn Rainbow("Test failed and output couldn't be parsed: \n#{e}").yellow
   next
 rescue StandardError => e
-  warn Rainbow("Test failed: #{e}").red
+  warn Rainbow("Test failed: #{e}\n#{e.class}:#{e.backtrace}").red
   aggregated_success = false
 end
 aggregated_score = RunK6.get_results_score(results: aggregated_results, env_vars: env_vars)
