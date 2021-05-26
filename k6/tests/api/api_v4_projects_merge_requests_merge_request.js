@@ -26,7 +26,7 @@ export let options = {
   }
 };
 
-export let projects = getLargeProjects(['encoded_path', 'mr_changes_iid']);
+export let projects = getLargeProjects(['encoded_path', 'mr_discussions_iid']);
 
 export function setup() {
   console.log('')
@@ -40,7 +40,7 @@ export default function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/merge_requests/${project['mr_changes_iid']}`, params);
+    let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${project['encoded_path']}/merge_requests/${project['mr_discussions_iid']}`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }

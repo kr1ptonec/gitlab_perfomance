@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/commits`
-@description: Web - Project Merge Request Commits Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequestsController#commits.json`</br>
+@description: Web - Project Merge Request Commits Page. <br>Controllers: `Projects::MergeRequestsController#commits.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209912
 @flags: dash_url
@@ -17,20 +17,17 @@ export let thresholds = {
   'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
   'ttfb': { 'latest': 1750 }
 };
-export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:show}": [`p(90)<${ttfbThreshold}`],
-    "http_req_waiting{endpoint:commits.json}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::MergeRequestsController#commits.json}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
-    "http_reqs{endpoint:commits.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
+    "http_reqs{controller:Projects::MergeRequestsController#commits.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
   stages: webProtoStages
@@ -58,8 +55,7 @@ export default function(data) {
     let project = selectRandom(projects);
 
     let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits`, null, {tags: {endpoint: 'show', controller: 'Projects::MergeRequestsController', action: 'show'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits.json`, null, {tags: {endpoint: 'commits.json', controller: 'Projects::MergeRequestsController', action: 'commits.json'}, redirects: 0}]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_commits_iid']}/commits.json`, null, {tags: {controller: 'Projects::MergeRequestsController#commits.json'}, redirects: 0}]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
