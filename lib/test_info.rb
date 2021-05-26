@@ -99,7 +99,7 @@ module TestInfo
     return false if test_required_gpt_data.nil? || test_required_gpt_data.empty?
 
     if test_required_gpt_data && gpt_data_version == '-'
-      warn Rainbow("GPT test data version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GPT test data version '#{test_required_gpt_data}' and up. Check that the test data was setup correctly using the GPT Data Generator. Skipping...").yellow
+      warn Rainbow("GPT test data version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GPT test data version '#{test_required_gpt_data}' and up. Check that the test data was setup correctly using the GPT Data Generator.\nIf you are running against a custom large project please disable this version check by adding `\"skip_check_version\": \"true\"` under `gpt_data` in Environment Config file.\nSkipping...").yellow
       return false
     end
 
