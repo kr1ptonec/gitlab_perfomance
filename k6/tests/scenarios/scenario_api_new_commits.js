@@ -41,7 +41,7 @@ export function setup() {
   let groupId = createGroup("group-api-v4-create-commit");
   let projectId = createProject(groupId);
   // Create a default branch
-  createBranch(projectId, "master");
+  createBranch(projectId, "main");
 
   let data = { groupId, projectId };
   return data;
@@ -86,8 +86,8 @@ export function createCommit(projectId, action) {
       }
     ]
   };
-  // First commits will create new branches from 'master'
-  if (action === "create") { body["start_branch"] = "master" } 
+  // First commits will create new branches from 'main'
+  if (action === "create") { body["start_branch"] = "main" } 
   if (action === "update") { body["actions"].push({ action: "create", file_path: `create/gpt_${__VU}_${__ITER}.md`, content: content }) }
   
   let createCommitRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/commits`, JSON.stringify(body), params);
