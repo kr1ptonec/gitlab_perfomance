@@ -46,7 +46,8 @@ export function createProject(groupId, additionalConfig={}) {
     name: `project-api-v4-new-scenario`,
     namespace_id: groupId,
     auto_devops_enabled: false,
-    visibility: "public"
+    visibility: "public",
+    default_branch: "main"
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
   let projectId = JSON.parse(res.body)['id'];
@@ -69,6 +70,6 @@ export function editProject(projectId, config) {
 export function createBranch(projectId, branchName) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'branches' } };
 
-  let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/branches`, { branch: branchName, ref: "master" }, params);
+  let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/branches`, { branch: branchName, ref: "main" }, params);
   return createBranchRes;
 }
