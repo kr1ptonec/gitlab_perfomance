@@ -3,8 +3,8 @@
 @endpoint: `GET /:group/:project/blob/master/:file_path?viewer=rich`
 @description: Web - Project File Rendered. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/271242
-@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/217572
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/332499
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/217572, https://gitlab.com/gitlab-org/gitlab/-/issues/271242
 */
 
 import http from "k6/http";
@@ -13,8 +13,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { '13.1.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
-  'ttfb': { '13.1.0': 20000, 'latest': 3000 }
+  'rps': { '13.1.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, '14.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.8 },
+  'ttfb': { '13.1.0': 20000, '14.0.0': 3000, 'latest': 1500 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
