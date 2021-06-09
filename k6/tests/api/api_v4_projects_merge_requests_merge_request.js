@@ -3,7 +3,7 @@
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid`
 @description: [Get information about a single merge request](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/327128
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/331490
 */
 
 import http from "k6/http";
@@ -13,7 +13,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let thresholds = {
   'rps': { 'latest': 0.5 },
-  'ttfb': { 'latest': 2000 },
+  'ttfb': { 'latest': 2750 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
