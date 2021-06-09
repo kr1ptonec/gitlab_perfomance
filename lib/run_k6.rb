@@ -98,6 +98,14 @@ module RunK6
     env_vars
   end
 
+  def check_large_projects_visibility(env_vars:)
+    large_projects = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS'])
+    large_projects.each do |large_project|
+      large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/#{large_project['unencoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
+      raise "\nPlease ensure that Large Project '#{large_project['unencoded_path']}' exists and has Public visibility.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#tests-failing-due-to-sign-in-page-redirect\nExiting..." if large_project_res.uri.to_s.include?("users/sign_in")
+    end
+  end
+
   def prepare_tests(tests:, env_vars:)
     # Prepare specific test data
     GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
