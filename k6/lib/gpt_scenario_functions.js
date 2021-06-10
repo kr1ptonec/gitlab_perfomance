@@ -47,7 +47,8 @@ export function createProject(groupId, additionalConfig={}) {
     namespace_id: groupId,
     auto_devops_enabled: false,
     visibility: "public",
-    default_branch: "main"
+    default_branch: "main",
+    initialize_with_readme: true
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
   let projectId = JSON.parse(res.body)['id'];
@@ -56,6 +57,17 @@ export function createProject(groupId, additionalConfig={}) {
   if (Object.keys(additionalConfig).length !== 0) editProject(projectId, additionalConfig)
 
   return projectId;
+}
+
+// Bug workaround: Default branch is ignored when creating a project via API - https://gitlab.com/gitlab-org/gitlab/-/issues/26261
+export function getProjectDefaultBranch(projectId) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, params);
+  let project = JSON.parse(res.body);
+  let defaultBranch = project && project.default_branch;  
+  defaultBranch ? console.log(`Project with id=${projectId} has default_branch=${defaultBranch}`) : console.log(`Default branch can't be detected for the project '${projectId}'`);
+
+  return defaultBranch;
 }
 
 export function editProject(projectId, config) {
@@ -67,9 +79,9 @@ export function editProject(projectId, config) {
 
 // Source Code //
 
-export function createBranch(projectId, branchName) {
+export function createBranch(projectId, ref, branchName) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` }, tags: { endpoint: 'branches' } };
 
-  let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/branches`, { branch: branchName, ref: "main" }, params);
+  let createBranchRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/branches`, { branch: branchName, ref: ref }, params);
   return createBranchRes;
 }
