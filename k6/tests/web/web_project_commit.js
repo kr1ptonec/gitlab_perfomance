@@ -3,8 +3,8 @@
 @endpoint: `GET /:group/:project/commit/:commit_sha`
 @description: Web - Commit Details Page. <br>Controllers: `Projects::CommitController#show`, `Projects::CommitController#branches`, `Projects::CommitController#merge_requests.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322559
-@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/232509
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/333292
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/232509, https://gitlab.com/gitlab-org/gitlab/-/issues/322559
 @flags: dash_url
 */
 
@@ -15,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { '13.9.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2 },
-  'ttfb': { '13.9.0': 12500, 'latest': 10000 }
+  'rps': { '13.9.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, '14.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
+  'ttfb': { '13.9.0': 12500, '14.0.0': 10000, 'latest': 2800 }
 };
 export let endpointCount = 3
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
