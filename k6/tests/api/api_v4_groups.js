@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups`
+@example_uri: /api/v4/groups
 @description: [List groups](https://docs.gitlab.com/ee/api/groups.html#list-groups)
 @gpt_data_version: 1
 */

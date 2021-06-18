@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/tags`
+@example_uri: /api/v4/projects/:encoded_path/repository/tags
 @description: [Get a list of repository tags in a project](https://docs.gitlab.com/ee/api/tags.html#list-project-repository-tags)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/299529

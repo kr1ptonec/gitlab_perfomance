@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/pipelines`
+@example_uri: /api/v4/projects/:encoded_path/pipelines
 @description: [List project pipelines](https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines)
 @gpt_data_version: 1
 */

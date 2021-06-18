@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/tree/master`
+@example_uri: /:unencoded_path/tree/master
 @description: Web - Project Files Tree. <br>Controllers: `Projects::TreeController#show`, `Projects::BlobController#show.json`, `Projects::RefsController#logs_tree.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211366

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:id/issues`
+@example_uri: /api/v4/groups/:environment_root_group/issues
 @description: [List groups issues](https://docs.gitlab.com/ee/api/issues.html#list-group-issues)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/301203

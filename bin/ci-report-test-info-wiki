@@ -18,18 +18,25 @@ tp.set(:max_width, 800)
   banner "\nOptions:"
   opt :help, 'Show help message'
   opt :page_title, "Title to use for wiki page", type: :string, required: true
+  opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, default: 'staging.json'
   opt :api_url, "GitLab wiki API URL", type: :string, default: "https://gitlab.com/api/v4/projects/gitlab-org%2Fquality%2Fperformance/wikis"
+  opt :dry_run, "Only generate Wiki page locally and don't post for testing purposes.", type: :flag
   banner "\nEnvironment Variable(s):"
   banner "  CI_PROJECT_ACCESS_TOKEN   A valid GitLab Personal Access Token that has access to the intended project where the wiki page will be posted. The token should come from a User that has admin access for the project(s) and have all permissions. (Default: nil)"
 end
 
-raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN']
+raise 'Environment Variable CI_PROJECT_ACCESS_TOKEN must be set to proceed. See command help for more info' unless ENV['CI_PROJECT_ACCESS_TOKEN'] || @opts[:dry_run]
+
+env_file = Dir.glob([@opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}/environments/#{@opts[:environment]}", "#{k6_dir}/#{@opts[:environment]}", "#{k6_dir}/config/environments/#{@opts[:environment]}"])[0]
+raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
 
 puts "Collecting test info..."
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
+env_file_vars = RunK6.setup_env_file_vars(k6_dir: k6_dir, env_file: env_file)
 tests_info = TestInfo.get_tests_info(tests)
 test_types = tests_info.map { |test_info| test_info[:type] }.uniq
 tests_with_issues = tests_info.select { |test_info| !test_info[:issues].nil? }
+tests_info = TestInfo.get_test_urls(tests_info, env_file_vars)
 
 wiki_report_contents = <<~DOC
   GitLab Performance Tool provides several different types of tests:
@@ -45,11 +52,13 @@ DOC
 test_types.each do |type|
   wiki_report_contents << "\n## #{type.include?('api') ? type.upcase : type.capitalize}\n"
   tests_info_by_type = tests_info.select { |test| test[:type] == type }
-  wiki_report_contents << TablePrint::Printer.table_print(tests_info_by_type, [{ tests: ->(test) { "#{test[:link_md]}<br><br>#{test[:endpoint]}" } }, :description])
+  wiki_report_contents << TablePrint::Printer.table_print(tests_info_by_type, [{ link_md: { display_name: :tests } }, :description, { endpoints: ->(endpoint) { "#{endpoint[:endpoint]}<br><br>#{endpoint[:url]}" } }])
 end
 
 wiki_report_contents << "\n## Known Issues\n"
 wiki_report_contents << TablePrint::Printer.table_print(tests_with_issues, [:name, :issues])
+
+exit if @opts[:dry_run]
 
 puts "Posting test info to Wiki page..."
 headers = { 'PRIVATE-TOKEN': ENV['CI_PROJECT_ACCESS_TOKEN'] }

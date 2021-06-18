@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id`
+@example_uri: /api/v4/projects/:encoded_path
 @description: [Get single project](https://docs.gitlab.com/ee/api/projects.html#get-single-project)
 @gpt_data_version: 1
 */

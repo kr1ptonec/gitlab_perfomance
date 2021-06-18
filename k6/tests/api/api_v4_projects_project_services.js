@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/services`
+@example_uri: /api/v4/projects/:encoded_path/services
 @description: [List project services](https://docs.gitlab.com/ee/api/services.html#list-all-available-services)
 @gpt_data_version: 1
 @gitlab_version: 12.7.0

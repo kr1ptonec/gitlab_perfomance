@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/branches`
+@example_uri: /api/v4/projects/:encoded_path/repository/branches
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
 @gpt_data_version: 1
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/30536, https://gitlab.com/gitlab-org/gitlab/-/issues/208738

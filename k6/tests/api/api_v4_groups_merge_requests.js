@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:id/merge_requests`
+@example_uri: /api/v4/groups/:environment_root_group/merge_requests
 @description: [List groups merge requests](https://docs.gitlab.com/ee/api/merge_requests.html#list-group-merge-requests)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/301204

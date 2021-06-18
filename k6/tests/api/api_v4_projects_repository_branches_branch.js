@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/branches/:branch`
+@example_uri: /api/v4/projects/:encoded_path/repository/branches/:branch
 @description: [Get a single project repository branch](https://docs.gitlab.com/ee/api/branches.html#get-single-repository-branch)
 @previous_issues: https://gitlab.com/gitlab-org/gitaly/-/issues/2108
 @gpt_data_version: 1

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:id/projects`
+@example_uri: /api/v4/groups/:environment_root_group/projects
 @description: [Get a list of projects in this group](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-projects)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211498

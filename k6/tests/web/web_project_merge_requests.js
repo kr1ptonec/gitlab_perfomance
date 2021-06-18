@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests`
+@example_uri: /:unencoded_path/merge_requests?scope=all&state=all
 @description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
 @gpt_data_version: 1
 @flags: dash_url

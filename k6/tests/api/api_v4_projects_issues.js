@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/issues`
+@example_uri: /api/v4/projects/:encoded_path/issues
 @description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
 @gpt_data_version: 1
