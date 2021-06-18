@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/tags`
+@example_uri: /:unencoded_path/tags
 @description: Web - Project Tags Page. <br>Controllers: `Projects::TagsController#index`</br>
 @flags: dash_url
 @gpt_data_version: 1

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/tree`
+@example_uri: /api/v4/projects/:encoded_path/repository/tree?path=:dir_path
 @description: [Get a list of repository files and directories in a project](https://docs.gitlab.com/ee/api/repositories.html#list-repository-tree)
 @gpt_data_version: 1
 */

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group`
+@example_uri: /:unencoded_group_path
 @description: Web - Group Page. <br>Controllers: `GroupsController#show`, `Groups::ChildrenController#index`</br>
 @gpt_data_version: 1
 */

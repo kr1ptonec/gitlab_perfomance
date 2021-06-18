@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/files/:file_path`
+@example_uri: /api/v4/projects/:encoded_path/repository/files/:file_source_path?ref=master
 @description: [Get information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-from-repository)
 @gpt_data_version: 1
 */

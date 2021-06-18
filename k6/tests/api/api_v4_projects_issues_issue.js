@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/issues/:issue_iid`
+@example_uri: /api/v4/projects/:encoded_path/issues/:issue_iid
 @description: [Get a single project issue](https://docs.gitlab.com/ee/api/issues.html#single-issue)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/326768

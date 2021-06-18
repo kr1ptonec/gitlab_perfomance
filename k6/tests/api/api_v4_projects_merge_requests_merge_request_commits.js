@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/commits`
+@example_uri: /api/v4/projects/:encoded_path/merge_requests/:mr_commits_iid/commits
 @description: [Get a list of merge request commits](https://docs.gitlab.com/ee/api/merge_requests.html#get-single-mr-commits)
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/31321
 @gpt_data_version: 1

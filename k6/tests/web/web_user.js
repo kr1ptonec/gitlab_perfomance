@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:user`
+@example_uri: /:user
 @description: Web - User Page <br>Controllers: `UsersController#show`,`UsersController#calendar.json`</br>
 @gpt_data_version: 1
 */

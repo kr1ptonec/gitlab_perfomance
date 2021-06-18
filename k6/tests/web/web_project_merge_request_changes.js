@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/diffs`
+@example_uri: /:unencoded_path/merge_requests/:mr_changes_iid/diffs
 @description: Web - Project Merge Request Changes Page. <br>Controllers: `Projects::MergeRequests::DiffsController#diffs_metadata.json`, `Projects::MergeRequests::DiffsController#diffs_batch.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/229164

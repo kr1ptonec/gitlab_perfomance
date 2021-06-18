@@ -33,6 +33,7 @@ module TestInfo
 
       info[:description] = get_test_tag_value(test_file, 'description')
       info[:endpoint] = get_test_tag_value(test_file, 'endpoint') || 'No documentaion'
+      info[:example_uri] = get_test_tag_value(test_file, 'example_uri')
       info[:issues] = get_test_tag_value(test_file, 'issue')
       info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
       info[:flags] = get_test_tag_value(test_file, 'flags')
@@ -43,6 +44,37 @@ module TestInfo
     end
 
     info_list
+  end
+
+  def get_test_urls(tests_info, env_vars)
+    env_url = env_vars['ENVIRONMENT_URL']
+    large_project = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
+    horizontal_data = JSON.parse(env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'])
+    additional_data = { "environment_root_group" => env_vars['ENVIRONMENT_ROOT_GROUP'], "user" => env_vars['ENVIRONMENT_USER'] }
+    test_data = large_project.merge(horizontal_data, additional_data)
+
+    tests_info.each do |test_info|
+      if test_info[:example_uri].nil?
+        test_info[:url] = ''
+        next
+      elsif !test_info[:example_uri].include?(':')
+        test_info[:url] = "#{env_url}#{test_info[:example_uri]}"
+        next
+      end
+
+      # Substitute all options like `:encoded_path` with test data from target env
+      endpoint = test_info[:example_uri].gsub(/(\/|=):(\w+)/) do |match|
+        test_option = match.gsub(/[^0-9A-Za-z_]/, '')
+        if test_data[test_option].nil?
+          test_info[:example_uri] = nil
+          next
+        else
+          "/#{test_data[test_option]}"
+        end
+      end
+      test_info[:url] = test_info[:example_uri].nil? ? '' : "#{env_url}#{endpoint}"
+    end
+    tests_info
   end
 
   # Check

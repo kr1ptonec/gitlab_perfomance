@@ -63,7 +63,7 @@ module RunK6
     options_env_vars
   end
 
-  def setup_env_vars(k6_dir:, env_file:, options_file:)
+  def setup_env_file_vars(k6_dir:, env_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
@@ -75,6 +75,11 @@ module RunK6
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
     env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] = env_file_vars['gpt_data']['skip_check_version']
+    env_vars
+  end
+
+  def setup_env_vars(k6_dir:, env_file:, options_file:)
+    env_vars = setup_env_file_vars(k6_dir: k6_dir, env_file: env_file)
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.99'

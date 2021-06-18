@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha/signature`
+@example_uri: /api/v4/projects/:encoded_path/repository/commits/:commit_sha/signature
 @description: [Get GPG signature of a commit](https://docs.gitlab.com/ee/api/commits.html#get-gpg-signature-of-a-commit)
 @gpt_data_version: 1
 @gitlab_version: 11.9.0

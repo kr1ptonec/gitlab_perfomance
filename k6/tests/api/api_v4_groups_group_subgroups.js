@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:id/subgroups`
+@example_uri: /api/v4/groups/:encoded_group_path/subgroups
 @description: [List a group’s subgroups](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-subgroups)
 @gpt_data_version: 1
 */

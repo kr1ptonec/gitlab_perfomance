@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project`
+@example_uri: /:unencoded_path
 @description: Web - Project Page. <br>Controllers: `ProjectsController#show`, `Projects::BlobController#show`</br>
 @gpt_data_version: 1
 */

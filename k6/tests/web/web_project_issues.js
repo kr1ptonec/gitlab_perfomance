@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/issues`
+@example_uri: /:unencoded_path/issues
 @description: Web - Project Issues Page. <br>Controllers: `Projects::IssuesController#index`</br>
 @gpt_data_version: 1
 @flags: dash_url

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/releases`
+@example_uri: /api/v4/projects/:encoded_path/releases
 @description: [Get project releases](https://docs.gitlab.com/ee/api/releases/#list-releases)
 @gpt_data_version: 2
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/299447

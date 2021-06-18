@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid`
+@example_uri: /:unencoded_path/merge_requests/:mr_discussions_iid
 @description: Web - Project Merge Request Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequestsController#show.json`, `Projects::MergeRequestsController#discussions.json`, `Projects::MergeRequests::ContentController#widget.json`, `Projects::MergeRequests::ContentController#cached_widget.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209784, https://gitlab.com/gitlab-org/gitlab/-/issues/331421

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/merge_requests/:merge_request_iid/discussions`
+@example_uri: /api/v4/projects/:encoded_path/merge_requests/:mr_discussions_iid/discussions
 @description: [Gets a list of all discussion items for a single merge request](https://docs.gitlab.com/ee/api/discussions.html#list-project-merge-request-discussion-items)
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/32455, https://gitlab.com/gitlab-org/gitlab/-/issues/221071
 @gpt_data_version: 1

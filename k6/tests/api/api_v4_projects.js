@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects?order_by=id&sort=asc and GET /projects?pagination=keyset&order_by=id&sort=asc`
+@example_uri: /api/v4/projects?order_by=id&sort=asc
 @description: [Get a list of all projects](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
-@endpoint: `GET /projects/:id/repository/files/:file_path/blame`
+@endpoint: `GET /projects/:id/repository/files/:file_path/blame?ref=master`
+@example_uri: /api/v4/projects/:encoded_path/repository/files/:file_blame_path/blame?ref=master
 @description: [Get blame information about file in repository](https://docs.gitlab.com/ee/api/repository_files.html#get-file-blame-from-repository)
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/217570

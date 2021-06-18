@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/merge_requests/:merge_request_iid/commits`
+@example_uri: /:unencoded_path/merge_requests/:mr_commits_iid/commits
 @description: Web - Project Merge Request Commits Page. <br>Controllers: `Projects::MergeRequestsController#commits.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209912

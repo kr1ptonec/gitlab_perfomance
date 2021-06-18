@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:group/merge_requests`
+@example_uri: /groups/:environment_root_group/merge_requests
 @description: Web - Group Merge Requests Page. <br>Controllers: `GroupsController#merge_requests`</br>
 @gpt_data_version: 1
 @flags: dash_url

@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha/diff`
+@example_uri: /api/v4/projects/:encoded_path/repository/commits/:commit_sha/diff
 @description: [Get the diff of a commit in a project](https://docs.gitlab.com/ee/api/commits.html#get-the-diff-of-a-commit)
 @gpt_data_version: 1
 */

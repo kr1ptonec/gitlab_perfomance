@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /users`
+@example_uri: /api/v4/users
 @description: [List users](https://docs.gitlab.com/ee/api/users.html#list-users)
 @gpt_data_version: 1
 */
