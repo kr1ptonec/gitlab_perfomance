@@ -243,6 +243,7 @@ module RunK6
     scores = results.reject { |result| result['score'].nil? || result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
     return nil if scores.length.zero?
 
-    (scores.sum / scores.length).round(2)
+    total_score = (scores.sum / scores.length).round(2)
+    total_score > 100.0 ? 100.0 : total_score
   end
 end
