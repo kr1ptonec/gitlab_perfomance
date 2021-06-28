@@ -4,6 +4,7 @@
 @example_uri: /:unencoded_path/merge_requests?scope=all&state=all
 @description: Web - Project Merge Requests Page. <br>Controllers: `Projects::MergeRequestsController#index`</br>
 @gpt_data_version: 1
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334447
 @flags: dash_url
 */
 
@@ -13,10 +14,14 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { 'latest': 500 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

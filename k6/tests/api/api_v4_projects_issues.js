@@ -3,6 +3,7 @@
 @endpoint: `GET /projects/:id/issues`
 @example_uri: /api/v4/projects/:encoded_path/issues
 @description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334434
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
 @gpt_data_version: 1
 */
@@ -14,7 +15,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 
 export let thresholds = {
   'rps': { '13.12.0': 0.6 },
-  'ttfb': { '13.12.0': 2000 },
+  'ttfb': { '13.12.0': 2000, 'latest': 500 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])

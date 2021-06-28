@@ -4,6 +4,7 @@
 @example_uri: /groups/:environment_root_group/issues
 @description: Web - Group Issues Page. <br>Controllers: `GroupsController#issues`</br>
 @gpt_data_version: 1
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334439
 @flags: dash_url
 */
 
@@ -13,10 +14,14 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { 'latest': 500 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

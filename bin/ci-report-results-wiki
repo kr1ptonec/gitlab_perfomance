@@ -34,7 +34,7 @@ raise 'Page Title must be specified' unless @opts[:page_title] || @opts[:dry_run
 def get_comparision_data(results)
   results_comparision_data = {}
   results_comparision_versions = []
-  ttfb_overall_target = (ENV['GPT_TARGET_TTFB']&.dup || 500).to_f
+  ttfb_overall_target = (ENV['GPT_TARGET_TTFB']&.dup || 200).to_f
 
   results.each do |result|
     results_comparision_versions |= [result["version"].tr('.', '-')]
@@ -81,7 +81,7 @@ results_comparision_contents = results_list.length > 1 ? "[[_TOC_]]\n" : ""
 if results_list.length > 1
   results_comparision_data = get_comparision_data(results_list)
   results_comparision_table = generate_comparision_table(results_comparision_data)
-  results_comparision_contents << "## Comparisions\n#{results_comparision_table}\n\nPercentages shown above are [percentage point changes](https://en.wikipedia.org/wiki/Percentage_point) calculated against the ideal target of 500ms unless specified otherwise.\n"
+  results_comparision_contents << "## Comparisions\n#{results_comparision_table}\n\nPercentages shown above are [percentage point changes](https://en.wikipedia.org/wiki/Percentage_point) calculated against the ideal target of 200ms unless specified otherwise.\n"
 end
 
 results_list.each do |results|
