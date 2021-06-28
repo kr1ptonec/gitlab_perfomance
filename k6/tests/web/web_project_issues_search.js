@@ -3,6 +3,7 @@
 @endpoint: `GET /:group/:project/issues/all?search`
 @description: Web - Project Issues Search Page. <br>Controllers: `Projects::IssuesController#index`</br>
 @gpt_data_version: 1
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334446
 @flags: dash_url
 */
 
@@ -13,10 +14,14 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
+export let thresholds = {
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { 'latest': 500 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

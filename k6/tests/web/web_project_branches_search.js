@@ -4,7 +4,7 @@
 @example_uri: /:unencoded_path/-/branches/all?search=:branch_search
 @description: Web - Project Branches Search Page. <br>Controllers: `BranchesController#index`, `Projects::BranchesController#diverging_commit_counts`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/322737
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334448
 @flags: dash_url
 */
 
