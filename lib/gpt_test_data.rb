@@ -475,7 +475,13 @@ class GPTTestData
   #  Vertical
 
   def select_default_large_project_tarball
-    @gitlab_version >= Semantic::Version.new('13.0.0') ? 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' : 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz'
+    if @gitlab_version >= Semantic::Version.new('14.0.0')
+      'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_14.0.0.tar.gz'
+    elsif @gitlab_version >= Semantic::Version.new('13.0.0') && @gitlab_version < Semantic::Version.new('14.0.0')
+      'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz'
+    else
+      'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz'
+    end
   end
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)
