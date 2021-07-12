@@ -20,7 +20,7 @@ opts = Optimist.options do
   banner "\nImports a GitLab Project tarball (local or remote) into the specified environment.\nDefaults to importing the gitlabhq project from a remote filestore to the specified environment, group and project namespace."
   banner "\nOptions:"
   opt :environment_url, "Full URL for the environment to import to.", short: :none, type: :string, required: true
-  opt :project_tarball, "Location of project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/gitlabhq_export_14.0.0.tar.gz'
+  opt :project_tarball, "Location of project tarball to import. Can be local or remote.", short: :none, type: :string, default: 'https://gitlab.com/gitlab-org/quality/performance-data/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz'
   opt :namespace, "The ID or path of the namespace that the project will be imported to, such as a Group.", short: :none, type: :string
   opt :project_name, "Name for project. Can be also be a combined path and name if required.", short: :none, type: :string, required: true
   opt :storage_name, "Name for target repository storage (Gitaly).", short: :none, type: :string, default: 'default'
