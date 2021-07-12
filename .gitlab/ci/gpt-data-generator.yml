@@ -18,7 +18,7 @@
     MAJOR_VERSION: 13
     MINOR_VERSION: 0
     ENVIRONMENT_NAME: docker
-    LARGE_PROJECT_TARBALL: https://gitlab.com/gitlab-org/quality/performance-data/raw/master/projects_export/small-project_13.0.0.tar.gz
+    LARGE_PROJECT_TARBALL: https://gitlab.com/gitlab-org/quality/performance-data/raw/main/projects_export/small-project_13.0.0.tar.gz
   script:
     - apk add docker
     - echo "$GPT_CP_DOCKER_IMAGE:$MAJOR_VERSION.$MINOR_VERSION.0-ce.0"
