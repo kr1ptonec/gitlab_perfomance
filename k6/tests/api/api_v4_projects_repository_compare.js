@@ -3,7 +3,7 @@
 @endpoint: `GET /projects/:id/repository/compare?from=branch1&to=branch2`
 @description: [Compare branches](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/327763
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/327763
 */
 
 import http from "k6/http";
@@ -12,8 +12,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': 0.1 },
-  'ttfb': { 'latest': 8000 },
+  'rps': { '14.1.0': 0.1 },
+  'ttfb': { '14.1.0': 8000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
