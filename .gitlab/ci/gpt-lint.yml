@@ -3,14 +3,14 @@
 #########################
 check:rubocop:
   stage: check
-  image: ruby:2.7-alpine
+  image: ruby:2.7-alpine3.13
   before_script:
     - apk add build-base
     - gem install bundler && bundle config without run && bundle install
   script:
     - rubocop --parallel
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
@@ -23,7 +23,7 @@ check:yamllint:
   script:
     - yamllint .gitlab-ci.yml .gitlab/ci/
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
@@ -36,7 +36,7 @@ check:eslint:
     - npm install eslint@^7.0.0 --global
     - eslint './**/*.js'
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
@@ -50,7 +50,7 @@ check:markdown:
     - markdownlint --config .markdownlint.yml docs
   only:
     refs:
-      - master
+      - main
       - merge_requests
     changes:
       - docs/*

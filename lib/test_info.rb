@@ -28,7 +28,7 @@ module TestInfo
 
       info[:name] = File.basename(test_file, '.js')
       info[:type] = test_file.split("/")[-2]
-      info[:link] = "https://gitlab.com/gitlab-org/quality/performance/blob/master/k6/tests/#{info[:type]}/#{info[:name]}.js"
+      info[:link] = "https://gitlab.com/gitlab-org/quality/performance/blob/main/k6/tests/#{info[:type]}/#{info[:name]}.js"
       info[:link_md] = "[#{info[:name]}](#{info[:link]})"
 
       info[:description] = get_test_tag_value(test_file, 'description')

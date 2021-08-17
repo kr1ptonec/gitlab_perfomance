@@ -46,11 +46,11 @@ module GPTPrepareTestData
     }.to_json
   end
 
-  # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md
+  # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
 
   # This method prepares binary files with git push data for git push test
   # It combines existing commits and branch with hardcoded binary data
-  # More information: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_push.md#how-does-it-work
+  # More information: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md#how-does-it-work
   def prepare_git_push_data(env_vars:)
     project_data = JSON.parse(env_vars["ENVIRONMENT_LARGE_PROJECTS"]).first
 

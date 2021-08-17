@@ -47,7 +47,7 @@ class ImportProject
 
   def import_project_request(proj_tarball_file:, project_name:, namespace:, storage_name:, project_description:)
     GPTLogger.logger.info "Importing project #{project_name}...\nNote that this may take some time to upload a file to the target environment."
-    GPTLogger.logger.info Rainbow("If project import takes more than an hour please refer to the troubleshooting docs https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#import-looks-to-have-hanged.\nStart time: #{Time.now.strftime('%H:%M:%S %Y-%m-%d %Z')}").blue
+    GPTLogger.logger.info Rainbow("If project import takes more than an hour please refer to the troubleshooting docs https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#import-looks-to-have-hanged.\nStart time: #{Time.now.strftime('%H:%M:%S %Y-%m-%d %Z')}").blue
     proj_url = "#{@env_api_url}/projects/import"
     proj_params = {
       file: HTTP::FormData::File.new(proj_tarball_file),
@@ -62,7 +62,7 @@ class ImportProject
     }.merge(@headers)
     GPTLogger.logger.info "Uploading project tarball to the target environment Import API..."
     proj_res = GPTCommon.make_http_request(method: 'post', url: proj_url, params: proj_params, headers: upload_headers, fail_on_error: false)
-    raise ProjectImportError, "Project import request has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}\nThis is very likely to be an issue with the target environment. To troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#import-has-failed\n" unless proj_res.status.success?
+    raise ProjectImportError, "Project import request has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}\nThis is very likely to be an issue with the target environment. To troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#import-has-failed\n" unless proj_res.status.success?
 
     proj_id = JSON.parse(proj_res.body.to_s)['id']
 
@@ -81,7 +81,7 @@ class ImportProject
         GPTLogger.logger.info(Rainbow("\nProject has successfully imported in #{time_taken}:\n#{@env_url}/#{proj_imp_res['path_with_namespace']}").green)
         break
       when 'failed'
-        raise ProjectImportError, "Project has failed to import.\nGitLab import error:\n #{proj_imp_res['import_error']}\nCorrelation ID: #{proj_imp_res['correlation_id']}\nThis is very likely to be an issue with the target environment. To troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#import-has-failed"
+        raise ProjectImportError, "Project has failed to import.\nGitLab import error:\n #{proj_imp_res['import_error']}\nCorrelation ID: #{proj_imp_res['correlation_id']}\nThis is very likely to be an issue with the target environment. To troubleshoot please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#import-has-failed"
       when 'scheduled', 'started'
         print '.'
         sleep 5

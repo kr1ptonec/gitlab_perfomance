@@ -14,10 +14,10 @@
 - [ ] Create a bug if the endpoint response time is above the [`performance main target (200 ms)`](https://about.gitlab.com/handbook/engineering/quality/issue-triage/#severity).
   - Specify created issue link under `@issue` tag.
 - [ ] Consider specifying the additional `@flags`:  
-  - `unsafe` - required for [Unsafe tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#unsafe-tests). Ensure that data before and after the test is consistent.
+  - `unsafe` - required for [Unsafe tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#unsafe-tests). Ensure that data before and after the test is consistent.
   - `search` - labels Search related tests.
   - `dash_url` - labels Web tests with the check if the endpoint path has a dash \ redirect.
-- [ ] [Web tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#test-types)
+- [ ] [Web tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#test-types)
   - Specify all called controller methods under the `@description`.
   - Consider creating MR to add the new test to [GitLab Performance SiteSpeed](https://gitlab.com/gitlab-org/quality/performance-sitespeed).
 

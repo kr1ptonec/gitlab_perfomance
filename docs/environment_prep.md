@@ -5,7 +5,7 @@
 
 Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating a User](#creating-a-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
 
-**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-master/README.md).**
+**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-main/README.md).**
 
 [[_TOC_]]
 
@@ -40,7 +40,7 @@ Remember to keep this Access Token to use with GPT after. After testing has fini
 
 ## Setting up test data with the GPT Data Generator
 
-With User and Access token created you should be ready to now setup data with the [GPT Data Generator](https://gitlab.com/gitlab-org/quality/performance/blob/master/bin/generate-gpt-data) tool. This tool has been designed to set up all the required test data that GPT itself requires.
+With User and Access token created you should be ready to now setup data with the [GPT Data Generator](https://gitlab.com/gitlab-org/quality/performance/blob/main/bin/generate-gpt-data) tool. This tool has been designed to set up all the required test data that GPT itself requires.
 
 To achieve consistent and comparable results GPT is designed primarily to be used with **opinionated test data**. This allows you to validate if the target environment is performing as expected by testing with the exact same data and then [comparing the results](k6.md#comparing-results) with our GitLab [Reference Architectures](https://docs.gitlab.com/ee/administration/reference_architectures/).
 
@@ -141,7 +141,7 @@ Details for each of the settings are as follows. Some are also available to be c
 
 **For a new environment the following settings will typically only need to be changed: `name`, `url`, `user` and `storage_nodes`. Environment config files typically should be saved to the `k6/config/environments` directory although you can save it elsewhere if desired.**
 
-**Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/master/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
+**Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/main/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
 
 ### Running the GPT Data Generator tool
 
@@ -328,7 +328,7 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Disabling Max Import Size limit on environment...
 Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283

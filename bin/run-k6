@@ -22,7 +22,7 @@ puts Rainbow("GitLab Performance Tool (GPT) v#{gpt_version} - Performance test r
 
 opts = Optimist.options do
   version gpt_version
-  banner "\nDocumentation: https://gitlab.com/gitlab-org/quality/performance/blob/master/docs/README.md"
+  banner "\nDocumentation: https://gitlab.com/gitlab-org/quality/performance/blob/main/docs/README.md"
   banner "\nUsage: run-k6 [options]"
   banner "Options:"
   opt :environment, "Name of Environment Config file in environments directory that the test(s) will be run with. Alternative filepath can also be given.", type: :string, required: true

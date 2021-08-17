@@ -107,7 +107,7 @@ module RunK6
     large_projects = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS'])
     large_projects.each do |large_project|
       large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/#{large_project['unencoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
-      raise "\nPlease ensure that Large Project '#{large_project['unencoded_path']}' exists and has Public visibility.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#tests-failing-due-to-sign-in-page-redirect\nExiting..." if large_project_res.uri.to_s.include?("users/sign_in")
+      raise "\nPlease ensure that Large Project '#{large_project['unencoded_path']}' exists and has Public visibility.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#tests-failing-due-to-sign-in-page-redirect\nExiting..." if large_project_res.uri.to_s.include?("users/sign_in")
     end
   end
 

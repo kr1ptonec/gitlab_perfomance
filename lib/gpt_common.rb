@@ -44,7 +44,7 @@ module GPTCommon
   def download_file(url:)
     ENV['PROXY_URL'] ? Down.download(url, proxy: ENV['PROXY_URL']) : Down.download(url)
   rescue Down::TimeoutError => e
-    raise e, "File download from url '#{url}' has timed out.\nIf the machine you are running this tool on doesn't have internet access please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#airgapped-environments for further info."
+    raise e, "File download from url '#{url}' has timed out.\nIf the machine you are running this tool on doesn't have internet access please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#airgapped-environments for further info."
   rescue Down::Error => e
     raise e, "File download from url '#{url}' with the following error: #{e.exception}"
   end
@@ -56,8 +56,8 @@ module GPTCommon
     raise "Environment access token check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
     gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'])
-    warn Rainbow("\nTarget environment is #{gitlab_version}. Minimum fully supported GitLab version for GPT is 12.5.0. For versions between 11.0.0 and 12.5.0 your mileage may vary, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#environment-requirements\n").yellow if gitlab_version < Semantic::Version.new('12.5.0')
-    raise "\nTarget environment is #{gitlab_version}. GitLab versions lower than 11.0.0 are unsupported, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/environment_prep.md#environment-requirements. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
+    warn Rainbow("\nTarget environment is #{gitlab_version}. Minimum fully supported GitLab version for GPT is 12.5.0. For versions between 11.0.0 and 12.5.0 your mileage may vary, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#environment-requirements\n").yellow if gitlab_version < Semantic::Version.new('12.5.0')
+    raise "\nTarget environment is #{gitlab_version}. GitLab versions lower than 11.0.0 are unsupported, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#environment-requirements. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
 
     version = JSON.parse(check_res.body.to_s).values.join(' ')
     GPTLogger.logger.info "Environment and Access Token check complete - URL: #{env_url}, Version: #{version}\n"

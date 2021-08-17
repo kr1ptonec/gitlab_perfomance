@@ -21,7 +21,7 @@ check:gpt-docker:
     - docker build -f Dockerfile.gpt -t gitlab/gitlab-performance-tool:test .
     - docker run --rm -e ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_projects_project.js api_v4_groups_group.js
   only:
-    - master
+    - main
     - merge_requests
     - tags
   except:

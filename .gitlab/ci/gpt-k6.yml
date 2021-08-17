@@ -9,7 +9,7 @@ check:k6:
   script:
     - ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN bin/run-k6 -e staging.json -t api_v4_projects_project.js api_v4_groups_group.js
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules

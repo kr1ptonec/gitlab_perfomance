@@ -42,7 +42,7 @@ check:generator:manual:
   stage: check
   extends: .generator-base
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
