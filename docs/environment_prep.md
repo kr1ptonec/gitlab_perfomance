@@ -399,11 +399,19 @@ First you will need to create the [Project Config File](..k6/config/projects). T
   "file_rendered_path": "CHANGELOG%2emd",
   "file_source_path": "fixtures%2femojis%2findex%2ejson",  
   "dir_path": "spec%2Flib%2Fgitlab",
-  "git_push_data": {
-    "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
-    "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
-    "branch_name": "12-1-auto-deploy-20190714"
-  },
+  "git_pull_data": [
+    {
+    "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+    "have_commit_sha": "92d536a03120b7095b2a78553e76f1913c30e7a9"
+    }
+  ],
+  "git_push_data": [
+    {
+      "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+      "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
+      "branch_name": "12-1-auto-deploy-20190714"
+    }
+  ],
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
   "mr_commits_iid": "4954",
   "mr_discussions_iid": "8785",
@@ -440,6 +448,10 @@ Details for each of the settings are as follows. You should aim to have each of 
 * `file_rendered_path` - The relative path to a large sized file in your project that would be shown rendered, e.g. a markdown file.
 * `file_source_path` - The relative path to a large sized file in your project that would be shown as source code, e.g. a json file.
 * `dir_path`- The relative path of a directory in your project that contains many files. Note that the directory must contain at least 100 files.
+* `git_pull_data` - Git pull data that will be used for git pull test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git push test, please refer to [`Git Pull test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements.
+  * `have_commit_sha` - The commit SHA client has locally.
+  * `want_commit_sha` - The commit SHA client wants to pull from the server.
+* `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
 * `git_push_data` - Git push data that will be used for git push test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git push test, please refer to [`Git Push test documentation`](test_docs/git_push.md). The size of the commits should be tuned to your environment's requirements.
   * `branch_current_head_sha` - The head commit of the `branch_name` branch.
   * `branch_new_head_sha` - Any commit SHA that older then `branch_current_head_sha` on the `branch_name` branch.

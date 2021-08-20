@@ -144,7 +144,7 @@ To intercept git requests and learn more about the objects set up this configura
 
 ## Troubleshooting
 
-* `Commit #efc9f72c9ffaa76f966b8c162a9d184d7aa1ff18 does not exist or user doesn't have developer access to the project. Failing the git push test.`
+* `Commit #efc9f72c9ffaa76f966b8c162a9d184d7aa1ff18 does not exist or user doesn't have developer access to the project.`
 
   * Commits specified in the environment file don't exist in the project. Please specify valid existing commit SHAs for the projects and generate git push data for them.
   * User doesn't have [developer access](https://docs.gitlab.com/ee/user/permissions.html#project-members-permissions) to the project.
