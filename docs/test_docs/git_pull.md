@@ -37,36 +37,38 @@ When user calls `git pull` to [download data](https://git-scm.com/book/en/v2/Git
     Content-Type: application/x-git-upload-pack-request
     Accept-Encoding: deflate, gzip
 
-    0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta\n
-    0032have eedcd0db2cbc11f683f152ef61a9b9a266563eff\n
-    00000009done\n
+    0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta
+    0032have eedcd0db2cbc11f683f152ef61a9b9a266563eff
+    0009done
+
     ```
 
     POST request body is using [pkt-line format](https://git-scm.com/docs/protocol-common#_pkt_line_format). The response to this request indicates success or failure, and includes the packfile.
 
 ## How does it work
 
-Test is using Git Pull over HTTPS to pull from master having locally a branch:
+Test is using Git Pull over HTTPS to pull from `want_commit_sha` having locally a `have_commit_sha`:
 
-1. Fetch commit SHA references of `master` and the `branch` from `mr_commits_iid` merge request in the [Environment JSON file](../k6.md#environments).
 1. Send first Git Pull request that initiates a `fetch-pack` process that connects to an `upload-pack`:
 
     ```txt
     GET /qa-perf-testing/gitlabhq.git/info/refs?service=git-upload-pack HTTP/1.1
     ```
 
-1. Send second Git Pull request that pulls objects that `fetch-pack` process needs by sending "want" and then the SHA-1 it wants(`master` head SHA) and sending "have" with SHA client already has which is `branch` from the step 1:
+1. Send a second Git Pull request that pulls objects that `fetch-pack` process needs by sending "want" and then the SHA-1 it wants(`want_commit_sha`) and sending "have" with SHA client already has which is `have_commit_sha` in the [Environment JSON file](../k6.md#environments):
 
 ```txt
 POST /qa-perf-testing/gitlabhq.git/git-upload-pack HTTP/1.1
 
-0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta\n
-0032have eedcd0db2cbc11f683f152ef61a9b9a266563eff\n
-00000009done\n
+0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta
+0032have eedcd0db2cbc11f683f152ef61a9b9a266563eff
+0009done
+
 ```
 
 ## Troubleshooting
 
-* `GoError: Branch not found`
+* `Commit #efc9f72c9ffaa76f966b8c162a9d184d7aa1ff18 does not exist or user doesn't have developer access to the project.`
 
-  * Branch was not found or user doesn't have [developer access](https://docs.gitlab.com/ee/user/permissions.html#project-members-permissions) to the project.
+  * Commits specified in the environment file don't exist in the project. Please specify valid existing commit SHAs for the projects.
+  * User doesn't have [developer access](https://docs.gitlab.com/ee/user/permissions.html#project-members-permissions) to the project.

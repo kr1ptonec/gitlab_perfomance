@@ -16,11 +16,19 @@
   "file_rendered_path": "CHANGELOG%2emd",
   "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "dir_path": "spec%2Flib%2Fgitlab",
-  "git_push_data": {
-    "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
-    "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
-    "branch_name": "12-1-auto-deploy-20190714"
-  },
+  "git_pull_data": [
+    {
+    "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+    "have_commit_sha": "92d536a03120b7095b2a78553e76f1913c30e7a9"
+    }
+  ],
+  "git_push_data": [
+    {
+      "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+      "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
+      "branch_name": "12-1-auto-deploy-20190714"
+    }
+  ],
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
   "mr_commits_iid": "4954",
   "mr_discussions_iid": "8785",

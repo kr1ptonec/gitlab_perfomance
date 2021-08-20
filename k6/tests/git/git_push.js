@@ -8,9 +8,9 @@
 */
 
 import http from "k6/http";
-import { group, fail } from "k6";
+import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, checkProjectKeys, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
+import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { getRefsListGitPush, pushRefsData, checkCommitExists, prepareGitPushData, updateProjectPipelinesSetting, checkAdminAccess, waitForGitSidekiqQueue } from "../../lib/gpt_git_functions.js";
 
 export let thresholds = {
@@ -39,9 +39,6 @@ export let options = {
 export let authEnvUrl = __ENV.ENVIRONMENT_URL.replace(/(^https?:\/\/)(.*)/, `$1test:${__ENV.ACCESS_TOKEN}@$2`)
 export let projects = getLargeProjects(['encoded_path', 'git_push_data']);
 
-projects = projects.filter(project => checkProjectKeys(project['git_push_data'], ["branch_current_head_sha","branch_new_head_sha","branch_name"]));
-if (projects.length == 0) fail('No projects found with required keys for test. Exiting...');
-
 projects = prepareGitPushData(projects)
 
 export function setup() {
@@ -57,8 +54,10 @@ export function setup() {
   // Test should only run if specified commits exist in the project
   // Also disable Pipelines for the project during the test to prevent them being triggered en masse.
   projects.forEach(project => {
-    checkCommitExists(project, project['git_push_data']['branch_current_head_sha']);
-    checkCommitExists(project, project['git_push_data']['branch_new_head_sha']);
+    project['git_push_data'].forEach(git_push_data => {
+      checkCommitExists(project, git_push_data['branch_current_head_sha']);
+      checkCommitExists(project, git_push_data['branch_new_head_sha']);
+    });
     updateProjectPipelinesSetting(project, false);
   });
 }
@@ -74,7 +73,8 @@ export default function () {
 
     if (project.data) {
       group("Git - Git Push Data", function () {
-        let pushResponses = pushRefsData(authEnvUrl, project);
+        let pushData = selectRandom(project.data);
+        let pushResponses = pushRefsData(authEnvUrl, project, pushData);
         pushResponses.forEach(function (res) {
           /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res)) ;
         });
