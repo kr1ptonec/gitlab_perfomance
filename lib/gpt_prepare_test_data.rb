@@ -59,7 +59,7 @@ module GPTPrepareTestData
     expected_keys = %w[branch_current_head_sha branch_new_head_sha branch_name]
 
     project_data["git_push_data"].each do |push_data|
-      return false if expected_keys.all? { |subkey| push_data.key?(subkey) }
+      return false unless expected_keys.all? { |subkey| push_data.key?(subkey) }
 
       branch_current_head = push_data["branch_current_head_sha"]
       branch_new_head = push_data["branch_new_head_sha"]
