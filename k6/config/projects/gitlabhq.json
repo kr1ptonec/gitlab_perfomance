@@ -16,6 +16,7 @@
   "file_rendered_path": "CHANGELOG%2emd",
   "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "dir_path": "spec%2Flib%2Fgitlab",
+  "git_clone_data": ["8f9beefac3774b30e911fb00a68f4c7a5244cf27", "3f242b6bb267fea02de29c67cc5cf0384020662e"],
   "git_pull_data": [
     {
     "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",

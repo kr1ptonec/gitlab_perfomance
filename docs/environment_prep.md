@@ -399,6 +399,7 @@ First you will need to create the [Project Config File](..k6/config/projects). T
   "file_rendered_path": "CHANGELOG%2emd",
   "file_source_path": "fixtures%2femojis%2findex%2ejson",  
   "dir_path": "spec%2Flib%2Fgitlab",
+  "git_clone_data": ["8f9beefac3774b30e911fb00a68f4c7a5244cf27", "3f242b6bb267fea02de29c67cc5cf0384020662e"],
   "git_pull_data": [
     {
     "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
@@ -448,7 +449,8 @@ Details for each of the settings are as follows. You should aim to have each of 
 * `file_rendered_path` - The relative path to a large sized file in your project that would be shown rendered, e.g. a markdown file.
 * `file_source_path` - The relative path to a large sized file in your project that would be shown as source code, e.g. a json file.
 * `dir_path`- The relative path of a directory in your project that contains many files. Note that the directory must contain at least 100 files.
-* `git_pull_data` - Git pull data that will be used for git pull test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git push test, please refer to [`Git Pull test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements.
+* `git_clone_data` - Git clone data contains an array of commit SHAs that will be cloned during the git clone test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git clone test, please refer to [`Git Clone test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements. Commits will be randomly selected from the array during the test.
+* `git_pull_data` - Git pull data that will be used for git pull test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git pull test, please refer to [`Git Pull test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements.
   * `have_commit_sha` - The commit SHA client has locally.
   * `want_commit_sha` - The commit SHA client wants to pull from the server.
 * `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
