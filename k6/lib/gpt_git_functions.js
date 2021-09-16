@@ -31,7 +31,7 @@ export function getRefsListGitPull(project) {
 // by sending “want” and then the SHA-1 it wants = master head
 // and sending "have" SHA-1 client already has = branch head with the biggest changes
 // https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols#_downloading_data
-export function pullRefsData(project, wantRefSHA, haveRefSHA) {
+export function pullRefsData(project, wantRefSHA, haveRefSHA="") {
   let params = {
     headers: {
       "Accept": "application/x-git-upload-pack-result",
@@ -39,7 +39,9 @@ export function pullRefsData(project, wantRefSHA, haveRefSHA) {
       "Content-Type": "application/x-git-upload-pack-request"
     }
   };
-  let body = `0054want ${wantRefSHA} multi_ack side-band-64k ofs-delta\n00000032have ${haveRefSHA}\n0009done\n`;
+  let body = (haveRefSHA === "") ? 
+    `0054want ${wantRefSHA} multi_ack side-band-64k ofs-delta\n00000009done\n`:
+    `0054want ${wantRefSHA} multi_ack side-band-64k ofs-delta\n00000032have ${haveRefSHA}\n0009done\n`;
   let response = http.post(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}.git/git-upload-pack`, body, params);
   return response;
 }

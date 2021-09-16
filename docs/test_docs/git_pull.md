@@ -1,8 +1,6 @@
-# Git Pull over HTTPS test
+# Git Pull/Clone over HTTPS test
 
-* [Git Pull over HTTPS](#git-pull-over-https)
-* [How does it work](#how-does-it-work)
-* [Troubleshooting](#troubleshooting)
+[[_TOC_]]
 
 ## Git Pull over HTTPS
 
@@ -63,6 +61,23 @@ POST /qa-perf-testing/gitlabhq.git/git-upload-pack HTTP/1.1
 0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta
 0032have eedcd0db2cbc11f683f152ef61a9b9a266563eff
 0009done
+
+```
+
+## Git Clone over HTTPS
+
+Git Clone over HTTPS uses the similar requests as [Git Pull over HTTPS](#git-pull-over-https) with a single difference that
+in the second request to `git-upload-pack` it sends only “want” SHA and omits "have" like so:
+
+```txt
+POST /qa-perf-testing/gitlabhq.git/git-upload-pack HTTP/1.1
+Host: localhost
+Accept: application/x-git-upload-pack-result
+Content-Type: application/x-git-upload-pack-request
+Accept-Encoding: deflate, gzip
+
+0054want 691d88b71d51786983b823207d876cee7c93f5d4 multi_ack side-band-64k ofs-delta
+00000009done
 
 ```
 

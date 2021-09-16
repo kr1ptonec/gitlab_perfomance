@@ -21,4 +21,4 @@
   - Specify all called controller methods under the `@description`.
   - Consider creating MR to add the new test to [GitLab Performance SiteSpeed](https://gitlab.com/gitlab-org/quality/performance-sitespeed).
 
-/label ~Quality ~performance ~"Quality:performance"
+/label ~Quality ~performance

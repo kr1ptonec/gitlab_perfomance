@@ -1,11 +1,6 @@
 # Git Push over HTTPS test
 
-* [Git Push over HTTPs](#git-push-over-https)
-* [Git Push test](#git-push-test)
-  * [Git Push commits to the existing branch](#git-push-commits-to-the-existing-branch)
-  * [Git Push new branch from the existing commit](#git-push-new-branch-from-the-existing-commit)
-* [How does it work](#how-does-it-work)
-* [Troubleshooting](#troubleshooting)  
+[[_TOC_]]
 
 ## Git Push over HTTPS
 
@@ -84,7 +79,7 @@ If we want to test git push for the last two commits:
   }
 ```
 
-#### Git Push new branch from the existing commit
+### Git Push new branch from the existing commit
 
 Specify `git_push_data` in the Environment file:
 
@@ -102,7 +97,7 @@ If we want to test git push for new branch `new_unique_branch_name`:
   }
 ```
 
-#### How does it work
+## How does it work
 
 Packfile that is being sent to `receive-pack` has a similar [structure](https://git-scm.com/docs/pack-protocol#_reference_update_request_and_packfile_transfer):
 
