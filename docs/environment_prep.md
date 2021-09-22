@@ -668,6 +668,10 @@ Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project i
 
 If you still see a Large Project validation error at this point, please look through the known Import issues listed above and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
 
+### Import failed with 413 Request Entity Too Large error
+
+`413 Request Entity Too Large` can appear due to the limit in Load Balancer configuration for a maximum allowed size of the client request body. If using GitLab Charts, you can set [`gitlab.webservice.ingress.proxyBodySize`](https://docs.gitlab.com/charts/charts/gitlab/webservice/#proxybodysize) to `0` to disable this limit.
+
 ## Create group request failed with 403 error
 
 If you are seeing `403 Forbidden` error when GPT Data Generator tries to create a `gpt` root group, please ensure that the user has access to create groups. Navigate to `http://<env_url>/admin/users/<username>` and check that `Can create groups` is enabled. If it's not, edit the user and update this field.
