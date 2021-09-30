@@ -643,15 +643,15 @@ Both issues are caused by the application problems with the target GitLab enviro
 
 GPT Data Generator will validate the project after to ensure it's imported fully. If there's an issue with the project Generator will report the problem accordingly.
 
-If for some reason the import has failed it may be due to a known import issue. A list of current [import issues can be found here](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters).
+There was a [known bug](https://gitlab.com/gitlab-org/gitlab/-/issues/332313) in GitLab version 13.12 or older which was fixed in version 14.0. If you are running an older GitLab version, please [follow this workaround](https://gitlab.com/gitlab-org/gitlab/-/issues/332313#workaround) to resolve the impartial import by disabling and deleting the `import_export_project_cleanup_worker` job in Sidekiq.
 
-Unfortunately when this happens the project will need to be reimported. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
-
-After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
+After it's done, rerun the GPT Data Generator to set up Vertical data once again skipping the horizontal check:
 
 ```sh
 docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
 ```
+
+If the Large Project validation error persists, please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node. After that run the command above to validate that the test data was setup correctly.
 
 Example of successful validation output:
 
@@ -668,7 +668,7 @@ Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project i
 █ GPT data generation finished after 0 seconds.
 ```
 
-If you still see a Large Project validation error at this point, please look through the known Import issues listed above and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
+If you still see a Large Project validation error at this point, please look through the [known Import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters) and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
 
 ### Import failed with 413 Request Entity Too Large error
 
