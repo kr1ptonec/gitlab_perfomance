@@ -4,7 +4,8 @@
 @example_uri: /:unencoded_path/merge_requests/:mr_discussions_iid
 @description: Web - Project Merge Request Page. <br>Controllers: `Projects::MergeRequestsController#show`, `Projects::MergeRequestsController#show.json`, `Projects::MergeRequestsController#discussions.json`, `Projects::MergeRequests::ContentController#widget.json`, `Projects::MergeRequests::ContentController#cached_widget.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/209784, https://gitlab.com/gitlab-org/gitlab/-/issues/331421
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/342612, https://gitlab.com/gitlab-org/gitlab/-/issues/331421
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/209784
 @gitlab_version: 12.2.0
 @flags: dash_url
 */
@@ -16,8 +17,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
-  'ttfb': { 'latest': 7500 }
+  'rps': { '14.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { '14.4.0': 7500, 'latest': 700 }
 };
 export let endpointCount = 5
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
