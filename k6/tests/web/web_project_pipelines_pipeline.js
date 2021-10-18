@@ -3,6 +3,7 @@
 @endpoint: `GET /:group/:project/pipelines/:pipeline_id`
 @description: Web - Project Pipeline Page. <br>Controllers: `Projects::PipelinesController#show`, `Projects::PipelinesController#show.json`, `Projects::Pipelines::TestsController#summary`, `Projects::PipelinesController#status`</br>
 @gpt_data_version: 1
+@gitlab_version: 13.3.0
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/320928
 @flags: dash_url
 */
