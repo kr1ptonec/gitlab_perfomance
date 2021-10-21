@@ -9,9 +9,11 @@ export function logError(res) {
   if ( typeof logError.last == 'undefined' ) logError.last = '';
 
   let error;
+  let correlationId;
   try {
     let message = JSON.parse(res.body)['message'] || JSON.parse(res.body)['error']
     error = typeof message === 'object' ? JSON.stringify(message) : message
+    correlationId = res.headers['X-Request-Id'];
   } catch (e) {
     error = res.body
   }
@@ -21,7 +23,9 @@ export function logError(res) {
 
   if (logError.last != error) {
     logError.last = error;
-    console.warn(`Error detected: '${logError.last}'`);
+    let message = `Error detected: '${logError.last}'`;
+    if (correlationId) { message = `${message} ====> Correlation ID: ${correlationId}`; }
+    console.warn(message);
   }
 }
 

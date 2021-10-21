@@ -36,7 +36,12 @@ module GPTCommon
       retry
     end
 
-    raise RequestError, "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n" if fail_on_error && !res.status.success?
+    if fail_on_error && !res.status.success?
+      error_message = "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n"
+      correlation_id = res.headers.to_hash['X-Request-Id']
+      error_message = "#{error_message}Correlation ID: #{correlation_id}\n" unless correlation_id.nil?
+      raise RequestError, error_message
+    end
 
     res
   end
