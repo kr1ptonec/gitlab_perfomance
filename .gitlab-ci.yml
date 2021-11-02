@@ -8,15 +8,23 @@ include:
   - template: Security/Dependency-Scanning.gitlab-ci.yml
   - template: Security/Container-Scanning.gitlab-ci.yml
 
+#################################
+##      Security Scanning      ##
+#################################
+
+.on_merge_request_and_merged_events:
+  rules:
+    - if: '$CI_BUILD_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
 gemnasium-dependency_scanning:
   stage: check
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - !reference [.on_merge_request_and_merged_events, rules]
 
 bundler-audit-dependency_scanning:
   stage: check
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - !reference [.on_merge_request_and_merged_events, rules]
 
 container_scanning:
   stage: check
@@ -24,7 +32,7 @@ container_scanning:
     DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
     DOCKERFILE_PATH: Dockerfile.gpt
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - !reference [.on_merge_request_and_merged_events, rules]
 
 container_scanning 2/2:
   extends: container_scanning
