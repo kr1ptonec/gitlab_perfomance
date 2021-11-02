@@ -5,3 +5,29 @@ include:
   - local: '.gitlab/ci/gpt-k6-compare.yml'
   - local: '.gitlab/ci/gpt-docker.yml'
   - local: '.gitlab/ci/gpt-data-generator.yml'
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+gemnasium-dependency_scanning:
+  stage: check
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+bundler-audit-dependency_scanning:
+  stage: check
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+container_scanning:
+  stage: check
+  variables:
+    DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+    DOCKERFILE_PATH: Dockerfile.gpt
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+container_scanning 2/2:
+  extends: container_scanning
+  variables:
+    DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+    DOCKERFILE_PATH: Dockerfile.gpt-data-generator
