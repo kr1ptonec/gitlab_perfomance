@@ -23,11 +23,13 @@ update-environment:
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: update
+    ENVIRONMENT_NODE_PREFIX: $ENVIRONMENT_NODE_PREFIX
+    ENVIRONMENT_CLOUD_PROVIDER: $ENVIRONMENT_CLOUD_PROVIDER
     GET_BRANCH: $GET_BRANCH
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
-    GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
+    AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
   trigger:
     project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
     branch: $GET_CONFIG_BRANCH
@@ -41,11 +43,13 @@ stop-environment:
   variables:
     ENVIRONMENT_NAME: $ENVIRONMENT_NAME
     ENVIRONMENT_ACTION: stop
+    ENVIRONMENT_NODE_PREFIX: $ENVIRONMENT_NODE_PREFIX
+    ENVIRONMENT_CLOUD_PROVIDER: $ENVIRONMENT_CLOUD_PROVIDER
     GET_BRANCH: $GET_BRANCH
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
-    GCP_GITLAB_NODE_PREFIX: $GCP_GITLAB_NODE_PREFIX
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
+    AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
   trigger:
     project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
     branch: $GET_CONFIG_BRANCH
@@ -61,8 +65,11 @@ stop-environment:
 k6:
   stage: test
   extends: .k6-base
+  variables:
+    GPT_ENVIRONMENT_CONF_FILE: $ENVIRONMENT_NAME.json
+    GPT_OPTIONS_CONF_FILE: $OPTIONS_FILE.json
   script:
-    - bin/run-k6 -s -e $ENVIRONMENT_NAME.json -o $OPTIONS_FILE.json -u $([ -n "$QUARANTINED" ] && echo "-q")
+    - bin/run-k6 -s -e $GPT_ENVIRONMENT_CONF_FILE -o $GPT_OPTIONS_CONF_FILE -u $([ -n "$QUARANTINED" ] && echo "-q")
   only:
     refs:
       - schedules

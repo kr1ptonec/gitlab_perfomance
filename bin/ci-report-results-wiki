@@ -101,8 +101,8 @@ results_list.each do |results|
 end
 
 # Colored results highlight for wiki
-results_comparision_contents.gsub!(/Passed/, '**{+Passed+}**')
-results_comparision_contents.gsub!(/FAILED/, '**{-FAILED-}**')
+results_comparision_contents.gsub!(/Passed/, '**{+Passed+}** ')
+results_comparision_contents.gsub!(/FAILED/, '**{-FAILED-}** ')
 
 results_comparision_file = File.join(@opts[:results_path], "results_comparision.txt")
 puts "Saving results to #{results_comparision_file}"
