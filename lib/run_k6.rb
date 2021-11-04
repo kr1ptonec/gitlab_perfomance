@@ -234,7 +234,7 @@ module RunK6
     results["score"] = [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?) ? ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) : 0.0
     results['redo'] = test_redo
 
-    results["issues"] = TestInfo.get_test_tag_value(test_file, 'issues')
+    results["issues"] = TestInfo.get_test_tag_value(test_file, 'issue')
     results["flags"] = TestInfo.get_test_tag_value(test_file, 'flags')
 
     results

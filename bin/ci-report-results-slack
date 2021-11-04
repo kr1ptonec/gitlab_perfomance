@@ -63,7 +63,14 @@ end
 def prepare_message_text(result, results_json = nil)
   environment = ENV['ENVIRONMENT_NAME']&.match?(/docker/i) ? "multiple GitLab versions" : ENV['ENVIRONMENT_NAME'].capitalize
   message = "#{@opts[:test_name].upcase} tests against #{environment} has"
-  summary = result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing:"
+
+  headline = if ENV['CI_SLACK_IGNORE_RESULT'] == 'true'
+               ":checkered_flag: #{message} completed! :checkered_flag:"
+             else
+               result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing"
+             end
+
+  summary = headline
   summary << "\n• Pipeline - #{ENV['CI_PIPELINE_URL']}" if ENV['CI_PIPELINE_URL']
   summary << "\n• Metrics Dashboard - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json
   summary << "\n• Results History Dashboard - #{ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']}" if ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']
