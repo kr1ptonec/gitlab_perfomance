@@ -668,7 +668,7 @@ Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project i
 █ GPT data generation finished after 0 seconds.
 ```
 
-If you still see a Large Project validation error at this point, please look through the [known Import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters) and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
+If you still see a Large Project validation error at this point, please look through the [known Import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?sort=created_date&state=opened&label_name[]=Category:Importers&label_name[]=type::bug) and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
 
 ### Import failed with 413 Request Entity Too Large error
 
