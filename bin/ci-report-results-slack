@@ -75,7 +75,7 @@ def prepare_message_text(result, results_json = nil)
   # Construct and add Grafana links(s) string
   if results_json
     grafana_str = "\n• <#{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}|Metrics Dashboard>" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']
-    grafana_str += " (<#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=2&width=1000&height=750|CPU>, <#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=17&width=1000&height=750|Memory>)" if ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']
+    grafana_str += " (<#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=2&width=1000&height=750&timeout=180|CPU>, <#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=17&width=1000&height=750&timeout=180|Memory>)" if ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']
 
     summary << grafana_str
   end
