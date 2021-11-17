@@ -49,7 +49,8 @@ gpt-build-docker:
         docker push gitlab/gitlab-performance-tool:latest
       fi
   only:
-    - tags
+    variables:
+      - $CI_COMMIT_TAG
 
 ##########################################
 ##   GPT Data Generator Docker Build   ##
