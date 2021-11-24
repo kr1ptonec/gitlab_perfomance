@@ -31,7 +31,7 @@ update-environment:
     GCLOUD_ZONE: $GCLOUD_ZONE
     AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
   trigger:
-    project: $GET_CONFIG_PROJECT
+    project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
     branch: $GET_CONFIG_BRANCH
     strategy: depend
   only:
@@ -51,7 +51,7 @@ stop-environment:
     GCLOUD_ZONE: $GCLOUD_ZONE
     AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
   trigger:
-    project: $GET_CONFIG_PROJECT
+    project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
     branch: $GET_CONFIG_BRANCH
     strategy: depend
   only:
