@@ -36,7 +36,7 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Issue Overview", function() {
+  group("API - Project Issue Overview", function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };

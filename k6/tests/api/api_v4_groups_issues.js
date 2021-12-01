@@ -35,7 +35,7 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Issues List", function() {
+  group("API - Group Issues List", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${__ENV.ENVIRONMENT_ROOT_GROUP}/issues`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
