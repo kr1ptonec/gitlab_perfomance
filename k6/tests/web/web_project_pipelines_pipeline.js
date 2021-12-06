@@ -16,7 +16,7 @@ import { checkProjEndpointDash, getPipelineId } from "../../lib/gpt_data_helper_
 import { pipelineDetailsQuery } from "../../lib/graphql/pipeline_details.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 2500 }
+  'ttfb': { 'latest': 6000 }
 };
 export let endpointCount = 4
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
