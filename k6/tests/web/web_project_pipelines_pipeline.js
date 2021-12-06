@@ -65,9 +65,6 @@ export default function(data) {
   group("Web - Project Pipelines Page", function() {
     let project = selectRandom(data.projects);
 
-    console.log(project)
-    console.log(`${__ENV.ENVIRONMENT_URL}=/=${project['unencoded_path']}=/=${data.endpointPath}=/=${project.pipelineId}=/=jobs`)
-
     let responses = http.batch([
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, {tags: {endpoint: '/pipeline', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/builds`, null, {tags: {endpoint: '/pipeline/:id/jobs', controller: 'Projects::PipelinesController', action: 'show'}, redirects: 0}],
