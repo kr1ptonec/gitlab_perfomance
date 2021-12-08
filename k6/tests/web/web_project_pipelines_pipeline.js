@@ -67,7 +67,6 @@ export default function(data) {
 
     let responses = http.batch([
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/builds`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, {tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0}],
