@@ -16,9 +16,9 @@ import { checkProjEndpointDash, getPipelineId, getPipelineIid } from "../../lib/
 import { operationName, variables, pipelineDetailsQuery } from "../../lib/graphql/pipeline_details.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 4000 }
+  'ttfb': { 'latest': 6000 }
 };
-export let endpointCount = 4
+export let endpointCount = 5
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT);
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT);
 export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount);
