@@ -16,7 +16,7 @@ import { checkProjEndpointDash, getPipelineId, getPipelineIid } from "../../lib/
 import { operationName, variables, pipelineDetailsQuery } from "../../lib/graphql/pipeline_details.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 6000 }
+  'ttfb': { 'latest': 4000 }
 };
 export let endpointCount = 4
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -67,12 +67,12 @@ export default function(data) {
     const project = selectRandom(data.projects);
     const pipelineIid = getPipelineIid(project['unencoded_path'], project.pipelineId);
 
-    let responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, {tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0}],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], pipelineIid)}`, null, {tags: {controller: 'Projects::PipelinesController'}, redirects: 0}]
+    const responses = http.batch([
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, { tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
