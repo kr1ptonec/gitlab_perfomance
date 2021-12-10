@@ -27,10 +27,16 @@ export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{controller:Projects::PipelinesController}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::PipelinesController#show}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::PipelinesController#show.json}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::PipelinesController#status}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::PipelinesController#jobs}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{controller:Projects::Pipelines::TestsController}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{controller:Projects::PipelinesController}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::PipelinesController#show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::PipelinesController#show.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::PipelinesController#status}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::PipelinesController#jobs}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{controller:Projects::Pipelines::TestsController}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
@@ -65,11 +71,11 @@ export default function(data) {
     const project = selectRandom(data.projects);
 
     const responses = http.batch([
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, { tags: { controller: 'Projects::PipelinesController#show' }, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, { tags: { controller: 'Projects::PipelinesController#show.json'}, redirects: 0 }],
+      ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, { tags: { controller: 'Projects::PipelinesController#status'}, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, { tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController#jobs' }, redirects: 0 }]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
