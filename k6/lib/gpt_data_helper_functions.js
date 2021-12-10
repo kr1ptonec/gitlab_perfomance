@@ -38,3 +38,11 @@ export function getPipelineId(projectId, pipelineSHA) {
   pipelineId ? console.log(`Pipeline with SHA '${pipelineSHA}' has id=${pipelineId}`) : console.log(`No pipelines containing SHA: '${pipelineSHA}'`);
   return pipelineId;
 }
+
+export function getPipelineIid(unencoded_path, pipelineId) {
+  const params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  const res = http.get(`${__ENV.ENVIRONMENT_URL}/${unencoded_path}/-/pipelines.json`, params);
+  const pipelines = JSON.parse(res.body).pipelines
+  const result = pipelines.filter(pipeline => pipeline.id == pipelineId)
+  return JSON.stringify(result[0].iid);
+}
