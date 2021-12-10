@@ -27,15 +27,11 @@ export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
-    "http_req_waiting{endpoint:/pipeline}": [`p(90)<${ttfbThreshold}`],
-    "http_req_waiting{endpoint:/pipeline.json}": [`p(90)<${ttfbThreshold}`],
-    "http_req_waiting{endpoint:/pipeline/status.json}": [`p(90)<${ttfbThreshold}`],
-    "http_req_waiting{endpoint:/pipeline/tests/summary.json}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::PipelinesController}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::Pipelines::TestsController}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
-    "http_reqs{endpoint:/pipeline}": [`count>=${rpsThresholds['count_per_endpoint']}`],
-    "http_reqs{endpoint:/pipeline.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
-    "http_reqs{endpoint:/pipeline/status.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
-    "http_reqs{endpoint:/pipeline/tests/summary.json}": [`count>=${rpsThresholds['count_per_endpoint']}`]
+    "http_reqs{controller:Projects::PipelinesController}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::Pipelines::TestsController}": [`count>=${rpsThresholds['count_per_endpoint']}`]
   },
   rps: webProtoRps,
   stages: webProtoStages
@@ -57,21 +53,23 @@ export function setup() {
   console.log(`Endpoint path is '${endpointPath}'`);
   
   // Get pipeline ID from pipeline SHA
-  projects.forEach(project => { project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']); });
+  projects.forEach(project => {
+    project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']);
+    project.pipelineIid = getPipelineIid(project['unencoded_path'], project.pipelineId);
+  });
   return { projects, endpointPath };
 }
 
 export default function(data) {
   group("Web - Project Pipelines Page", function() {
     const project = selectRandom(data.projects);
-    const pipelineIid = getPipelineIid(project['unencoded_path'], project.pipelineId);
 
     const responses = http.batch([
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, { tags: { controller: 'Projects::PipelinesController'}, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, { tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }]
+      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController' }, redirects: 0 }]
     ]);
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
