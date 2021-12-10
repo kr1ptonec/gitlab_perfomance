@@ -19,11 +19,11 @@ export let thresholds = {
   'ttfb': { 'latest': 4000 }
 };
 export let endpointCount = 4
-export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
-export let successRate = new Rate("successful_requests")
+export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT);
+export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT);
+export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount);
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb']);
+export let successRate = new Rate("successful_requests");
 export let options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
@@ -44,18 +44,17 @@ export let options = {
 export let projects = getLargeProjects(['name', 'encoded_path', 'unencoded_path', 'pipeline_sha']);
 
 export function setup() {
-  console.log('')
-  console.log(`Web Protocol RPS: ${webProtoRps}`)
-  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
-  console.log(`RPS Threshold per Endpoint: ${rpsThresholds['mean_per_endpoint']}/s (${rpsThresholds['count_per_endpoint']})`)
-  console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+  console.log('');
+  console.log(`Web Protocol RPS: ${webProtoRps}`);
+  console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`);
+  console.log(`RPS Threshold per Endpoint: ${rpsThresholds['mean_per_endpoint']}/s (${rpsThresholds['count_per_endpoint']})`);
+  console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`);
+  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`);
 
   // Check if endpoint path has a dash \ redirect
-  let checkProject = selectRandom(projects)
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines')
-  console.log()
-  console.log(`Endpoint path is '${endpointPath}'`)
+  let checkProject = selectRandom(projects);
+  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines');
+  console.log(`Endpoint path is '${endpointPath}'`);
   
   // Get pipeline ID from pipeline SHA
   projects.forEach(project => { project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']); });
