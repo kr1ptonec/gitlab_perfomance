@@ -58,7 +58,7 @@ export function setup() {
   let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines');
   console.log(`Endpoint path is '${endpointPath}'`);
   
-  // Get pipeline ID from pipeline SHA
+  // Get pipeline ID and IID from pipeline SHA
   projects.forEach(project => {
     project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']);
     project.pipelineIid = getPipelineIid(project['unencoded_path'], project.pipelineId);
