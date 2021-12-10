@@ -75,10 +75,14 @@ export default function(data) {
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}.json`, null, { tags: { controller: 'Projects::PipelinesController#show.json'}, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/status.json`, null, { tags: { controller: 'Projects::PipelinesController#status'}, redirects: 0 }],
       ["GET", `${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project.pipelineId}/tests/summary.json`, null, { tags: {controller: 'Projects::Pipelines::TestsController'}, redirects: 0 }],
-      ["GET", `${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, null, { tags: { controller: 'Projects::PipelinesController#jobs' }, redirects: 0 }]
     ]);
+    
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
+    
+    let graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, Object.assign({}, { tags: { controller: 'Projects::PipelinesController#jobs' } }));
+    let graphQLErrors = JSON.parse(graphqlResponse.body).errors
+    graphQLErrors === undefined ? successRate.add(true) : (successRate.add(false), logError(graphQLErrors));
   });
 }
