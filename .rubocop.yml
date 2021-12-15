@@ -49,7 +49,7 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 Metrics/AbcSize:
-  Max: 75.0
+  Max: 76.0
 
 Style/StringConcatenation:
   Enabled: false
