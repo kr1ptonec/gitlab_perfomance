@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.22'
+gpt_data_version = '1.0.23'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do

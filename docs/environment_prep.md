@@ -154,7 +154,7 @@ The recommended way to run the GPT Data Generator is with our Docker image, [git
 The full options for running the tool can be seen by getting the help output via `docker run -it gitlab/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.22 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.23 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -211,7 +211,11 @@ As standard with Docker you can mount several volumes to get your own config fil
 Here's an example of how you would run the Docker image with all pieces of config and results mounted (replacing placeholders as appropriate):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 Typically you will only need to run the tool directly without any options. Doing this will create all the data that GPT requires and then be ready to go. In addition to this GPT Data Generator is idempotent meaning you can run it again in the future when the test data may have changed and the tool will make the specific changes as required.
@@ -273,7 +277,12 @@ For environments that don't have internet access you'll need to download the def
 With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_14.0.0.tar.gz
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  -v <HOST PROJECT FOLDER>:/projects \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_14.0.0.tar.gz
 ```
 
 ##### Environments running behind a Proxy
@@ -283,7 +292,13 @@ For environments that do have internet access but through a http proxy the Gener
 With our recommended way of running Generator via Docker you'll need to pass this environment variable in directly in the command, for example:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -e PROXY_URL=<URL> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -e PROXY_URL=<URL> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  -v <HOST PROJECT FOLDER>:/projects \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 #### Location and Network conditions
@@ -307,7 +322,7 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.22 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.23 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
 Creating group gpt
@@ -550,13 +565,21 @@ Both of these can easily be deleted by an admin user with data specifically easi
 The Generator can also be used to delete the root group by passing the `--clean-up` param:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
 ```
 
 In addition to this it's possible to only delete one of the subsets of data (Vertical or Horizontal). This can be done by passing the `--clean-up-mode` param with either of the values `vertical` or `horizontal` respectively in addition to `--clean-up`. Below is an example of how to clean up only horizontal data:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
 ```
 
 # Troubleshooting
@@ -648,7 +671,11 @@ There was a [known bug](https://gitlab.com/gitlab-org/gitlab/-/issues/332313) in
 After it's done, rerun the GPT Data Generator to set up Vertical data once again skipping the horizontal check:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
 ```
 
 If the Large Project validation error persists, please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node. After that run the command above to validate that the test data was setup correctly.
