@@ -3,7 +3,7 @@
 @endpoint: `GET /:group/:project/pipelines/:pipeline_id`
 @description: Web - Project Pipeline Page. <br>Controllers: `Projects::PipelinesController#show`, `Projects::PipelinesController#show.json`, `Projects::Pipelines::TestsController#summary`, `Projects::PipelinesController#status`</br>
 @gpt_data_version: 1
-@gitlab_version: 13.3.0
+@gitlab_version: 13.7.0
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/320928
 @flags: dash_url
 */
@@ -81,7 +81,7 @@ export default function(data) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
     
-    let graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, Object.assign({}, { tags: { controller: 'Projects::PipelinesController#jobs' } }));
+    let graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, { tags: { controller: 'Projects::PipelinesController#jobs' } });
     let graphQLErrors = JSON.parse(graphqlResponse.body).errors
     graphQLErrors === undefined ? successRate.add(true) : (successRate.add(false), logError(graphQLErrors));
   });
