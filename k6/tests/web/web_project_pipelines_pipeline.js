@@ -82,7 +82,7 @@ export default function(data) {
     });
     
     const graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, { tags: { controller: 'Projects::PipelinesController#jobs' } });
-    const graphQLErrors = JSON.parse(graphqlResponse.body).errors
+    const graphQLErrors = JSON.parse(graphqlResponse.body).errors;
     graphQLErrors === undefined ? successRate.add(true) : (successRate.add(false), logError(graphQLErrors));
   });
 }
