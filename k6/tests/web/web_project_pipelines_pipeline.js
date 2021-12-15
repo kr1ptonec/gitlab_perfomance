@@ -15,16 +15,16 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash, getPipelineId, getPipelineIid } from "../../lib/gpt_data_helper_functions.js";
 import { operationName, variables, pipelineDetailsQuery } from "../../lib/graphql/pipeline_details.js";
 
-export let thresholds = {
+export const thresholds = {
   'ttfb': { 'latest': 6000 }
 };
-export let endpointCount = 5
-export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT);
-export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT);
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount);
-export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb']);
-export let successRate = new Rate("successful_requests");
-export let options = {
+export const endpointCount = 5
+export const webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT);
+export const webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT);
+export const rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount);
+export const ttfbThreshold = getTtfbThreshold(thresholds['ttfb']);
+export const successRate = new Rate("successful_requests");
+export const options = {
   thresholds: {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting{controller:Projects::PipelinesController#show}": [`p(90)<${ttfbThreshold}`],
@@ -54,8 +54,8 @@ export function setup() {
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`);
 
   // Check if endpoint path has a dash \ redirect
-  let checkProject = selectRandom(projects);
-  let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines');
+  const checkProject = selectRandom(projects);
+  const endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'pipelines');
   console.log(`Endpoint path is '${endpointPath}'`);
   
   // Get pipeline ID and IID from pipeline SHA
@@ -81,8 +81,8 @@ export default function(data) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
     
-    let graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, { tags: { controller: 'Projects::PipelinesController#jobs' } });
-    let graphQLErrors = JSON.parse(graphqlResponse.body).errors
+    const graphqlResponse = http.get(`${__ENV.ENVIRONMENT_URL}/api/graphql?query=${pipelineDetailsQuery}&operationName=${operationName}&variables=${variables(project['unencoded_path'], project.pipelineIid)}`, { tags: { controller: 'Projects::PipelinesController#jobs' } });
+    const graphQLErrors = JSON.parse(graphqlResponse.body).errors
     graphQLErrors === undefined ? successRate.add(true) : (successRate.add(false), logError(graphQLErrors));
   });
 }
