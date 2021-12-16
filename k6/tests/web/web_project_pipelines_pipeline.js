@@ -61,7 +61,7 @@ export function setup() {
   // Get pipeline ID and IID from pipeline SHA
   projects.forEach(project => {
     project.pipelineId = getPipelineId(project['encoded_path'], project['pipeline_sha']);
-    project.pipelineIid = getPipelineIid(project['unencoded_path'], project.pipelineId);
+    project.pipelineIid = getPipelineIid(project['unencoded_path'], project['pipeline_sha']);
   });
   return { projects, endpointPath };
 }

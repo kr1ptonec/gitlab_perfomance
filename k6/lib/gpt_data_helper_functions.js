@@ -39,10 +39,12 @@ export function getPipelineId(projectId, pipelineSHA) {
   return pipelineId;
 }
 
-export function getPipelineIid(unencoded_path, pipelineId) {
-  const params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  const res = http.get(`${__ENV.ENVIRONMENT_URL}/${unencoded_path}/-/pipelines.json`, params);
-  const pipelines = JSON.parse(res.body).pipelines
-  const result = pipelines.filter(pipeline => pipeline.id == pipelineId)
-  return JSON.stringify(result[0].iid);
+export function getPipelineIid(unencoded_path, pipelineSHA) {
+  const query = `query { project(fullPath: "${unencoded_path}") { pipeline(sha: "${pipelineSHA}") { iid } } }`;
+  const headers = {
+    'Authorization': `Bearer ${__ENV.ACCESS_TOKEN}`,
+    'Content-Type': 'application/json',
+  };
+  const res = http.post(`${__ENV.ENVIRONMENT_URL}/api/graphql`, JSON.stringify({ query: query }), { headers: headers });
+  return JSON.parse(res.body).data.project.pipeline.iid;
 }
