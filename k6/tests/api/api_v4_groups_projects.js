@@ -33,7 +33,7 @@ export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+  console.log(`Success Rate Threshold: 97%`)
 }
 
 export default function() {
