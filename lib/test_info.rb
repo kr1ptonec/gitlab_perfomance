@@ -82,7 +82,7 @@ module TestInfo
   def test_has_unsafe_requests?(test_file)
     return true if get_test_tag_value(test_file, 'flags')&.include?('unsafe')
 
-    write_methods = %w[post put del patch]
+    write_methods = %w[put del patch]
     File.open(test_file, "r") do |test_file_content|
       test_file_content.each_line do |line|
         line_has_write_method = write_methods.any? { |write_method| line.include?("http.#{write_method}") }

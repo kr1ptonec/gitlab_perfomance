@@ -29,6 +29,12 @@ export function logError(res) {
   }
 }
 
+export function logGraphqlError(graphQLErrors) {
+  // Only log errors for the first 5 VUs to prevent spam
+  if (__VU > 5) return;
+  console.log(JSON.stringify(graphQLErrors));
+}
+
 export function parseVersion(version) {
   let verRegex = /([0-9]+)/g;
   let parsedVersion = version.match(verRegex);
