@@ -6,6 +6,7 @@ require 'gpt_common'
 require 'http'
 require 'import_project'
 require 'rainbow'
+require 'ruby-progressbar'
 require 'tty-spinner'
 require 'uri'
 
@@ -52,13 +53,12 @@ class GPTTestData
         GPTLogger.logger.warn Rainbow("Delete request successfully scheduled. It will be removed after the time as defined by the environment's deletion delay settings. \nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#group-or-project-is-marked-for-deletion").yellow
         break
       elsif check_deleted_entity.status.code == 404
-        GPTLogger.logger.info "Delete successful"
+        GPTLogger.logger(only_to_file: true).info "Delete successful"
         break
       end
 
       raise WaitForDeleteError, "Delete request failed!\nCode: #{check_deleted_entity.code}\nResponse: #{check_deleted_entity.body}\n" if check_deleted_entity.status.to_s.match?(/5\d{2}$/)
 
-      print '.'
       sleep 1
     end
   end
@@ -187,14 +187,14 @@ class GPTTestData
     raise GroupCheckError, "Root Group path '#{grp_path}' is already taken by user #{user}.\nPlease change their username or use a different group name by changing the `root_group` option in Environment Config File." if users&.any? { |user| user['username'] == grp_path }
   end
 
-  def create_group(group_name:, parent_group: nil)
+  def create_group(group_name:, parent_group: nil, log_only_to_file: false)
     grp_path = parent_group ? "#{parent_group['full_path']}/#{group_name}" : group_name
     grp_check_res = check_group_exists(grp_path: grp_path)
 
     GPTLogger.logger.warn Rainbow("\nGroup #{grp_path} has been scheduled to be deleted as per the environment's settings. If this is not expected it's recommended you confirm this on the GitLab environment and adjust directly where required.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#group-or-project-is-marked-for-deletion\n").yellow unless grp_check_res&.dig('marked_for_deletion_on').nil?
     return grp_check_res unless grp_check_res.nil?
 
-    GPTLogger.logger.info "Creating group #{grp_path}"
+    GPTLogger.logger(only_to_file: log_only_to_file).info "Creating group #{grp_path}"
 
     grp_params = {
       name: group_name,
@@ -212,6 +212,7 @@ class GPTTestData
     GPTLogger.logger.info "Creating #{groups_count} groups with name prefix '#{group_prefix}' under parent group '#{parent_group['full_path']}'"
     groups = []
     retry_counter = 0
+    progressbar = ProgressBar.create(title: 'Generating groups', total: groups_count, format: "%t: %c from %C |%b>%i| %E %a")
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -238,7 +239,7 @@ class GPTTestData
               if grp_check_res.status.success?
                 existing_group = grp_check_res.parse.slice('id', 'name', 'full_path', 'description')
                 mutex.synchronize { groups << existing_group }
-                print '*'
+                progressbar.increment
                 GPTLogger.logger(only_to_file: true).info "Group #{existing_group['full_path']} already exists"
                 next
               else
@@ -254,7 +255,6 @@ class GPTTestData
               }
               grp_res = http.post("#{@env_api_url.path}/groups", params: grp_params, headers: @headers, ssl_context: ctx)
               unless grp_res.status.success?
-                print 'x'
                 GPTLogger.logger(only_to_file: true).info "Error creating group '#{group_name}' (Attempt #{retry_counter}):\nCode: #{grp_res.code}\nResponse: #{grp_res.body}"
                 grp_res.flush
 
@@ -266,7 +266,7 @@ class GPTTestData
 
               new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
               mutex.synchronize { groups << new_group }
-              print '.'
+              progressbar.increment
               retry_counter = 0
               GPTLogger.logger(only_to_file: true).info "Creating group #{new_group['full_path']}"
             end
@@ -282,17 +282,17 @@ class GPTTestData
     groups
   end
 
-  def delete_group(group:)
-    GPTLogger.logger.info "Deleting group #{group['full_path']}"
+  def delete_group(group:, log_only_to_file: false)
+    GPTLogger.logger(only_to_file: log_only_to_file).info "Deleting group #{group['full_path']}"
     GPTCommon.make_http_request(method: 'delete', url: "#{@env_api_url}/groups/#{group['id']}", headers: @headers, fail_on_error: false, retry_on_error: true)
-    puts("Waiting for group #{group['full_path']} to be deleted...")
+    GPTLogger.logger(only_to_file: log_only_to_file).info "Waiting for group #{group['full_path']} to be deleted..."
     wait_for_delete(entity_endpoint: "groups/#{group['id']}")
   end
 
-  def recreate_group(group:, parent_group:)
+  def recreate_group(group:, parent_group:, log_only_to_file: true)
     disable_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS'] # Will disable soft delete only for the first time
-    delete_group(group: group)
-    create_group(group_name: group['name'], parent_group: parent_group)
+    delete_group(group: group, log_only_to_file: log_only_to_file)
+    create_group(group_name: group['name'], parent_group: parent_group, log_only_to_file: log_only_to_file)
   end
 
   # Projects
@@ -364,6 +364,7 @@ class GPTTestData
     GPTLogger.logger.info "\nCreating #{projects_count} projects each under #{subgroups.size} subgroups with name prefix '#{project_prefix}'"
     projects = []
     retry_counter = 0
+    progressbar = ProgressBar.create(title: 'Generating projects', total: projects_count * subgroups.count, format: "%t: %c from %C |%b>%i| %E %a")
 
     ctx = OpenSSL::SSL::SSLContext.new
     ctx.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -393,7 +394,7 @@ class GPTTestData
                 if proj_check_res.status.success?
                   existing_project = proj_check_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
                   mutex.synchronize { projects << existing_project }
-                  print '*'
+                  progressbar.increment
                   GPTLogger.logger(only_to_file: true).info "Project #{existing_project['path_with_namespace']} already exists"
                   next
                 else
@@ -413,7 +414,6 @@ class GPTTestData
                 }
                 proj_res = http.post("#{@env_api_url.path}/projects", params: proj_params, headers: @headers, ssl_context: ctx)
                 unless proj_res.status.success?
-                  print 'x'
                   GPTLogger.logger(only_to_file: true).info "Error creating project '#{project_name}' (Attempt #{retry_counter}):\nCode: #{proj_res.code}\nResponse: #{proj_res.body}"
                   proj_res.flush
 
@@ -425,7 +425,7 @@ class GPTTestData
 
                 new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
                 mutex.synchronize { projects << new_project }
-                print '.'
+                progressbar.increment
                 retry_counter = 0
                 GPTLogger.logger(only_to_file: true).info "Creating project #{new_project['path_with_namespace']}"
               end
@@ -453,14 +453,15 @@ class GPTTestData
     configure_repo_storage_settings(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
     existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
-    parent_group = recreate_group(group: parent_group, parent_group: root_group) if existing_subgroups_count > subgroups_count
+    parent_group = recreate_group(group: parent_group, parent_group: root_group, log_only_to_file: false) if existing_subgroups_count > subgroups_count
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
-    GPTLogger.logger.info "Checking for existing projects under groups..."
+    GPTLogger.logger(only_to_file: true).info "Checking for existing projects under groups..."
+    progressbar = ProgressBar.create(title: 'Checking for existing projects under groups', total: subgroups_count, format: "%t: %c from %C |%b>%i| %E %a")
     sub_groups_without_projects = []
     sub_groups.each do |sub_group|
       existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
-      print '.'
+      progressbar.increment
 
       if existing_projects_count.zero?
         sub_groups_without_projects << sub_group
