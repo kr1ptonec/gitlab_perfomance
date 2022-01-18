@@ -109,7 +109,7 @@ Typically all that's needed to be done for this file is to copy one of the exist
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 250,
+      "subgroups": 1000,
       "subgroup_prefix": "gpt-subgroup-",
       "projects": 10,
       "project_prefix": "gpt-project-"
@@ -135,6 +135,7 @@ Details for each of the settings are as follows. Some are also available to be c
   * `many_groups_and_projects` - Contains information about the "horizontal" data.
     * `group` - The name of the Group that will contain the "horizontal" data. (Default: `many_groups_and_projects`).
     * `subgroups` - Number of subgroups that `group` have. The number of the subgroups should be tuned to your environment's requirements.
+      * **Note**: For [Reference Architectures with up to 1,000 users](https://docs.gitlab.com/ee/administration/reference_architectures/1k_users.html) set `subgroups` to `500`.
     * `subgroup_prefix` - Prefix that the subgroups use. (Default: `gpt-subgroup-`).
     * `projects` - Number of projects that each subgroup have. The number of the projects should be tuned to your environment's requirements.
     * `project_prefix` - Prefix that the projects use. (Default: `gpt-project-`).
@@ -324,17 +325,17 @@ The tool's output will look like the following:
 ```txt
 GPT Data Generator v1.0.23 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Creating group gpt
 Creating group gpt/many_groups_and_projects
-Creating 250 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
-..........................................................................................................................................................................................................................................................
-Checking for existing projects under groups...
-............................................................................................................................................................................................
-..............................................................
-Creating 10 projects each under 250 subgroups with name prefix 'gpt-project-'
-....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
-<-> Horizontal data: successfully generated after 4 minutes 21 seconds!
+Creating 1000 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
+Generating groups: 1000 from 1000 |=========================================================>| Time: 00:01:04 Time: 00:01:04
+
+Checking for existing projects under groups: 1000 from 1000 |===============================>| Time: 00:00:01 Time: 00:00:01
+
+Creating 10 projects each under 1000 subgroups with name prefix 'gpt-project-'
+Generating projects: 10000 from 10000 |=====================================================>| Time: 00:37:16 Time: 00:37:16
+<-> Horizontal data: successfully generated after 38 minutes 21 seconds!
 
 | Vertical data: importing large projects for GPT...
 Group gpt already exists
@@ -343,10 +344,10 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Disabling Max Import Size limit on environment...
 Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
 
@@ -357,9 +358,9 @@ http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
 Validating project 'gpt/large_projects/gitlabhq1' imported successfully...
 
 | Vertical data: successfully generated after 40 minutes 55 seconds!
-█ GPT data generation finished after 49 minutes 16 seconds.
+█ GPT data generation finished after 89 minutes 16 seconds.
 
-█ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2021-01-14_132605.log
+█ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2022-01-29_181033.log
 ```
 
 #### Advanced Setup

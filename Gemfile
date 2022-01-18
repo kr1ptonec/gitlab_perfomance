@@ -8,6 +8,7 @@ end
 
 group :run do
   gem 'chronic_duration'
+  gem 'connection_pool'
   gem 'down'
   gem 'http'
   gem 'naturally'
@@ -15,7 +16,7 @@ group :run do
   gem 'os'
   gem 'semantic'
   gem 'rainbow'
+  gem 'ruby-progressbar'
   gem 'table_print'
   gem 'tty-spinner'
-  gem 'connection_pool'
 end
