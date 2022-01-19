@@ -15,12 +15,13 @@ export let thresholds = {
   'rps': { 'latest': 0.05 },
   'ttfb': { 'latest': 24000 },
 };
+export let customSuccessRate = 0.2 // https://gitlab.com/gitlab-org/quality/performance/-/issues/493
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
-    "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
+    "successful_requests": [`rate>${customSuccessRate}`],
     "http_req_waiting": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`]
   }
@@ -32,7 +33,7 @@ export function setup() {
   console.log('')
   console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-  console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+  console.log(`Success Rate Threshold: ${customSuccessRate*100}%`)
 }
 
 export default function() {
