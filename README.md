@@ -4,7 +4,7 @@ The GitLab Performance Tool (`gpt`) is built and maintained by the GitLab Qualit
 
 The tool can be used both manually and automatically, with us doing the latter for automated testing of reference environments via [Pipelines](https://gitlab.com/gitlab-org/quality/performance/pipeline_schedules).
 
-GPT is used by the GitLab Quality Enablement team to continuously performance test GitLab on environments based on our [Reference Architectures](https://docs.gitlab.com/ee/administration/reference_architectures/) that have been built with the [GitLab Environment Toolkit](https://gitlab.com/gitlab-org/quality/gitlab-environment-toolkit). For more information please refer to our blog post - [How our QA team leverages GitLab’s performance testing tool (and you can too)](https://about.gitlab.com/blog/2020/02/18/how-were-building-up-performance-testing-of-gitlab/).
+GPT is used by the GitLab Quality Enablement team to continuously performance test GitLab on environments based on our [Reference Architectures](https://docs.gitlab.com/ee/administration/reference_architectures/) that have been built with the [GitLab Environment Toolkit](https://gitlab.com/gitlab-org/gitlab-environment-toolkit). For more information please refer to our blog post - [How our QA team leverages GitLab’s performance testing tool (and you can too)](https://about.gitlab.com/blog/2020/02/18/how-were-building-up-performance-testing-of-gitlab/).
 
 ## Documentation
 
