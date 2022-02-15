@@ -508,7 +508,7 @@ The [Environment Config File](../k6/config/environments) will need to be tweaked
 
 For this use case the `project` setting should be changed to the name of the Project Config file.
 
-If you are planning to run GPT against a project that *already exists* on the target GitLab environment the `gpt_data` section needs to be tweaked further:
+If you are planning to run GPT against a project that _already exists_ on the target GitLab environment the `gpt_data` section needs to be tweaked further:
 
 ```json
 {
