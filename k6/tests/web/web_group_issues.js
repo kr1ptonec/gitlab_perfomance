@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:group/issues`
-@example_uri: /groups/:environment_root_group/issues
+@example_uri: /groups/:environment_root_group/-/issues
 @description: Web - Group Issues Page. <br>Controllers: `GroupsController#issues`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334439
