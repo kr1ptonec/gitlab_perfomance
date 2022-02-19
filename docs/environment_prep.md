@@ -536,7 +536,7 @@ Note that in this case when the custom large project already exists on the targe
 Finally to import the data itself you will need to have the project's [export tarball file](https://docs.gitlab.com/ee/user/project/settings/import_export.html#exporting-a-project-and-its-data) available. When ready you can then set up all of the test data, with custom project, as follows:
 
 ```sh
-docker run -it gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
+docker run -it gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --large-project-name=<PROJECT NAME>
 ```
 
 Some notes you should consider on the above:
