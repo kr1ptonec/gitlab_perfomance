@@ -4,7 +4,7 @@
 @example_uri: /groups/:environment_root_group/-/issues
 @description: Web - Group Issues Page. <br>Controllers: `GroupsController#issues`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334439
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334439, https://gitlab.com/gitlab-org/gitlab/-/issues/353461
 @flags: dash_url
 */
 
@@ -15,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { 'latest': 500 }
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.05 },
+  'ttfb': { 'latest': 25000 }
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)

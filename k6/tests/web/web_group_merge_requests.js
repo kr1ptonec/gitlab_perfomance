@@ -4,7 +4,7 @@
 @example_uri: /groups/:environment_root_group/-/merge_requests
 @description: Web - Group Merge Requests Page. <br>Controllers: `GroupsController#merge_requests`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334443
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334443, https://gitlab.com/gitlab-org/gitlab/-/issues/353462
 @flags: dash_url
 */
 
@@ -15,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { 'latest': 500 }
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1 },
+  'ttfb': { 'latest': 5500 }
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
