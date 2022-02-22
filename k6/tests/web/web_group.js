@@ -3,7 +3,7 @@
 @endpoint: `GET /:group`
 @example_uri: /:unencoded_group_path
 @description: Web - Group Page. <br>Controllers: `GroupsController#show`, `Groups::ChildrenController#index`</br>
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334795
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334795, https://gitlab.com/gitlab-org/gitlab/-/issues/353401
 @gpt_data_version: 1
 */
 
@@ -13,8 +13,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { 'latest': 400 }
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1 },
+  'ttfb': { 'latest': 4400 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT )
