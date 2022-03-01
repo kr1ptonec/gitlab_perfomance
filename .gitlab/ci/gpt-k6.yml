@@ -29,6 +29,7 @@ update-environment:
     GCP_PROJECT_NAME: $GCP_PROJECT_NAME
     GCLOUD_REGION: $GCLOUD_REGION
     GCLOUD_ZONE: $GCLOUD_ZONE
+    AWS_REGION: $AWS_REGION
     AZURE_RESOURCE_GROUP: $AZURE_RESOURCE_GROUP
   trigger:
     project: gitlab-org/quality/gitlab-environment-toolkit-configs/quality
