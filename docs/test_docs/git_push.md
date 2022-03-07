@@ -150,3 +150,7 @@ To intercept git requests and learn more about the objects set up this configura
 * `Error with Project Pipelines setting update.`
 
   * Ensure that Access Token grants the permission to update projects settings. The `git_push` test requires this as it will turn off pipelines during it's run (and back on after) to prevent any being triggered en masse.
+
+* The `git_push` test is not running.
+
+  * `git_push` is marked as an [unsafe test](../k6.md#unsafe-test). Use the `--unsafe` flag to run the test.
