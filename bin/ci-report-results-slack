@@ -73,7 +73,7 @@ def prepare_message_text(result, results_json = nil)
   summary << "\n\n• <#{ENV['CI_PIPELINE_URL']}|Pipeline>" if ENV['CI_PIPELINE_URL']
 
   # Construct and add Grafana links(s) string
-  if results_json
+  if results_json && (ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] || ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL'])
     grafana_str = "\n• <#{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}|Metrics Dashboard>" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']
     grafana_str += " (<#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=2&width=1000&height=750&timeout=180|CPU>, <#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=17&width=1000&height=750&timeout=180|Memory>)" if ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']
 
