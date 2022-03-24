@@ -58,7 +58,6 @@ export function setup() {
       checkCommitExists(project, git_push_data['branch_current_head_sha']);
       checkCommitExists(project, git_push_data['branch_new_head_sha']);
     });
-    updateProjectPipelinesSetting(project, false);
   });
 }
 
@@ -87,9 +86,8 @@ export default function () {
 }
 
 export function teardown() {
-  waitForGitSidekiqQueue();
   projects.forEach(project => {
-    // Ensure that all branches were restored to the original `branch_current_head_sha` 
+    // Ensure that all branches were restored to the original `branch_current_head_sha`
     let params = {
       headers: {
         "Accept": "application/x-git-receive-pack-result",
@@ -98,6 +96,5 @@ export function teardown() {
     };
     http.post(`${authEnvUrl}/${project['unencoded_path']}.git/git-receive-pack`, project.data.branch_set_old_head, params);
     // Reenable Pipelines in the Project
-    updateProjectPipelinesSetting(project, true);
   });
 }
