@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_m
 
 export let thresholds = {
   'rps': { 'latest': 0.3 },
-  'ttfb': { 'latest': 5500 },
+  'ttfb': { 'latest': 10000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
