@@ -16,7 +16,7 @@ import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let thresholds = {
   'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { 'latest': 500 }
+  'ttfb': { 'latest': 600 }
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
