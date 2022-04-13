@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 import { getPipelineId } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 1500 },
+  'ttfb': { 'latest': 1800 },
 };
 
 export let rpsThresholds = getRpsThresholds()
