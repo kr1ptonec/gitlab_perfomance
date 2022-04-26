@@ -341,7 +341,7 @@ class GPTTestData
   end
 
   def check_project_entities_count(project:, entity:, expected_count:)
-    existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true, fail_on_error: false).headers.to_hash["X-Total"].to_i
+    existing_entity_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{project['id']}/#{entity}", headers: @headers, retry_on_error: true, fail_on_error: false).headers.to_hash.transform_keys(&:downcase)["x-total"].to_i
     raise ProjectCheckError, "Project metadata '#{entity}' is mising in the Project Config file.\nTo learn more please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#configure-project-config-file." if expected_count.nil?
 
     return if existing_entity_count >= expected_count
@@ -454,7 +454,7 @@ class GPTTestData
   def create_horizontal_test_data(root_group:, parent_group:, subgroups_count:, subgroup_prefix:, projects_count:, project_prefix:)
     configure_repo_storage_settings(storage: @storage_nodes) unless ENV['SKIP_CHANGING_ENV_SETTINGS']
 
-    existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+    existing_subgroups_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{parent_group['id']}/subgroups", headers: @headers, retry_on_error: true).headers.to_hash.transform_keys(&:downcase)["x-total"].to_i
     parent_group = recreate_group(group: parent_group, parent_group: root_group, log_only_to_file: false) if existing_subgroups_count > subgroups_count
 
     sub_groups = create_groups(group_prefix: subgroup_prefix, parent_group: parent_group, groups_count: subgroups_count)
@@ -462,7 +462,7 @@ class GPTTestData
     progressbar = ProgressBar.create(title: 'Checking for existing projects under groups', total: subgroups_count, format: "%t: %c from %C |%b>%i| %E %a")
     sub_groups_without_projects = []
     sub_groups.each do |sub_group|
-      existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash["X-Total"].to_i
+      existing_projects_count = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/groups/#{sub_group['id']}/projects", headers: @headers, retry_on_error: true).headers.to_hash.transform_keys(&:downcase)["x-total"].to_i
       progressbar.increment
 
       if existing_projects_count.zero?
