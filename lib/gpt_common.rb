@@ -38,7 +38,7 @@ module GPTCommon
 
     if fail_on_error && !res.status.success?
       error_message = "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n"
-      correlation_id = res.headers.to_hash['X-Request-Id']
+      correlation_id = res.headers.to_hash.transform_keys(&:downcase)['x-request-id']
       error_message = "#{error_message}Correlation ID: #{correlation_id}\n" unless correlation_id.nil?
       raise RequestError, error_message
     end

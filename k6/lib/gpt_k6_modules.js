@@ -13,7 +13,7 @@ export function logError(res) {
   try {
     let message = JSON.parse(res.body)['message'] || JSON.parse(res.body)['error']
     error = typeof message === 'object' ? JSON.stringify(message) : message
-    correlationId = res.headers['X-Request-Id'];
+    correlationId = res.headers['X-Request-Id'] || res.headers['x-request-id'];
   } catch (e) {
     error = res.body
   }
