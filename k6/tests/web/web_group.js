@@ -14,8 +14,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { 'latest': 500 }
+  'rps': { '14.8.0': __ENV.WEB_ENDPOINT_THROUGHPUT, '15.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { '14.8.0': 500, '15.0.0': 4400, 'latest': 500 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT )
