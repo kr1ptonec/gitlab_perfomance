@@ -10,7 +10,7 @@
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, createProject, getProjectDefaultBranch, createBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { createProject, getProjectDefaultBranch, createBranch, deleteGroup, searchAndCreateGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let thresholds = {
   'ttfb': { 'latest': 1500 }
@@ -37,7 +37,7 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
-  let groupId = createGroup("group-api-v4-create-branch");
+  let groupId = searchAndCreateGroup("group-api-v4-create-branch");
   let projectId = createProject(groupId);
   let projectDefaultBranch = getProjectDefaultBranch(projectId);
   let data = { groupId, projectId, projectDefaultBranch };

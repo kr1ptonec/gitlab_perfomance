@@ -5,11 +5,18 @@ import { logError } from "./gpt_k6_modules.js";
 
 // Group //
 
-export function createGroup(groupName) {
+export function searchAndCreateGroup(groupName) {
   let rootGroupId = searchForGroup(__ENV.ENVIRONMENT_ROOT_GROUP);
   let groupId = searchForGroup(groupName);
   if (groupId) { deleteGroup(groupId) }
 
+  let res = createGroup(groupName, rootGroupId);
+  groupId = JSON.parse(res.body)['id'];
+  /20(0|1)/.test(res.status) ? console.log(`Group #${groupId} was created`) : (logError(res), fail("Group was not created"));
+  return groupId;
+}
+
+export function createGroup(groupName, rootGroupId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata = {
     name: `${groupName}-${Date.now()}`,
@@ -18,9 +25,7 @@ export function createGroup(groupName) {
     parent_id: rootGroupId
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/groups`, formdata, params);
-  groupId = JSON.parse(res.body)['id'];
-  /20(0|1)/.test(res.status) ? console.log(`Group #${groupId} was created`) : (logError(res), fail("Group was not created"));
-  return groupId;
+  return res;
 }
 
 export function deleteGroup(groupId) {
