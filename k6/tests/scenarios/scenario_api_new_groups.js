@@ -13,7 +13,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { searchAndCreateGroup, createGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let thresholds = {
-    'ttfb': { 'latest': 1000 }
+  'rps': { 'latest': __ENV.SCENARIO_ENDPOINT_THROUGHPUT * 0.2 },
+  'ttfb': { 'latest': 7000 }
 }
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
@@ -24,8 +25,7 @@ export let options = {
     thresholds: {
         "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
         "http_req_waiting": [`p(90)<${ttfbThreshold}`],
-        "http_reqs": [`count>=${rpsThresholds['count']}`],
-        "http_reqs{endpoint:issues}": [`count>=${rpsThresholds['count']}`],
+        "http_reqs": [`count>=${rpsThresholds['count']}`]
     },
     stages: stages,
     rps: rps
@@ -44,7 +44,7 @@ export function setup() {
 }
 
 export default function (data) {
-    group("API - Create Subgroup", function () {
+    group("API - Create Group", function () {
         let res = createGroup(data.subGroupName, data.subGroupParentGroupId);
         /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
