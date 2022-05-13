@@ -21,11 +21,6 @@ gemnasium-dependency_scanning:
   rules:
     - !reference [.on_merge_request_and_merged_events, rules]
 
-bundler-audit-dependency_scanning:
-  stage: check
-  rules:
-    - !reference [.on_merge_request_and_merged_events, rules]
-
 container_scanning:
   stage: check
   variables:
