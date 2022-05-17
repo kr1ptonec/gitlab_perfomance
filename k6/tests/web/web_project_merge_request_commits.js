@@ -16,7 +16,7 @@ import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
   'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
-  'ttfb': { 'latest': 1750 }
+  'ttfb': { 'latest': 1950 }
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)

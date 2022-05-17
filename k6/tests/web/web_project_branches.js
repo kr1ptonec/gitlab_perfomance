@@ -16,7 +16,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'ttfb': { '13.9.0': 1500, '14.0.0': 1000, 'latest': 800 }
+  'ttfb': { '13.9.0': 1500, '14.0.0': 1000, 'latest': 900 }
 };
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
