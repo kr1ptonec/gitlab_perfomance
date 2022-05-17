@@ -16,7 +16,7 @@ export let thresholds = {
   'rps': { 'latest': 0.05 },
   'ttfb': { 'latest': 22000 },
 };
-export let customSuccessRate = 0.4 // https://gitlab.com/gitlab-org/gitlab/-/issues/211498#note_789522107 and https://gitlab.com/gitlab-org/quality/performance/-/issues/493
+export let customSuccessRate = 0.3 // https://gitlab.com/gitlab-org/gitlab/-/issues/211498#note_789522107 and https://gitlab.com/gitlab-org/quality/performance/-/issues/493
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
