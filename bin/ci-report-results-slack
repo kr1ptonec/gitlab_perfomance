@@ -24,6 +24,7 @@ results_dir = Pathname.new(File.expand_path('../results', __dir__)).relative_pat
   opt :test_name, "Name of test that's being reported on.", type: :string, required: true
   opt :test_result, "The result of the test. Must be either 'passed' or 'failed'.", type: :string, required: true
   opt :channel, "Slack channel to post results to.", type: :string, default: "qa-performance"
+  opt :dry_run, "Only generate report message locally and don't post for testing purposes.", type: :flag
   banner "\nEnvironment Variable(s):"
   banner "  ENVIRONMENT_NAME                    Name of environment. (Default: nil)"
   banner "  ENVIRONMENT_GRAFANA_DASHBOARD_URL   URL to environment's Grafana dashboard to show in Slack message. (Default: nil)"
@@ -32,7 +33,7 @@ results_dir = Pathname.new(File.expand_path('../results', __dir__)).relative_pat
   banner "  SLACK_BOT_TOKEN                     A valid Slack Token that belongs to a Bot that has permissions for the intended Slack instance. (Default: nil)"
 end
 
-raise 'Environment Variable SLACK_BOT_TOKEN must be set to proceed. See command help for more info' unless ENV['SLACK_BOT_TOKEN']
+raise 'Environment Variable SLACK_BOT_TOKEN must be set to proceed. See command help for more info' unless ENV['SLACK_BOT_TOKEN'] || @opts[:dry_run]
 raise 'Test Result must be either \'passed\' or \'failed\'. Exiting...' unless @opts[:test_result].match?(/passed|failed/)
 
 def post_slack_message(message)
@@ -104,11 +105,13 @@ if results_file && File.extname(results_file) == '.json'
   # Remove any terminal ANSI codes
   content.gsub!(/\e\[([;\d]+)?m/, '')
 
+  abort(content) if @opts[:dry_run]
   post_slack_snippet(results_file, message, content)
 else
   puts "Posting result summary to Slack\n"
 
   result = @opts[:test_result] == "passed"
   message = prepare_message_text(result)
+  abort(message) if @opts[:dry_run]
   post_slack_message(message)
 end
