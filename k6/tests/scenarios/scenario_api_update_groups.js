@@ -1,24 +1,23 @@
 /* global __ENV */
 /*
-@endpoint: `POST /groups`
-@description: Setup stage: Create a parent group for subgroup(s) <br>Test: Create a subgroup <br>Teardown stage: Delete subgroup's parent group
+@endpoint: `PUT /groups/:id`
+@description: Setup stage: Create a group <br>Test: Update the group's name and path <br>Teardown stage: Delete the group
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/361365
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/364824
 @flags: unsafe
 */
 
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { searchAndCreateGroup, createGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { searchAndCreateGroup, updateGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let thresholds = {
-  'rps': { 'latest': __ENV.SCENARIO_ENDPOINT_THROUGHPUT * 0.01 },
-  'ttfb': { 'latest': 9000 }
+    'ttfb': { 'latest': 900 }
 }
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
@@ -35,21 +34,25 @@ export function setup() {
     console.log('')
     console.log(`RPS Threshold: ${rpsThresholds['mean']}/s (${rpsThresholds['count']})`)
     console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
-    console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
+    console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD) * 100}%`)
 
-    let subGroupParentGroupId = searchAndCreateGroup("parent-group-api-v4");
-    let subGroupName = "subgroup-api-v4";
-    let data = { subGroupName, subGroupParentGroupId };
+    let groupName = "group-api-v4-to-update";
+    let groupId = searchAndCreateGroup(groupName);
+    let data = { groupName, groupId };
     return data;
 }
 
 export default function (data) {
-    group("API - Create Group", function () {
-        let res = createGroup(data.subGroupName, data.subGroupParentGroupId);
-        /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
+    group("API - Update Group", function () {
+        let newGroupNameAndPath = `group-api-v4-updated-${Date.now()}`;
+        let res = updateGroup(data.groupId, {
+            name: newGroupNameAndPath,
+            path: newGroupNameAndPath
+        });
+        /20(0|1)/.test(res.status) ? (successRate.add(true)) : (successRate.add(false), logError(res));
     });
 }
 
 export function teardown(data) {
-    deleteGroup(data.subGroupParentGroupId);
+    deleteGroup(data.groupId);
 }
