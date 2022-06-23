@@ -28,6 +28,12 @@ export function createGroup(groupName, rootGroupId) {
   return res;
 }
 
+export function updateGroup(groupId, formData) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}`, formData, params);
+  return res;
+}
+
 export function deleteGroup(groupId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.del(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}`, undefined, params);
