@@ -42,7 +42,7 @@ export function parseVersion(version) {
   return parsedVersion.map(ver => parseInt(ver))
 }
 
-export function versionIsLowerThanEnvVersion(version) {
+export function envVersionIsHigherThan(version) {
   let envVersion = parseVersion(__ENV.ENVIRONMENT_VERSION);
   let targetVersion = parseVersion(version);
 
@@ -69,13 +69,13 @@ export function getCurrentVersionThreshold(defaultThreshold, thresholds) {
   } else {
     for (var version in thresholds) {
       // Use historical threshold if threshold version is bigger than env version
-      if ((version != 'latest') && (!versionIsLowerThanEnvVersion(version))) {
+      if ((version != 'latest') && (!envVersionIsHigherThan(version))) {
         threshold = thresholds[version];
         break;
       } else {
         threshold = thresholds['latest'] == null ? defaultThreshold : thresholds['latest'];
       }
-    } 
+    }
   }
 
   return threshold;
@@ -121,7 +121,7 @@ export function checkProjectKeys(project, keys) {
 // Returns projects that contain all keys (if passed) or exits if none found
 export function getLargeProjects(keys=[]) {
   let large_projects = JSON.parse(__ENV.ENVIRONMENT_LARGE_PROJECTS);
-  
+
   let projects_with_keys = {};
   if (Array.isArray(keys) && keys.length > 0) {
     projects_with_keys = large_projects.filter(project => checkProjectKeys(project, keys));

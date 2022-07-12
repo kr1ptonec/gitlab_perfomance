@@ -10,9 +10,9 @@
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, versionIsLowerThanEnvVersion, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
+import { logError, envVersionIsHigherThan, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
-let endpoints = versionIsLowerThanEnvVersion('12.7.0') ? ['projects?pagination=offset', 'projects?pagination=keyset'] : ['projects?pagination=offset'];
+let endpoints = envVersionIsHigherThan('12.7.0') ? ['projects?pagination=offset', 'projects?pagination=keyset'] : ['projects?pagination=offset'];
 
 export let thresholds = {
   'rps': { 'latest': 0.15 },

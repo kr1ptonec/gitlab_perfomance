@@ -1,7 +1,7 @@
 /*global __ENV : true  */
 import http from "k6/http";
 import { fail, sleep } from "k6";
-import { logError, versionIsLowerThanEnvVersion } from "./gpt_k6_modules.js";
+import { logError, envVersionIsHigherThan } from "./gpt_k6_modules.js";
 
 // Common //
 
@@ -106,7 +106,7 @@ export function updateProjectPipelinesSetting(project, state) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let formdata;
 
-  if (versionIsLowerThanEnvVersion('12.1.0')) {
+  if (envVersionIsHigherThan('12.1.0')) {
     formdata = { builds_access_level: state ? "enabled" : "disabled" }
   } else {
     formdata = { jobs_enabled: state }
