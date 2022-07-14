@@ -70,6 +70,13 @@ export function createProject(groupId, additionalConfig={}) {
   return projectId;
 }
 
+export function updateProject(projectId, formData, tags) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  if (tags) { params['tags'] = tags; }
+  let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, formData, params);
+  return res;
+}
+
 // Bug workaround: Default branch is ignored when creating a project via API - https://gitlab.com/gitlab-org/gitlab/-/issues/26261
 export function getProjectDefaultBranch(projectId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
