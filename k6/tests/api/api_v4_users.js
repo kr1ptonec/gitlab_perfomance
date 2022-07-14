@@ -4,7 +4,8 @@
 @example_uri: /api/v4/users
 @description: [List users](https://docs.gitlab.com/ee/api/users.html#list-users)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/346601
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/367872
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/346601
 */
 
 import http from "k6/http";
@@ -13,8 +14,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': 0.5 },
-  'ttfb': { 'latest': 5500 },
+  'rps': { '15.2.0': 0.5 },
+  'ttfb': { '15.2.0': 5500, 'latest': 300 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
