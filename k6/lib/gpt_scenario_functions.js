@@ -28,8 +28,9 @@ export function createGroup(groupName, rootGroupId) {
   return res;
 }
 
-export function updateGroup(groupId, formData) {
+export function updateGroup(groupId, formData, tags) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  if (tags) { params['tags'] = tags; }
   let res = http.put(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}`, formData, params);
   return res;
 }

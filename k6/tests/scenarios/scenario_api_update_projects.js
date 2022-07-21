@@ -56,7 +56,7 @@ export default function (data) {
   group("API - Update Project", function () {
     let newProjectNameOrPath = `project-api-v4-updated-${Date.now()}`;
     let actionToTest = selectRandom(actions);
-    let formData = {}
+    let formData = {};
 
     formData[actionToTest] = newProjectNameOrPath;
 
