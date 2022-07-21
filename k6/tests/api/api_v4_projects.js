@@ -4,7 +4,7 @@
 @example_uri: /api/v4/projects?order_by=id&sort=asc
 @description: [Get a list of all projects](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/groups/gitlab-org/-/epics/8164
 */
 
 import http from "k6/http";
