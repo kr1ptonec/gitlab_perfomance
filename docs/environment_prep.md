@@ -3,7 +3,7 @@
 * [**GitLab Performance Tool - Preparing the Environment**](environment_prep.md)
 * [GitLab Performance Tool - Running Tests](k6.md)
 
-Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating a User](#creating-a-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
+Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating an Admin User](#creating-an-admin-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
 
 **Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-main/README.md).**
 
@@ -123,7 +123,7 @@ Details for each of the settings are as follows. Some are also available to be c
 * The environment's details:
   * `name` - The name of the environment. Mainly used in output and results. (Environment variable: `ENVIRONMENT_NAME`)
   * `url` - Full URL of the environment, used by all of the tests and in other areas. (Environment variable: `ENVIRONMENT_URL`)
-  * `user` - The name of the user prepared as part of the [Creating a User](#creating-a-user) step.
+  * `user` - The name of the user prepared as part of the [Creating an Admin User](#creating-an-admin-user) step.
   * `config`- Additional details about the environment that are used to adjust test results accordingly.
     * `latency` - The network latency (in ms) between where the Tool will be running and the environment. (Environment variable: `ENVIRONMENT_LATENCY`)
   * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Shard](https://docs.gitlab.com/ee/administration/gitaly/) node or [Gitaly Cluster](https://docs.gitlab.com/ee/administration/gitaly/praefect.html). If you have multiple Gitaly Shards or Clusters, you should list them in full to ensure that the test data is spread across all storages evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
@@ -243,7 +243,7 @@ Before running some setup is required for the GPT Data Generator tool specifical
 1. First, set up [`Ruby`](https://www.ruby-lang.org/en/documentation/installation/) and [`Ruby Bundler`](https://bundler.io) if they aren't already available on the machine.
 1. Next, install the required Ruby Gems via Bundler
     * `bundle install`
-1. Add your custom [Environment Config file](#setup-environment-file) to its respective directory. From the tool's root folder this would be [`k6/config/environments`](../k6/config/environments).
+1. Add your custom [Environment Config file](#configure-environment-config-file) to its respective directory. From the tool's root folder this would be [`k6/config/environments`](../k6/config/environments).
 
 Once setup is done you can run the tool with the `bin/generate-gpt-data` script. The options for running the tests are the same as when running in Docker but the examples change to the following:
 
