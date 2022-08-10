@@ -11,6 +11,7 @@ group :run do
   gem 'connection_pool'
   gem 'down'
   gem 'http'
+  gem 'graphql-client'
   gem 'naturally'
   gem 'optimist'
   gem 'os'
