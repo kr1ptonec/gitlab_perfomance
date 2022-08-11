@@ -7,7 +7,7 @@ require 'gpt_logger'
 
 # Overriding GraphQL::Client::HTTP headers method to pass GITLAB ACCESS_TOKEN
 class CustomGraphqlHttp < GraphQL::Client::HTTP
-  GITLAB_TOKEN = ENV.fetch('GITLAB_TOKEN')
+  GITLAB_TOKEN = ENV.fetch('ACCESS_TOKEN')
 
   def headers(context)
     { 'PRIVATE-TOKEN' => GITLAB_TOKEN }
@@ -16,19 +16,18 @@ end
 
 # Create GraphQL client by loading schema and endpoint
 class GQLClient
-  GITLAB_TOKEN = ENV.fetch('GITLAB_TOKEN')
   def initialize
-    @http = CustomGraphqlHttp.new("https://gitlab.com/api/graphql")
+    @endpoint = ENV['GPT_GRAPHQL_ENDPOINT'] || "https://gitlab.com/api/graphql"
+    @http = CustomGraphqlHttp.new(@endpoint)
     @schema = GraphQL::Client.load_schema(@http)
   end
 
   def client
     @client ||= GraphQL::Client.new(schema: @schema, execute: @http)
   end
-
 end
 
-class Queries
+class GQLQueries
   # Using Constants for graphql client as recommended here https://github.com/github/graphql-client#defining-queries
   GQL_CLIENT = GQLClient.new.client
   GET_QUERY = GQL_CLIENT.parse <<-'GRAPHQL'

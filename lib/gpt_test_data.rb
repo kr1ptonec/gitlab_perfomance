@@ -3,6 +3,7 @@ $LOAD_PATH.unshift File.expand_path('.', __dir__)
 require 'cgi'
 require 'connection_pool'
 require 'gpt_common'
+require 'gpt_graphql'
 require 'http'
 require 'import_project'
 require 'rainbow'
@@ -303,15 +304,19 @@ class GPTTestData
     GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
   end
 
-  def validate_project_data(proj_path:, storage:, project_metadata:)
+  def get_project_details(proj_path:)
     proj_check_res = get_project(proj_path: proj_path)
     raise ProjectCheckError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
 
+    JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
+  end
+
+  def validate_project_data(proj_path:, storage:, project_metadata:)
     GPTLogger.logger.info "Validating project '#{proj_path}' imported successfully..."
     @large_projects_validation_errors[proj_path] = []
     # Check that project was imported to the correct repo storage
     # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
-    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
+    project = get_project_details(proj_path: proj_path)
 
     version = project_metadata['version']
     unless project['description']&.match?(/^Version: #{version}/)
@@ -491,10 +496,19 @@ class GPTTestData
     end
   end
 
+  def create_vulnerability_report(proj_path:, vulnerabilities_count:)
+    ENV['GPT_GRAPHQL_ENDPOINT'] = "#{@env_url}/api/graphql"
+    project_details = get_project_details(proj_path: proj_path)
+    project_id_path = "gid://gitlab/Project/#{project_details['id']}"
+    gql_queries = GQLQueries.new
+    vulnerabilities_count.times do
+      gql_queries.create_vulnerability_data(project_id_path)
+    end
+  end
+
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)
     project_version = project_metadata['version']
     check_repo_storage_settings_type
-
     proj_tarball_file = nil
     @storage_nodes.each.with_index(1) do |gitaly_node, i|
       import_project = ImportProject.new(env_url: @env_url, project_tarball: project_tarball)
