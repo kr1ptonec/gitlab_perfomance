@@ -3,7 +3,7 @@
 @endpoint: `GET /projects/:id/repository/branches?search`
 @description: [Search a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/325537
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/325537
 */
 
 import http from "k6/http";
@@ -12,8 +12,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { 'latest': 0.3 },
-  'ttfb': { 'latest': 6000 },
+  'rps': { '13.12.0': 0.3 },
+  'ttfb': { '13.12.0': 6000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
