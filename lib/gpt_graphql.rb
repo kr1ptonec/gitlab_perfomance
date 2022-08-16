@@ -17,7 +17,7 @@ end
 # Create GraphQL client by loading schema and endpoint
 class GQLClient
   def initialize
-    @endpoint = ENV['GPT_GRAPHQL_ENDPOINT'] || "https://gitlab.com/api/graphql"
+    @endpoint = ENV['GPT_GRAPHQL_ENDPOINT']
     @http = CustomGraphqlHttp.new(@endpoint)
     @schema = GraphQL::Client.load_schema(@http)
   end
