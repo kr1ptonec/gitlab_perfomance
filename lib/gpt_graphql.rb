@@ -109,7 +109,14 @@ class GQLQueries
 
   def create_vulnerability_data(project_id_path)
     # Using Constant for query as recommended here https://github.com/github/graphql-client#defining-queries
-    Kernel.const_set(:CreateVulnerabilityMutation, @graphql_client.parse(@create_vulnerability_mutation_query))
+
+    begin
+      # To avoid initializing constant multiple times during data generation
+      Kernel.const_get(:CreateVulnerabilityMutation)
+    rescue NameError => e
+      GPTLogger.logger.warn "Constant was not initialized : #{e}; Initializing for the first time"
+      Kernel.const_set(:CreateVulnerabilityMutation, @graphql_client.parse(@create_vulnerability_mutation_query))
+    end
     result = @graphql_client.query(CreateVulnerabilityMutation, variables: { project_id: project_id_path,
                                                                              mutation_id: mutation_id,
                                                                              scanner_id: scanner_id,
@@ -121,7 +128,7 @@ class GQLQueries
 
     if result.data.nil?
       GPTLogger.logger.warn "Graphql query Error while creating vulnerability data: #{result.errors[:data]}"
-    elsif result.data.errors.messages
+    elsif !result.data.errors.messages.empty?
       GPTLogger.logger.warn "Graphql Server Error while creating vulnerability data: #{result.data.errors[:vulnerability_create]}"
     end
 
