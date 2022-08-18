@@ -497,10 +497,9 @@ class GPTTestData
   end
 
   def create_vulnerability_report(proj_path:, vulnerabilities_count:)
-    ENV['GPT_GRAPHQL_ENDPOINT'] = "#{@env_url}/api/graphql"
     project_details = get_project_details(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
-    gql_queries = GQLQueries.new
+    gql_queries = GQLQueries.new("#{@env_url}/api/graphql")
     vulnerabilities_count.times do
       gql_queries.create_vulnerability_data(project_id_path)
     end

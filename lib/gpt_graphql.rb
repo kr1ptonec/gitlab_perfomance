@@ -16,8 +16,8 @@ end
 
 # Create GraphQL client by loading schema and endpoint
 class GQLClient
-  def initialize
-    @endpoint = ENV['GPT_GRAPHQL_ENDPOINT']
+  def initialize(env_url)
+    @endpoint = env_url
     @http = CustomGraphqlHttp.new(@endpoint)
     @schema = GraphQL::Client.load_schema(@http)
   end
@@ -28,27 +28,10 @@ class GQLClient
 end
 
 class GQLQueries
-  # Using Constants for graphql client as recommended here https://github.com/github/graphql-client#defining-queries
-  GQL_CLIENT = GQLClient.new.client
-  GET_QUERY = GQL_CLIENT.parse <<-'GRAPHQL'
-     query(
-        $path: ID!
-         )
-        {
-          project(fullPath: $path)
-          {
-            vulnerabilities(severity: LOW){
-              nodes{
-                id
-                resolvedOnDefaultBranch
-                state
-              }
-            }
-          }
-        }
-  GRAPHQL
+  def initialize(env_url)
+    @graphql_client = GQLClient.new(env_url).client
 
-  CREATE_VULNERABILITY_MUTATION = GQL_CLIENT.parse <<-'GRAPHQL'
+    @create_vulnerability_mutation_query = <<-'GRAPHQL'
      mutation(
             $project_id: ProjectID!,
             $name: String!,
@@ -91,7 +74,8 @@ class GQLQueries
                     }
                   }
                }
-  GRAPHQL
+    GRAPHQL
+  end
 
   # Defining randomized parameters for vulnerability mutation
   def name
@@ -124,14 +108,16 @@ class GQLQueries
   end
 
   def create_vulnerability_data(project_id_path)
-    result = GQL_CLIENT.query(CREATE_VULNERABILITY_MUTATION, variables: { project_id: project_id_path,
-                                                                          mutation_id: mutation_id,
-                                                                          scanner_id: scanner_id,
-                                                                          name: name,
-                                                                          description: description,
-                                                                          scanner_name: scanner_name,
-                                                                          identifier: identifier,
-                                                                          severity: severity })
+    # Using Constant for query as recommended here https://github.com/github/graphql-client#defining-queries
+    Kernel.const_set(:CreateVulnerabilityMutation, @graphql_client.parse(@create_vulnerability_mutation_query))
+    result = @graphql_client.query(CreateVulnerabilityMutation, variables: { project_id: project_id_path,
+                                                                             mutation_id: mutation_id,
+                                                                             scanner_id: scanner_id,
+                                                                             name: name,
+                                                                             description: description,
+                                                                             scanner_name: scanner_name,
+                                                                             identifier: identifier,
+                                                                             severity: severity })
 
     if result.data.nil?
       GPTLogger.logger.warn "Graphql query Error while creating vulnerability data: #{result.errors[:data]}"
