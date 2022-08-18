@@ -7,7 +7,7 @@ require 'gpt_logger'
 
 # Overriding GraphQL::Client::HTTP headers method to pass GITLAB ACCESS_TOKEN
 class CustomGraphqlHttp < GraphQL::Client::HTTP
-  GITLAB_TOKEN = ENV.fetch('ACCESS_TOKEN')
+  GITLAB_TOKEN = ENV['ACCESS_TOKEN']
 
   def headers(context)
     { 'PRIVATE-TOKEN' => GITLAB_TOKEN }
