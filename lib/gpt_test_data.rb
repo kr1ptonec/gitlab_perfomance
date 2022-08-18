@@ -497,12 +497,19 @@ class GPTTestData
   end
 
   def create_vulnerability_report(proj_path:, vulnerabilities_count:)
+    check_vuln_api_supported
     project_details = get_project_details(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
     gql_queries = GQLQueries.new("#{@env_url}/api/graphql")
     vulnerabilities_count.times do
       gql_queries.create_vulnerability_data(project_id_path)
     end
+  end
+
+  def check_vuln_api_supported
+    return if @gitlab_version >= Semantic::Version.new('14.3.0')
+
+    abort(Rainbow("Target Gitlab Environment v#{@gitlab_version} does not support creating vulnerabilities via api\n").yellow)
   end
 
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)
