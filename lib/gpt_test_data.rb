@@ -304,19 +304,15 @@ class GPTTestData
     GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/projects/#{CGI.escape(proj_path)}", headers: @headers, fail_on_error: false)
   end
 
-  def get_project_details(proj_path:)
+  def validate_project_data(proj_path:, storage:, project_metadata:)
     proj_check_res = get_project(proj_path: proj_path)
     raise ProjectCheckError, "Get project request failed!\nCode: #{proj_check_res.code}\nResponse: #{proj_check_res.body}\n" unless proj_check_res.status.success?
 
-    JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
-  end
-
-  def validate_project_data(proj_path:, storage:, project_metadata:)
     GPTLogger.logger.info "Validating project '#{proj_path}' imported successfully..."
     @large_projects_validation_errors[proj_path] = []
     # Check that project was imported to the correct repo storage
     # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
-    project = get_project_details(proj_path: proj_path)
+    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
 
     version = project_metadata['version']
     unless project['description']&.match?(/^Version: #{version}/)
@@ -498,7 +494,7 @@ class GPTTestData
 
   def create_vulnerability_report(proj_path:, vulnerabilities_count:)
     check_vuln_api_supported
-    project_details = get_project_details(proj_path: proj_path)
+    project_details = check_project_exists(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
     gql_queries = GQLQueries.new("#{@env_url}/api/graphql")
     vulnerabilities_count.times do
@@ -515,6 +511,7 @@ class GPTTestData
   def create_vertical_test_data(project_tarball:, large_projects_group:, project_name:, project_metadata:)
     project_version = project_metadata['version']
     check_repo_storage_settings_type
+
     proj_tarball_file = nil
     @storage_nodes.each.with_index(1) do |gitaly_node, i|
       import_project = ImportProject.new(env_url: @env_url, project_tarball: project_tarball)
