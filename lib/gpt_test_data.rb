@@ -311,7 +311,12 @@ class GPTTestData
     @large_projects_validation_errors[proj_path] = []
     # Check that project was imported to the correct repo storage
     # Due to an issue https://gitlab.com/gitlab-org/gitlab/-/issues/227408 in GitLab versions 13.1 and 13.2
-    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage')
+    project = JSON.parse(proj_check_res.body.to_s).slice('id', 'name', 'path_with_namespace', 'description', 'repository_storage', 'visibility')
+
+    unless project['visibility'] == 'public'
+      GPTLogger.logger.info "Project visibiliity '#{project['visibility']}' is different than required 'public' visibility. Updating..."
+      GPTCommon.make_http_request(method: 'put', url: "#{@env_api_url}/projects/#{project['id']}", params: { visibility: 'public' }, headers: @headers)
+    end
 
     version = project_metadata['version']
     unless project['description']&.match?(/^Version: #{version}/)
