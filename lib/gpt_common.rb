@@ -84,6 +84,13 @@ module GPTCommon
     sleep 1 # Wait for a setting change to propagate
   end
 
+  def get_license_details(env_url:, headers:)
+    return false unless ENV['ACCESS_TOKEN']
+
+    res = GPTCommon.make_http_request(method: 'get', url: "#{env_url}/api/v4/license", headers: headers, fail_on_error: false)
+    res.status.success? ? JSON.parse(res.body.to_s) : {} # returns nil if no license found ie., free tier
+  end
+
   def show_warning_prompt(warn_text)
     puts Rainbow("#{warn_text}\nDo you want to proceed? [Y/N]").yellow
     prompt = $stdin.gets.chomp

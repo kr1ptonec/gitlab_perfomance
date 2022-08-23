@@ -31,6 +31,7 @@ class GPTTestData
 
     @gitlab_version = GPTCommon.check_gitlab_env_and_token(env_url: @env_url)
     @settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
+    @license = GPTCommon.get_license_details(env_url: @env_url, headers: @headers)
     @large_projects_validation_errors = {}
 
     @default_pool_size = ENV['GPT_GENERATOR_POOL_SIZE'].nil? ? 10 : ENV['GPT_GENERATOR_POOL_SIZE'].to_i
@@ -68,6 +69,14 @@ class GPTTestData
 
   def check_setting_available?(setting:)
     @settings.key?(setting)
+  end
+
+  # check enterprise license
+
+  def check_gitlab_ultimate?
+    return false if @license.nil?
+
+    @license['plan'].downcase.include?('ultimate')
   end
 
   ## Soft Delete
@@ -493,6 +502,7 @@ class GPTTestData
   end
 
   def create_vulnerability_report(proj_path:, vulnerabilities_count:)
+    abort(Rainbow("EE license not found in #{@env_url} gitlab instance, exiting").yellow) unless check_gitlab_ultimate?
     check_vuln_api_supported
     project_details = check_project_exists(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
