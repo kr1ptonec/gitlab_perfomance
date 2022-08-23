@@ -13,9 +13,10 @@ import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectR
 import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let thresholds = {
-  'ttfb': { 'latest': 500 }
+  'rps': { 'latest': 0.3 },
+  'ttfb': { 'latest': 5000 }
 };
-export let rpsThresholds = getRpsThresholds()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
