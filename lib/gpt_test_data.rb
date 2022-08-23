@@ -503,7 +503,7 @@ class GPTTestData
   end
 
   def check_vuln_api_supported
-    return if @gitlab_version >= Semantic::Version.new('14.3.0')
+    return if @gitlab_version >= Semantic::Version.new('14.8.2')
 
     abort(Rainbow("Target Gitlab Environment v#{@gitlab_version} does not support creating vulnerabilities via api\n").yellow)
   end
