@@ -9,14 +9,15 @@ export function logError(res) {
   if ( typeof logError.last == 'undefined' ) logError.last = '';
 
   let error;
-  let correlationId;
   try {
     let message = JSON.parse(res.body)['message'] || JSON.parse(res.body)['error']
     error = typeof message === 'object' ? JSON.stringify(message) : message
-    correlationId = res.headers['X-Request-Id'] || res.headers['x-request-id'];
   } catch (e) {
     error = res.body
   }
+
+  let correlationId = getObjectValue(res.headers,'X-Request-Id');
+  let rateLimit = getObjectValue(res.headers, 'RateLimit-Name');
 
   // Report redirects when responseType is null
   if (/30(1|2)/.test(res.status) && error === null) error = "request was redirected"
@@ -24,9 +25,17 @@ export function logError(res) {
   if (logError.last != error) {
     logError.last = error;
     let message = `Error detected: '${logError.last}'`;
+    if (rateLimit) { message = `${message} ====> Rate Limit error caused by '${rateLimit}' limit.`; }
     if (correlationId) { message = `${message} ====> Correlation ID: ${correlationId}`; }
     console.warn(message);
   }
+}
+
+// Case insensitive value search in the object
+// GitLab headers have different case sensitivity
+// depending on target environment, examples: 'RateLimit-Name', 'Ratelimit-Name' and 'ratelimit-name'
+function getObjectValue(object, key) {
+  return object[Object.keys(object).find(k => k.toLowerCase() == key.toLowerCase())];
 }
 
 export function logGraphqlError(graphQLErrors) {
