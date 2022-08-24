@@ -60,7 +60,7 @@ module GPTCommon
     check_res = make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
     raise "Environment access token check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
-    gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'])
+    gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'].match(/\d+\.\d+\.\d+/)[0])
     warn Rainbow("\nTarget environment is #{gitlab_version}. Minimum fully supported GitLab version for GPT is 12.5.0. For versions between 11.0.0 and 12.5.0 your mileage may vary, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#environment-requirements\n").yellow if gitlab_version < Semantic::Version.new('12.5.0')
     raise "\nTarget environment is #{gitlab_version}. GitLab versions lower than 11.0.0 are unsupported, please refer to the docs for more info - https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/environment_prep.md#environment-requirements. Exiting..." if gitlab_version < Semantic::Version.new('11.0.0')
 
