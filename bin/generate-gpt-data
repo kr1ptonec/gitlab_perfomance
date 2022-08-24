@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.25'
+gpt_data_version = '1.0.26'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -103,7 +103,7 @@ results_file_prefix = "#{URI(opts[:environment_url]).host}_#{start_time.strftime
 ENV['GPT_LOGGER_PATH'] = "#{results_home}/generate-gpt-data_#{results_file_prefix}.log"
 unattended = opts[:unattended] || opts[:force]
 
-GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified group `#{opts[:root_group]}` on #{opts[:environment_url]}. Note that this may take some time.") unless unattended || opts[:clean_up]
+GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified group `#{opts[:root_group]}` with Public visibility on #{opts[:environment_url]}. Note that this may take some time.") unless unattended || opts[:clean_up]
 
 # Generate opinionated test data
 begin

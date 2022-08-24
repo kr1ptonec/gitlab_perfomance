@@ -73,21 +73,32 @@ class GPTTestData
 
   def disable_soft_delete_settings
     # Deletion adjourned period is only available for GitLab Premium or Ultimate
-    # For other tiers settings won't have 'deletion_adjourned_period'
-    return if !check_setting_available?(setting: 'deletion_adjourned_period') || @settings['deletion_adjourned_period'].zero?
+    # For other tiers settings won't have 'deletion_adjourned_period' / `delayed_project_deletion`
+    delayed_deletion_settings = @gitlab_version >= Semantic::Version.new('15.3.0') ? { 'delayed_project_deletion' => false, 'delayed_group_deletion' => false } : { 'deletion_adjourned_period' => 0 }
 
-    # Workaround until https://gitlab.com/gitlab-org/gitlab/-/issues/191367 is addressed
-    GPTCommon.show_warning_prompt("GPT Data Generator will update the GitLab Environment 'deletion_adjourned_period' setting to disable soft-delete.\n\nWhile the GPT Data Generator is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
-    GPTLogger.logger.info "Disabling soft-delete by updating 'deletion_adjourned_period' to 0..."
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: 0 })
+    delayed_deletion_settings.each do |setting, value|
+      break if !check_setting_available?(setting: setting) || @settings[setting] == value
+
+      # Disable soft delete only for the first time
+      current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
+      break if current_settings[setting] == value
+
+      # Workaround until Project API supports immediate deletion https://gitlab.com/gitlab-org/gitlab/-/issues/371541
+      GPTCommon.show_warning_prompt("GPT Data Generator will update the GitLab Environment '#{setting}' setting to disable soft-delete.\n\nWhile the GPT Data Generator is running this setting change will be in effect.\nThe original setting will be restored at the end of data generation.") unless @unattended
+      GPTLogger.logger.info "Disabling soft-delete by updating '#{setting}' to '#{value}'..."
+      GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { setting => value })
+    end
   end
 
   def restore_soft_delete_settings
     current_settings = GPTCommon.get_env_settings(env_url: @env_url, headers: @headers)
-    return if !check_setting_available?(setting: 'deletion_adjourned_period') || current_settings['deletion_adjourned_period'] == @settings['deletion_adjourned_period']
+    delayed_deletion_settings = @gitlab_version >= Semantic::Version.new('15.3.0') ? %w[delayed_group_deletion delayed_project_deletion] : ['deletion_adjourned_period']
+    delayed_deletion_settings.each do |setting|
+      break if !check_setting_available?(setting: setting) || current_settings[setting] == @settings[setting]
 
-    GPTLogger.logger.info "Restoring the original 'deletion_adjourned_period' setting..."
-    GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { deletion_adjourned_period: @settings['deletion_adjourned_period'] })
+      GPTLogger.logger.info "Restoring the original '#{setting}' setting..."
+      GPTCommon.change_env_settings(env_url: @env_url, headers: @headers, settings: { setting => @settings[setting] })
+    end
   end
 
   ## Storage
