@@ -12,6 +12,7 @@
 
 import http from "k6/http";
 import { group } from "k6";
+import ws from 'k6/ws';
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
@@ -59,7 +60,8 @@ export function setup() {
   let checkProject = selectRandom(projects)
   let endpointPath = checkProjEndpointDash(`${__ENV.ENVIRONMENT_URL}/${checkProject['unencoded_path']}`, 'merge_requests')
   console.log(`Endpoint path is '${endpointPath}'`)
-  return { endpointPath };
+  let websocketUrl = `wss://${__ENV.ENVIRONMENT_URL.replace(/^https?:\/\//, '')}/-/cable`;
+  return { endpointPath, websocketUrl };
 }
 
 export default function(data) {
@@ -76,5 +78,23 @@ export default function(data) {
     responses.forEach(function(res) {
       /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
     });
+
+    let params = { headers: { "Origin": `${__ENV.ENVIRONMENT_URL}` } };
+    const res = ws.connect(data.websocketUrl, params, function (socket) {
+      socket.on('open', function open() {
+        console.log('connected');
+        socket.send(Date.now());
+
+        socket.setInterval(function timeout() {
+          socket.ping();
+          console.log('Pinging every 3sec (setInterval test)');
+        }, 3000);
+      });
+      socket.on('message', function (message) {
+        console.log(`Received message: ${message}`);
+      });
+      socket.on('close', () => console.log('disconnected'));
+    });
+    /101/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));
   });
 }
