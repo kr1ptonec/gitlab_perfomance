@@ -43,10 +43,10 @@ export function deleteGroup(groupId) {
 
 export function searchForGroup(groupName) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
-  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupName}`, params);
-  let foundGroup = JSON.parse(res.body);
-  let groupId = foundGroup && foundGroup.id;  
-  groupId ? console.log(`Group contaning '${groupName}' name has id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
+  let foundGroup = JSON.parse(res.body)[0];
+  let groupId = foundGroup && foundGroup.id;
+  groupId ? console.log(`Group containing '${groupName}' name has id=${groupId}`) : console.log(`No groups containing name: '${groupName}'`);
   return groupId;
 }
 
@@ -60,6 +60,7 @@ export function createProject(groupId, additionalConfig={}) {
     auto_devops_enabled: false,
     visibility: "public",
     default_branch: "main",
+    issues_enabled: true,
     initialize_with_readme: true
   };
   let res = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects`, formdata, params);
@@ -83,7 +84,7 @@ export function getProjectDefaultBranch(projectId) {
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}`, params);
   let project = JSON.parse(res.body);
-  let defaultBranch = project && project.default_branch;  
+  let defaultBranch = project && project.default_branch;
   defaultBranch ? console.log(`Project with id=${projectId} has default_branch=${defaultBranch}`) : console.log(`Default branch can't be detected for the project '${projectId}'`);
 
   return defaultBranch;
