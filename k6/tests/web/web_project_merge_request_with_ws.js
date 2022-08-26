@@ -17,7 +17,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
-const sessionDuration = __ENV.GPT_WS_SESSION_MS || 10000; //10s user session duration
+const sessionDuration = parseInt(__ENV.GPT_WS_SESSION_MS) || 10000; //10s user session duration
 
 export let thresholds = {
   'rps': { '14.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
@@ -47,7 +47,7 @@ export let options = {
   scenarios: {
     closed_model: {
       executor: 'constant-vus',
-      vus: __ENV.GPT_RPS,
+      vus: parseInt(__ENV.GPT_RPS),
       duration: __ENV.GPT_TEST_DURATION,
     },
   },
