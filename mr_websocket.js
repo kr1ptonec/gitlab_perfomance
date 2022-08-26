@@ -1,9 +1,10 @@
-/*global __VU : true  */
+/*global __ENV, __VU : true  */
 import ws from 'k6/ws';
-import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.2.0/index.js';
 import { check } from 'k6';
 
-const sessionDuration = 10000;// randomIntBetween(3000, 10000); // user session between 1s and 6s
+const sessionDuration = __ENV.GPT_WS_SESSION_MS || 10000; //10s user session duration
+const rps_count = __ENV.GPT_RPS || 1;
+const test_duration = __ENV.GPT_TEST_DURATION || '60s';
 export let subscriptionMessage = '{"command":"subscribe","identifier":"{"channel":"GraphqlChannel","query":"subscription issuableLabelsUpdatedEE($issuableId: IssuableID!) {\\n  issuableLabelsUpdated(issuableId: $issuableId) {\\n    ... on Issue {\\n      id\\n      labels {\\n        nodes {\\n          ...Label\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    ... on MergeRequest {\\n      id\\n      labels {\\n        nodes {\\n          ...Label\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    ... on Epic {\\n      id\\n      labels {\\n        nodes {\\n          ...Label\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\\nfragment Label on Label {\\n  id\\n  title\\n  description\\n  color\\n  textColor\\n  __typename\\n}\\n","variables":{"issuableId":"gid://gitlab/MergeRequest/3143"},"operationName":"issuableLabelsUpdatedEE","nonce":"c1476f37-2ced-4cdf-bf07-9e6d1df4a07a"}"}';
 
 
@@ -11,8 +12,8 @@ export const options = {
   scenarios: {
     closed_model: {
       executor: 'constant-vus',
-      vus: 1,
-      duration: '60s',
+      vus: rps_count,
+      duration: test_duration,
     },
   },
 };

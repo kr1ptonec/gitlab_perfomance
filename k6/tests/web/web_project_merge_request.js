@@ -17,7 +17,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
-const sessionDuration = 10000;
+const sessionDuration = __ENV.GPT_WS_SESSION_MS || 10000; //10s user session duration
 
 export let thresholds = {
   'rps': { '14.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
@@ -69,6 +69,7 @@ export function setup() {
   console.log(`Endpoint path is '${endpointPath}'`)
 
   let websocketUrl = `ws://${__ENV.ENVIRONMENT_URL.replace(/^https?:\/\//, '')}/-/cable`;
+  console.log(`WebSocket URL is '${websocketUrl}', session duration ${sessionDuration/1000} seconds`)
 
   let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
   let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${checkProject['encoded_path']}/merge_requests/${checkProject['mr_discussions_iid']}`, params);
