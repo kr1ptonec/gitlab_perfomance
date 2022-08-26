@@ -30,6 +30,8 @@ module ResultWriter
             test_result['ttfb_p90'],
             test_result['ttfb_p90_threshold'],
             test_result['ttfb_p95'],
+            test_result['ws_connect_avg'],
+            test_result['ws_connect_p90'],
             test_result['success_rate'],
             test_result['success_rate_threshold'],
             test_result['result'] ? "Passed" : "FAILED"
@@ -73,6 +75,8 @@ module ResultWriter
           tp_result["Name"] = test_result['name'] || '-'
           tp_result["RPS"] = test_result['rps_target'] ? "#{test_result['rps_target']}/s" : '-'
           tp_result["RPS Result"] = [test_result['rps_result'], test_result['rps_threshold']].none?(&:nil?) ? "#{test_result['rps_result']}/s (>#{test_result['rps_threshold']}/s)" : '-'
+          tp_result["WS Connect Avg"] = "#{test_result['ws_connect_avg']}ms" if test_result['ws_connect_avg']
+          tp_result["WS Connect P90"] = "#{test_result['ws_connect_p90']}ms" if test_result['ws_connect_p90']
           tp_result["TTFB Avg"] = test_result['ttfb_avg'] ? "#{test_result['ttfb_avg']}ms" : '-'
           tp_result["TTFB P90"] = [test_result['ttfb_p90'], test_result['ttfb_p90_threshold']].none?(&:nil?) ? "#{test_result['ttfb_p90']}ms (<#{test_result['ttfb_p90_threshold']}ms)" : '-'
           tp_result["TTFB P95"] = "#{test_result['ttfb_p95']}ms" if ENV['GPT_TTFB_P95']

@@ -38,10 +38,19 @@ module RunK6
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('unzip', '-j', '-o', k6_archive.path, '-d', File.dirname(k6_archive.path))
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
+
+      k6_browser_url = ENV['K6_BR_URL'] || "https://github.com/grafana/xk6-browser/releases/download/v#{k6_browser_version}/xk6-browser-v#{k6_browser_version}-macos-#{cpu_arch}.zip"
+      warn Rainbow("xk6-browser not found or wrong version detected. Downloading xk6-browser version #{k6_browser_version} from #{k6_browser_url} to system temp folder...").yellow
+
+      k6_browser_archive = GPTCommon.download_file(url: k6_browser_url)
+      extract_output, extract_status = Open3.capture2e('unzip', '-j', '-o', k6_browser_archive.path, '-d', File.dirname(k6_browser_archive.path))
+      raise "xk6-browser archive extract failed:\b#{extract_output}" unless extract_status.success?
     end
 
     File.join(File.dirname(k6_archive.path), 'k6')
+    # File.join(File.dirname(k6_browser_archive.path), 'xk6-browser')
   end
+
 
   def get_env_version(env_url:)
     headers = { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }
@@ -182,7 +191,7 @@ module RunK6
     cmd += ['--summary-trend-stats', 'avg,min,med,max,p(90),p(95)']
     cmd += ['--user-agent', "GPT/#{gpt_version}"]
     cmd += ['--insecure-skip-tls-verify']
-    cmd += ['--http-debug'] if ENV['GPT_DEBUG']
+    cmd += ['--http-debug=full'] if ENV['GPT_DEBUG']
     cmd += ['--out', "influxdb=#{opts[:influxdb_url]}"] if opts[:influxdb_url] && ENV['K6_INFLUXDB_OUTPUT']
     cmd += [test_file]
 
@@ -215,6 +224,10 @@ module RunK6
         results["ttfb_avg"] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)[2]
         results["ttfb_p90"] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)[2]
         results["ttfb_p95"] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[2]
+      when /ws_connecting/
+        results["ws_connect_avg"] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)[2]
+        results["ws_connect_p90"] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)[2]
+        results["ws_connect_p95"] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[2]
       when /vus_max/
         results["rps_target"] = line.match(/max=(\d+)/)[1]
       when /RPS Threshold:/
