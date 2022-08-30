@@ -28,6 +28,10 @@ GEM
       rubocop-performance (~> 1.9.2)
       rubocop-rails (~> 2.9)
       rubocop-rspec (~> 1.44)
+    graphql (2.0.12)
+    graphql-client (0.18.0)
+      activesupport (>= 3.0)
+      graphql
     http (5.0.4)
       addressable (~> 2.8)
       http-cookie (~> 1.0)
@@ -101,6 +105,7 @@ DEPENDENCIES
   connection_pool
   down
   gitlab-styles
+  graphql-client
   http
   naturally
   optimist
@@ -115,4 +120,4 @@ RUBY VERSION
    ruby 2.7.5p203
 
 BUNDLED WITH
-   2.2.32
+   2.2.33
