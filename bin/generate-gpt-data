@@ -29,6 +29,7 @@ opts = Optimist.options do
   opt :root_group, "Root group for GPT data.", short: :none, type: :string
   opt :horizontal, "Generate horizontal GPT data with multiple subgroups and projects.", short: :none, type: :boolean, default: true
   opt :group, "Group name that the subgroups and projects will be generated under.", short: :none, type: :string
+  opt :secure_group, "Group name where vulnerabilities projects will be created under", short: :none, type: :string
   opt :subgroup_prefix, "Prefix that the subgroups will be generated with.", short: :none, type: :string
   opt :subgroups, "Number of subgroups to create", type: :integer
   opt :project_prefix, "Prefix that the projects will be generated with.", short: :none, type: :string
@@ -38,10 +39,11 @@ opts = Optimist.options do
   opt :large_project_name, "Name for large project to import.", short: :none, type: :string
   opt :large_project_tarball, "Location of custom large project tarball to import. Can be local or remote.", short: :none, type: :string
   opt :storage_nodes, "Repository storages that will be used to import vertical data.", short: :none, type: :strings
+  opt :security_perf, "Creates a separate group and projects for performance testing of security", short: :none, type: :boolean, default: false
   opt :unattended, "Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :force, "Alternative flag for unattended. Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :clean_up, "Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.", type: :flag, default: false
-  opt :clean_up_mode, "Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
+  opt :clean_up_mode, "Specify 'vertical', 'horizontal' or 'secure' to clean up only Vertical, Horizontal or Secure GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
   opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
@@ -72,11 +74,13 @@ if opts[:environment]
   opts[:environment_url] ||= env_file_vars['environment']['url']
   opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
+  opts[:secure_group] ||= env_file_vars['gpt_data']['secure_projects']['group']
   opts[:subgroup_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroup_prefix']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
   opts[:project_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['project_prefix']
+  opts[:secure_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix']
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
-
+  opts[:secure_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects']
   opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
 
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
@@ -118,6 +122,8 @@ begin
                         gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:group]}")
                       when 'vertical'
                         gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vert_group]}")
+                      when 'secure'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:secure_group]}")
                       else
                         root_group
                       end
@@ -134,6 +140,15 @@ begin
   end
 
   gpt_test_data.check_users_with_group_name(grp_path: opts[:root_group])
+
+  if opts[:security_perf]
+    root_group = gpt_test_data.create_group(group_name: opts[:root_group])
+    secure_group = [gpt_test_data.create_group(group_name: opts[:secure_group], parent_group: root_group)]
+    projects = gpt_test_data.create_projects(project_prefix: opts[:secure_projects_prefix], subgroups: secure_group, projects_count: opts[:secure_projects_count])
+    projects.each do |project|
+      gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: 3)
+    end
+  end
 
   if opts[:horizontal]
     GPTCommon.show_warning_prompt("\nFor the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.\n\nWhile the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.\nThe original setting will be restored after the the tool is finished.") unless unattended

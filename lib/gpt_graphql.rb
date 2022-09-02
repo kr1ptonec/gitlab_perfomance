@@ -75,6 +75,22 @@ class GQLQueries
                   }
                }
     GRAPHQL
+
+    @vulnerabilities_count = <<-'GRAPHQL'
+      query($full_path: ID!)
+        {
+          project(fullPath: $full_path){
+            vulnerabilitySeveritiesCount{
+              critical
+              high
+              info
+              low
+              medium
+              unknown
+            }
+          }
+        }
+    GRAPHQL
   end
 
   # Defining randomized parameters for vulnerability mutation
@@ -105,6 +121,23 @@ class GQLQueries
   def identifier
     prefix = %w[CVE CWE].sample
     "#{prefix}-#{SecureRandom.hex(6)}"
+  end
+
+  def vulnerabilities_count(project_path)
+    begin
+      # To avoid initializing constant multiple times during data generation
+      Kernel.const_get(:GetVulneabilitiesCount)
+    rescue NameError => e
+      GPTLogger.logger.warn "Constant was not initialized : #{e}; Initializing for the first time"
+      Kernel.const_set(:GetVulneabilitiesCount, @graphql_client.parse(@vulnerabilities_count))
+    end
+
+    result = @graphql_client.query(GetVulneabilitiesCount, variables: { full_path: project_path })
+    raise StandardError, "Error getting data from graphql, check project path #{result.errors[:data]}" if result.data.nil? || result.data.project.nil?
+
+    result.data.project.vulnerability_severities_count.critical.to_i + result.data.project.vulnerability_severities_count.low.to_i + \
+      +result.data.project.vulnerability_severities_count.high.to_i + result.data.project.vulnerability_severities_count.medium.to_i + \
+      result.data.project.vulnerability_severities_count.unknown.to_i + result.data.project.vulnerability_severities_count.info.to_i
   end
 
   def create_vulnerability_data(project_id_path)
