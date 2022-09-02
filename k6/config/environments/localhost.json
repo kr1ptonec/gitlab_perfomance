@@ -20,6 +20,12 @@
       "subgroup_prefix": "gpt-subgroup-",
       "projects": 5,
       "project_prefix": "gpt-project-"
+    },
+    "secure_projects": {
+      "group": "secure_group",
+      "projects": 3,
+      "project_prefix": "gpt-vulnerabilities-proj",
+      "vulnerabilities_count": 3
     }
   }
 }

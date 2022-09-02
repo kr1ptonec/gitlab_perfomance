@@ -29,7 +29,6 @@ opts = Optimist.options do
   opt :root_group, "Root group for GPT data.", short: :none, type: :string
   opt :horizontal, "Generate horizontal GPT data with multiple subgroups and projects.", short: :none, type: :boolean, default: true
   opt :group, "Group name that the subgroups and projects will be generated under.", short: :none, type: :string
-  opt :secure_group, "Group name where vulnerabilities projects will be created under", short: :none, type: :string
   opt :subgroup_prefix, "Prefix that the subgroups will be generated with.", short: :none, type: :string
   opt :subgroups, "Number of subgroups to create", type: :integer
   opt :project_prefix, "Prefix that the projects will be generated with.", short: :none, type: :string
@@ -74,13 +73,14 @@ if opts[:environment]
   opts[:environment_url] ||= env_file_vars['environment']['url']
   opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
-  opts[:secure_group] ||= env_file_vars['gpt_data']['secure_projects']['group']
+  opts[:secure_group] ||= env_file_vars['gpt_data']['secure_projects']['group'] if env_file_vars['gpt_data'].key?('secure_projects')
   opts[:subgroup_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroup_prefix']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
   opts[:project_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['project_prefix']
-  opts[:secure_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix']
+  opts[:secure_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix'] if env_file_vars['gpt_data'].key?('secure_projects')
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
-  opts[:secure_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects']
+  opts[:secure_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects'] if env_file_vars['gpt_data'].key?('secure_projects')
+  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['secure_projects']['vulnerabilities_count'] if env_file_vars['gpt_data'].key?('secure_projects')
   opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
 
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
@@ -146,7 +146,7 @@ begin
     secure_group = [gpt_test_data.create_group(group_name: opts[:secure_group], parent_group: root_group)]
     projects = gpt_test_data.create_projects(project_prefix: opts[:secure_projects_prefix], subgroups: secure_group, projects_count: opts[:secure_projects_count])
     projects.each do |project|
-      gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: 3)
+      gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: opts[:vulnerabilities_count])
     end
   end
 

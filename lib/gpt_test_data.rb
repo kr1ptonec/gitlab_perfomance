@@ -18,6 +18,7 @@ class GPTTestData
   IncorrectProjectDataError = Class.new(StandardError)
   ProjectCheckError = Class.new(StandardError)
   GroupCheckError = Class.new(StandardError)
+  VulnerabilitiesCountError = Class.new(StandardError)
 
   def initialize(gpt_data_version:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:, skip_project_validation:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
