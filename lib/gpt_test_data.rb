@@ -527,8 +527,10 @@ class GPTTestData
     check_vuln_api_supported
     project_details = check_project_exists(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
+    progress_bar = ProgressBar.create(title: 'Generating vulnerabilities', total: vulnerabilities_count, format: "%t: %c from %C |%b>%i| %E %a")
     vulnerabilities_count.times do
       gql_queries.create_vulnerability_data(project_id_path)
+      progress_bar.increment
     end
 
     raise VulnerabilitiesCountError, "Vulnerability count does not match between project data and paramter passed" unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
