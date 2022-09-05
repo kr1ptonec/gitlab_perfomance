@@ -73,14 +73,15 @@ if opts[:environment]
   opts[:environment_url] ||= env_file_vars['environment']['url']
   opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
-  opts[:secure_group] ||= env_file_vars['gpt_data']['secure_projects']['group'] if env_file_vars['gpt_data'].key?('secure_projects')
+  opts[:secure_perf] ||= env_file_vars['gpt_data'].key?('secure_projects') ? true : false
+  opts[:secure_group] ||= env_file_vars['gpt_data']['secure_projects']['group'] if opts[:secure_perf]
   opts[:subgroup_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroup_prefix']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
   opts[:project_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['project_prefix']
-  opts[:secure_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix'] if env_file_vars['gpt_data'].key?('secure_projects')
+  opts[:secure_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix'] if opts[:secure_perf]
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
-  opts[:secure_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects'] if env_file_vars['gpt_data'].key?('secure_projects')
-  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['secure_projects']['vulnerabilities_count'] if env_file_vars['gpt_data'].key?('secure_projects')
+  opts[:secure_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects'] if opts[:secure_perf]
+  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['secure_projects']['vulnerabilities_count'] if opts[:secure_perf]
   opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
 
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
@@ -142,6 +143,8 @@ begin
   gpt_test_data.check_users_with_group_name(grp_path: opts[:root_group])
 
   if opts[:security_perf]
+    raise Rainbow("Secure projects and group not defined in ENV file in k6/config/environments..exiting").red unless opts[:secure_perf]
+
     root_group = gpt_test_data.create_group(group_name: opts[:root_group])
     secure_group = [gpt_test_data.create_group(group_name: opts[:secure_group], parent_group: root_group)]
     projects = gpt_test_data.create_projects(project_prefix: opts[:secure_projects_prefix], subgroups: secure_group, projects_count: opts[:secure_projects_count])
