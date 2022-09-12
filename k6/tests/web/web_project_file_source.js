@@ -15,7 +15,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 
 export let thresholds = {
   'rps': { '13.11.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
-  'ttfb': { '13.11.0': 5000, 'latest': 3550 }
+  'ttfb': { '13.11.0': 5000, 'latest': 3750 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
