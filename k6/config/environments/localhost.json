@@ -21,11 +21,11 @@
       "projects": 5,
       "project_prefix": "gpt-project-"
     },
-    "secure_projects": {
-      "group": "secure_group",
+    "vulnerabilities_projects": {
+      "group": "vulnerabilities_group",
       "projects": 3,
       "project_prefix": "gpt-vulnerabilities-proj",
-      "vulnerabilities_count": 3
+      "vulnerabilities_count": 100
     }
   }
 }

@@ -124,13 +124,14 @@ class GQLQueries
   end
 
   def vulnerabilities_count(project_path)
-    begin
-      # To avoid initializing constant multiple times during data generation
+    # To avoid initializing constant multiple times during data generation
+    if Kernel.const_defined?(:GetVulneabilitiesCount)
       Kernel.const_get(:GetVulneabilitiesCount)
-    rescue NameError => e
-      GPTLogger.logger.warn "Constant was not initialized : #{e}; Initializing for the first time"
+    else
+      GPTLogger.logger.warn ":GetVulneabilitiesCount was not initialized, Initializing for the first time"
       Kernel.const_set(:GetVulneabilitiesCount, @graphql_client.parse(@vulnerabilities_count))
     end
+
 
     result = @graphql_client.query(GetVulneabilitiesCount, variables: { full_path: project_path })
     raise StandardError, "Error getting data from graphql, check project path #{result.errors[:data]}" if result.data.nil? || result.data.project.nil?
@@ -143,13 +144,14 @@ class GQLQueries
   def create_vulnerability_data(project_id_path)
     # Using Constant for query as recommended here https://github.com/github/graphql-client#defining-queries
 
-    begin
-      # To avoid initializing constant multiple times during data generation
+    if Kernel.const_defined?(:CreateVulnerabilityMutation)
       Kernel.const_get(:CreateVulnerabilityMutation)
-    rescue NameError => e
-      GPTLogger.logger.warn "Constant was not initialized : #{e}; Initializing for the first time"
+    else
+      GPTLogger.logger.warn ":CreateVulnerabilityMutation was not initialized, Initializing for the first time"
       Kernel.const_set(:CreateVulnerabilityMutation, @graphql_client.parse(@create_vulnerability_mutation_query))
     end
+
+
     result = @graphql_client.query(CreateVulnerabilityMutation, variables: { project_id: project_id_path,
                                                                              mutation_id: mutation_id,
                                                                              scanner_id: scanner_id,

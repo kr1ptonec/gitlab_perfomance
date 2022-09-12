@@ -533,7 +533,7 @@ class GPTTestData
       progress_bar.increment
     end
 
-    raise VulnerabilitiesCountError, "Vulnerability count does not match between project data and parameter passed" unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
+    raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
   end
 
   def vulnerabilities_count_matches?(proj_path:, vulnerabilities_count:)

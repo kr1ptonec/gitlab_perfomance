@@ -83,11 +83,11 @@ if opts[:environment]
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
 
   # Vulnerabilities data
-  opts[:vulnerabilities_perf] ||= env_file_vars['gpt_data'].key?('secure_projects') ? true : false
-  opts[:vulnerabilities_group] ||= env_file_vars['gpt_data']['secure_projects']['group'] if opts[:vulnerabilities_perf]
-  opts[:vulnerabilities_projects_prefix] ||= env_file_vars['gpt_data']['secure_projects']['project_prefix'] if opts[:vulnerabilities_perf]
-  opts[:vulnerabilities_projects_count] ||= env_file_vars['gpt_data']['secure_projects']['projects'] if opts[:vulnerabilities_perf]
-  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['secure_projects']['vulnerabilities_count'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_perf] ||= env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
+  opts[:vulnerabilities_group] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['group'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_projects_prefix] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['project_prefix'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_projects_count] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['projects'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['vulnerabilities_count'] if opts[:vulnerabilities_perf]
 
   # Vertical
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
@@ -129,7 +129,7 @@ begin
                         gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:group]}")
                       when 'vertical'
                         gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vert_group]}")
-                      when 'secure'
+                      when 'vulnerabilities'
                         gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vulnerabilities_group]}")
                       else
                         root_group
