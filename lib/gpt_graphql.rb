@@ -132,7 +132,6 @@ class GQLQueries
       Kernel.const_set(:GetVulneabilitiesCount, @graphql_client.parse(@vulnerabilities_count))
     end
 
-
     result = @graphql_client.query(GetVulneabilitiesCount, variables: { full_path: project_path })
     raise StandardError, "Error getting data from graphql, check project path #{result.errors[:data]}" if result.data.nil? || result.data.project.nil?
 
@@ -150,7 +149,6 @@ class GQLQueries
       GPTLogger.logger.warn ":CreateVulnerabilityMutation was not initialized, Initializing for the first time"
       Kernel.const_set(:CreateVulnerabilityMutation, @graphql_client.parse(@create_vulnerability_mutation_query))
     end
-
 
     result = @graphql_client.query(CreateVulnerabilityMutation, variables: { project_id: project_id_path,
                                                                              mutation_id: mutation_id,
