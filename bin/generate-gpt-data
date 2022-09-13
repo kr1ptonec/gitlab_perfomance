@@ -42,7 +42,7 @@ opts = Optimist.options do
   opt :unattended, "Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :force, "Alternative flag for unattended. Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :clean_up, "Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.", type: :flag, default: false
-  opt :clean_up_mode, "Specify 'vertical', 'horizontal' or 'secure' to clean up only Vertical, Horizontal or Secure GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
+  opt :clean_up_mode, "Specify 'vertical', 'horizontal' or 'vulnerabilities' to clean up only Vertical, Horizontal or Vulnerabilities GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
   opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
