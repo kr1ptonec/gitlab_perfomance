@@ -18,6 +18,7 @@ class GPTTestData
   IncorrectProjectDataError = Class.new(StandardError)
   ProjectCheckError = Class.new(StandardError)
   GroupCheckError = Class.new(StandardError)
+  VulnerabilitiesCountError = Class.new(StandardError)
 
   def initialize(gpt_data_version:, unattended:, env_url:, storage_nodes:, max_wait_for_delete:, skip_project_validation:)
     @gpt_data_version_description = "Generated and maintained by GPT Data Generator v#{gpt_data_version}"
@@ -517,15 +518,26 @@ class GPTTestData
     end
   end
 
+  def gql_queries
+    @gql_queries ||= GQLQueries.new("#{@env_url}/api/graphql")
+  end
+
   def create_vulnerability_report(proj_path:, vulnerabilities_count:)
     abort(Rainbow("EE license not found in #{@env_url} gitlab instance, exiting").yellow) unless check_gitlab_ultimate?
     check_vuln_api_supported
     project_details = check_project_exists(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
-    gql_queries = GQLQueries.new("#{@env_url}/api/graphql")
+    progress_bar = ProgressBar.create(title: 'Generating vulnerabilities', total: vulnerabilities_count, format: "%t: %c from %C |%b>%i| %E %a")
     vulnerabilities_count.times do
       gql_queries.create_vulnerability_data(project_id_path)
+      progress_bar.increment
     end
+
+    raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
+  end
+
+  def vulnerabilities_count_matches?(proj_path:, vulnerabilities_count:)
+    gql_queries.vulnerabilities_count(proj_path) == vulnerabilities_count
   end
 
   def check_vuln_api_supported
