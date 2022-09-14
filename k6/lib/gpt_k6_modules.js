@@ -157,6 +157,21 @@ export function getManyGroupsOrProjects(key) {
   return group_with_projects[key];
 }
 
+//Returns secure project data
+export function getSecureProjects() {
+  let group_with_projects = JSON.parse(__ENV.ENVIRONMENT_SECURE_PROJECTS);
+  console.log(`group_with_projects: ${JSON.stringify(group_with_projects)}`)
+  // Prepare projects data
+  group_with_projects['encoded_projects_path'] = [];
+  group_with_projects['unencoded_projects_path'] = [];
+  for (let i = 0; i < group_with_projects['projects_count']; i++) {
+    group_with_projects['encoded_projects_path'].push(`${group_with_projects['encoded_group_path']}%2F${group_with_projects['project_prefix']}${i}`);
+    group_with_projects['unencoded_projects_path'].push(`${group_with_projects['unencoded_group_path']}/${group_with_projects['project_prefix']}${i}`);
+  }
+  console.log(`computed_group_with_projects: ${JSON.stringify(group_with_projects)}`)
+  return group_with_projects
+}
+
 export function selectRandom(entities) {
   return entities.length == 1 ? entities[0] : entities[entities.length * Math.random() << 0];
 }

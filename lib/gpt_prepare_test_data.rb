@@ -46,6 +46,22 @@ module GPTPrepareTestData
     }.to_json
   end
 
+  def prepare_secure_project_json_data(env_file_vars:)
+    secure_group_proj = env_file_vars['gpt_data']['secure_projects']
+    secure_group_encoded_group_path = "#{env_file_vars['gpt_data']['root_group']}%2F#{secure_group_proj['group']}"
+    secure_group_unencoded_group_path = "#{env_file_vars['gpt_data']['root_group']}/#{secure_group_proj['group']}"
+    required_keys = %w[group projects project_prefix]
+
+    return {}.to_json unless required_keys.all? { |required_key| secure_group_proj.key?(required_key) }
+
+    {
+      'encoded_group_path' => secure_group_encoded_group_path,
+      'unencoded_group_path' => secure_group_unencoded_group_path,
+      'projects_count' => secure_group_proj['projects'],
+      'project_prefix' => secure_group_proj['project_prefix']
+    }.to_json
+  end
+
   # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
 
   # This method prepares binary files with git push data for git push test
