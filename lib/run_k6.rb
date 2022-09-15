@@ -136,8 +136,7 @@ module RunK6
       tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
       tests += Dir.glob("#{ENV['GPT_DOCKER_TESTS_DIR']}/*/#{File.basename(test_path, File.extname(test_path))}.js") if ENV['GPT_DOCKER_TESTS_DIR']
     end
-    require 'pry'
-    binding.pry
+
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
     tests = tests.uniq { |path| File.basename(path, '.js') }.sort_by { |path| File.basename(path, '.js') }
