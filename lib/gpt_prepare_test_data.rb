@@ -46,6 +46,13 @@ module GPTPrepareTestData
     }.to_json
   end
 
+  def prepare_secure_project_json_data(env_file_vars:)
+    vulnerabilities_group = env_file_vars['gpt_data']['vulnerabilities_projects']['group']
+    {
+      'group_name' => vulnerabilities_group
+    }.to_json
+  end
+
   # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
 
   # This method prepares binary files with git push data for git push test

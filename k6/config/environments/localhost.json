@@ -14,6 +14,7 @@
       "group": "large_projects",
       "project": "gitlabhq"
     },
+    "skip_check_version": "true",
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
       "subgroups": 5,

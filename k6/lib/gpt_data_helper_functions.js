@@ -38,3 +38,43 @@ export function getPipelineId(projectId, pipelineSHA) {
   pipelineId ? console.log(`Pipeline with SHA '${pipelineSHA}' has id=${pipelineId}`) : console.log(`No pipelines containing SHA: '${pipelineSHA}'`);
   return pipelineId;
 }
+
+//Returns vulnerabilities project group
+export function getVulnerabilitiesGroup() {
+  let vulnerabilities_group = JSON.parse(__ENV.ENVIRONMENT_VULNERABILITIES_GROUP);
+  console.log(`group_with_projects: ${JSON.stringify(vulnerabilities_group)}`)
+  return vulnerabilities_group["group_name"]
+}
+
+// Group id //
+/* Retrieves for group id from group name */
+export function getGroupId(groupName) {
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups?search=${groupName}`, params);
+  let foundGroup = JSON.parse(res.body)[0]; // get the first search result
+  let groupId = foundGroup && foundGroup["id"];
+  groupId ? console.log(`Group with name '${groupName}' has id=${groupId}`) : console.log(`No Groups with name: '${groupName}'`);
+  return groupId;
+}
+
+// Get projects belonging to a group
+export function getProjects(groupId){
+  let project_paths = []
+  let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
+  let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${groupId}/projects`, params);
+  let projects = JSON.parse(res.body);
+  projects.forEach(item => project_paths.push(item["path_with_namespace"]))
+  console.log(`project_paths: '${project_paths}'`)
+  return project_paths
+}
+
+/* Get projects where vulnerabilities test data is present,
+it picks the vulnerabilities group from k6/config/environments/*.json */
+
+export function getVulnerabilitiesProjects(){
+  let groupName = getVulnerabilitiesGroup()
+  let groupId = getGroupId(groupName)
+  return getProjects(groupId)
+}
+
+
