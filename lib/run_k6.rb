@@ -74,7 +74,7 @@ module RunK6
     env_vars['ENVIRONMENT_ROOT_GROUP'] = env_file_vars['gpt_data']['root_group']
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
-    env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'] = GPTPrepareTestData.prepare_secure_project_json_data(env_file_vars: env_file_vars)
+    env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'] = GPTPrepareTestData.vulnerabilities_projects_group(env_file_vars: env_file_vars)
     env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] = env_file_vars['gpt_data']['skip_check_version']
     env_vars
   end

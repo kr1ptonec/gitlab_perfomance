@@ -46,11 +46,15 @@ module GPTPrepareTestData
     }.to_json
   end
 
-  def prepare_secure_project_json_data(env_file_vars:)
-    vulnerabilities_group = env_file_vars['gpt_data']['vulnerabilities_projects']['group']
+  def vulnerabilities_projects_group(env_file_vars:)
+    vulnerabilities_group = env_file_vars['gpt_data']['vulnerabilities_projects']['group'] if check_vulnerabilities_group_defined?(env_file_vars: env_file_vars)
     {
       'group_name' => vulnerabilities_group
     }.to_json
+  end
+
+  def check_vulnerabilities_group_defined?(env_file_vars:)
+    env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
   end
 
   # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
