@@ -118,7 +118,7 @@ module RunK6
     GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, test_excludes: [], env_vars: {})
+  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, vulnerabilities:, test_excludes: [], env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -127,6 +127,7 @@ module RunK6
         tests += Dir.glob(["#{test_glob}.js", "#{test_glob}/*.js", "#{test_glob}/api/*.js", "#{test_glob}/git/*.js", "#{test_glob}/web/*.js"])
         tests += Dir.glob("#{test_glob}/quarantined/*.js") if quarantined
         tests += Dir.glob("#{test_glob}/scenarios/*.js") if scenarios
+        tests += Dir.glob("#{test_glob}/api/graphql_vulnerabilities/*.js") if vulnerabilities
       end
 
       # Add any test files given directly if they exist and are of .js type
@@ -135,6 +136,8 @@ module RunK6
       tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
       tests += Dir.glob("#{ENV['GPT_DOCKER_TESTS_DIR']}/*/#{File.basename(test_path, File.extname(test_path))}.js") if ENV['GPT_DOCKER_TESTS_DIR']
     end
+    require 'pry'
+    binding.pry
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
     tests = tests.uniq { |path| File.basename(path, '.js') }.sort_by { |path| File.basename(path, '.js') }
