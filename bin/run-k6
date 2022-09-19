@@ -65,7 +65,7 @@ start_time = Time.now
 GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL'])
 RunK6.check_large_projects_visibility(env_vars: env_vars) unless ENV['GPT_SKIP_VISIBILITY_CHECK'] || env_vars['GPT_LARGE_PROJECT_CHECK_SKIP']
 
-opts[:vulnerabilities] = true unless JSON.parse(env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'])["group_name"].nil?
+opts[:vulnerabilities] = true unless env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'].nil?
 
 tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], vulnerabilities: opts[:vulnerabilities], env_vars: env_vars)
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)

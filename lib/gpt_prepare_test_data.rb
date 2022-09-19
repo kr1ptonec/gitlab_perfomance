@@ -47,9 +47,20 @@ module GPTPrepareTestData
   end
 
   def vulnerabilities_projects_group(env_file_vars:)
-    vulnerabilities_group = env_file_vars['gpt_data']['vulnerabilities_projects']['group'] if check_vulnerabilities_group_defined?(env_file_vars: env_file_vars)
+    return unless check_vulnerabilities_group_defined?(env_file_vars: env_file_vars)
+
+    vulnerabilities_section = env_file_vars['gpt_data']['vulnerabilities_projects']
+    vulnerabilities_group_encoded_path = "#{env_file_vars['gpt_data']['root_group']}%2F#{vulnerabilities_section['group']}"
+    vulnerabilities_group_unencoded_path = "#{env_file_vars['gpt_data']['root_group']}/#{vulnerabilities_section['group']}"
+    required_keys = %w[group projects project_prefix vulnerabilities_count]
+
+    return {}.to_json unless required_keys.all? { |required_key| vulnerabilities_section.key?(required_key) }
+
     {
-      'group_name' => vulnerabilities_group
+      'encoded_group_path' => vulnerabilities_group_encoded_path,
+      'unencoded_group_path' => vulnerabilities_group_unencoded_path,
+      'projects_count' => vulnerabilities_section['projects'],
+      'project_prefix' => vulnerabilities_section['project_prefix']
     }.to_json
   end
 

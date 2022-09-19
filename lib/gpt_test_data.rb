@@ -413,7 +413,8 @@ class GPTTestData
         Thread.new(subgroups, projects) do |parent_group, projects|
           while parent_group = mutex.synchronize { subgroups.pop }
             subgroup_num = parent_group['name'].split('-')[-1].to_i
-            projects_count_start = projects_count * (subgroup_num - 1)
+            # To account for vulnerabilities projects
+            projects_count_start = subgroup_num.zero? ? 0 : projects_count * (subgroup_num - 1)
 
             projects_count.times do |num|
               projects_pool.with do |http|
@@ -532,8 +533,6 @@ class GPTTestData
       gql_queries.create_vulnerability_data(project_id_path)
       progress_bar.increment
     end
-
-    raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
   end
 
   def vulnerabilities_count_matches?(proj_path:, vulnerabilities_count:)

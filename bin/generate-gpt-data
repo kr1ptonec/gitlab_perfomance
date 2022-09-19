@@ -154,8 +154,17 @@ begin
     root_group = gpt_test_data.create_group(group_name: opts[:root_group])
     vulnerabilities_group = [gpt_test_data.create_group(group_name: opts[:vulnerabilities_group], parent_group: root_group)]
     projects = gpt_test_data.create_projects(project_prefix: opts[:vulnerabilities_projects_prefix], subgroups: vulnerabilities_group, projects_count: opts[:vulnerabilities_projects_count])
+    threads = [] # In order to call vulnerabilities mutation in parallel instead of sequentially
     projects.each do |project|
-      gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: opts[:vulnerabilities_count])
+      threads << Thread.new(project) do
+        gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: opts[:vulnerabilities_count])
+      end
+    end
+    threads.each(&:join)
+
+    projects.each do |project|
+      raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." \
+          unless gpt_test_data.vulnerabilities_count_matches?(proj_path: project['path_with_namespace'], vulnerabilities_count: opts[:vulnerabilities_count])
     end
   end
 
