@@ -127,7 +127,6 @@ module RunK6
         tests += Dir.glob(["#{test_glob}.js", "#{test_glob}/*.js", "#{test_glob}/api/*.js", "#{test_glob}/git/*.js", "#{test_glob}/web/*.js"])
         tests += Dir.glob("#{test_glob}/quarantined/*.js") if quarantined
         tests += Dir.glob("#{test_glob}/scenarios/*.js") if scenarios
-        tests += Dir.glob("#{test_glob}/api/graphql_vulnerabilities/*.js") if vulnerabilities
       end
 
       # Add any test files given directly if they exist and are of .js type
@@ -145,6 +144,7 @@ module RunK6
     end
 
     tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
+    tests.reject! { |test| TestInfo.test_has_flag?(test, 'vulnerabilities') } unless vulnerabilities
     filter_tests(tests: tests, env_vars: env_vars)
   end
 

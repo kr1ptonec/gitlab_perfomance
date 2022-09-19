@@ -80,7 +80,7 @@ module TestInfo
   # Check
 
   def test_has_unsafe_requests?(test_file)
-    return true if get_test_tag_value(test_file, 'flags')&.include?('unsafe')
+    return true if test_has_flag?(test_file, 'unsafe')
 
     write_methods = %w[put del patch]
     File.open(test_file, "r") do |test_file_content|
@@ -91,6 +91,11 @@ module TestInfo
     end
 
     false
+  end
+
+  # check if k6 test has a specific flag
+  def test_has_flag?(test_file, flag)
+    true if get_test_tag_value(test_file, 'flags')&.include?(flag)
   end
 
   def test_supported_by_gitlab_version?(test_file, gitlab_version)
