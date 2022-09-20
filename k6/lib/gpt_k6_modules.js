@@ -160,7 +160,6 @@ export function getManyGroupsOrProjects(key) {
 // Returns vulnerabilities projects
 export function getVulnerabilitiesProjects() {
   let vulnerabilities_project_paths = JSON.parse(__ENV.ENVIRONMENT_VULNERABILITIES_GROUP);
-  console.log(JSON.stringify(vulnerabilities_project_paths));
   // Prepare vulnerabilities projects data
   vulnerabilities_project_paths['encoded_paths'] = [];
   vulnerabilities_project_paths['unencoded_paths'] = [];

@@ -38,4 +38,3 @@ export function getPipelineId(projectId, pipelineSHA) {
   pipelineId ? console.log(`Pipeline with SHA '${pipelineSHA}' has id=${pipelineId}`) : console.log(`No pipelines containing SHA: '${pipelineSHA}'`);
   return pipelineId;
 }
-
