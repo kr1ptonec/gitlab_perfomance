@@ -46,6 +46,28 @@ module GPTPrepareTestData
     }.to_json
   end
 
+  def vulnerabilities_projects_group(env_file_vars:)
+    return unless check_vulnerabilities_group_defined?(env_file_vars: env_file_vars)
+
+    vulnerabilities_section = env_file_vars['gpt_data']['vulnerabilities_projects']
+    vulnerabilities_group_encoded_path = "#{env_file_vars['gpt_data']['root_group']}%2F#{vulnerabilities_section['group']}"
+    vulnerabilities_group_unencoded_path = "#{env_file_vars['gpt_data']['root_group']}/#{vulnerabilities_section['group']}"
+    required_keys = %w[group projects project_prefix vulnerabilities_count]
+
+    return {}.to_json unless required_keys.all? { |required_key| vulnerabilities_section.key?(required_key) }
+
+    {
+      'encoded_group_path' => vulnerabilities_group_encoded_path,
+      'unencoded_group_path' => vulnerabilities_group_unencoded_path,
+      'projects_count' => vulnerabilities_section['projects'],
+      'project_prefix' => vulnerabilities_section['project_prefix']
+    }.to_json
+  end
+
+  def check_vulnerabilities_group_defined?(env_file_vars:)
+    env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
+  end
+
   # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
 
   # This method prepares binary files with git push data for git push test

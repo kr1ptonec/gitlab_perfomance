@@ -157,6 +157,20 @@ export function getManyGroupsOrProjects(key) {
   return group_with_projects[key];
 }
 
+// Returns vulnerabilities projects
+export function getVulnerabilitiesProjects() {
+  let vulnerabilities_project_paths = JSON.parse(__ENV.ENVIRONMENT_VULNERABILITIES_GROUP);
+  // Prepare vulnerabilities projects data
+  vulnerabilities_project_paths['encoded_paths'] = [];
+  vulnerabilities_project_paths['unencoded_paths'] = [];
+  for (let i = 1; i <= vulnerabilities_project_paths['projects_count']; i++) {
+    vulnerabilities_project_paths['encoded_paths'].push(`${vulnerabilities_project_paths['encoded_group_path']}%2F${vulnerabilities_project_paths['project_prefix']}${i}`);
+    vulnerabilities_project_paths['unencoded_paths'].push(`${vulnerabilities_project_paths['unencoded_group_path']}/${vulnerabilities_project_paths['project_prefix']}${i}`);
+  }
+
+  return vulnerabilities_project_paths;
+}
+
 export function selectRandom(entities) {
   return entities.length == 1 ? entities[0] : entities[entities.length * Math.random() << 0];
 }
