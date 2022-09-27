@@ -14,7 +14,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { '13.6.0': 0.1, 'latest': 0.5 },
+  'rps': { '13.6.0': 0.1, 'latest': 0.4 },
   'ttfb': { '13.6.0': 12000, 'latest': 3500 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps']);
