@@ -74,6 +74,7 @@ module RunK6
     env_vars['ENVIRONMENT_ROOT_GROUP'] = env_file_vars['gpt_data']['root_group']
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
+    env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'] = GPTPrepareTestData.vulnerabilities_projects_group(env_file_vars: env_file_vars)
     env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] = env_file_vars['gpt_data']['skip_check_version']
     env_vars
   end
@@ -117,7 +118,7 @@ module RunK6
     GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, test_excludes: [], env_vars: {})
+  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, vulnerabilities:, test_excludes: [], env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -134,6 +135,7 @@ module RunK6
       tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
       tests += Dir.glob("#{ENV['GPT_DOCKER_TESTS_DIR']}/*/#{File.basename(test_path, File.extname(test_path))}.js") if ENV['GPT_DOCKER_TESTS_DIR']
     end
+
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
     tests = tests.uniq { |path| File.basename(path, '.js') }.sort_by { |path| File.basename(path, '.js') }
@@ -142,6 +144,7 @@ module RunK6
     end
 
     tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
+    tests.reject! { |test| TestInfo.test_has_flag?(test, 'vulnerabilities') } unless vulnerabilities
     filter_tests(tests: tests, env_vars: env_vars)
   end
 
@@ -153,17 +156,19 @@ module RunK6
     gitlab_settings = GPTCommon.get_env_settings(env_url: env_vars['ENVIRONMENT_URL'], headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
     tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
-    large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
-    begin
-      large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: true)
-      large_project_description = JSON.parse(large_project_res.body.to_s)['description']
-      gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
-    rescue GPTCommon::RequestError => e
-      raise "\nLarge Project request has failed with the error:\n#{e}\nPlease ensure that Large Project exists at this location '#{large_project_data['unencoded_path']}'\nExiting..."
-    rescue TypeError, NoMethodError
-      raise "\nLarge Project's description can't be parsed.\nPlease check if there are any problems with the target environment. If the environment is confirmed working but the problem persists, please run the GPT Data Generator to reimport the Large Project.\nExiting..."
+    unless env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] == 'true'
+      large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
+      begin
+        large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: true)
+        large_project_description = JSON.parse(large_project_res.body.to_s)['description']
+        gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
+      rescue GPTCommon::RequestError => e
+        raise "\nLarge Project request has failed with the error:\n#{e}\nPlease ensure that Large Project exists at this location '#{large_project_data['unencoded_path']}'\nExiting..."
+      rescue TypeError, NoMethodError
+        raise "\nLarge Project's description can't be parsed.\nPlease check if there are any problems with the target environment. If the environment is confirmed working but the problem persists, please run the GPT Data Generator to reimport the Large Project.\nExiting..."
+      end
+      tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
     end
-    tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) } unless env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] == 'true'
 
     tests
   end

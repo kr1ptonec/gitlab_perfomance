@@ -30,6 +30,7 @@ opts = Optimist.options do
   opt :tests, "Names of Test files or directories to run with. When directory given tests will be recursively added from api, web and git subdirs.", type: :strings, default: ["tests"]
   opt :scenarios, "Include any tests inside the test directory's scenarios subfolder when true.", type: :flag, default: false
   opt :quarantined, "Include any tests inside the test directory's quarantined subfolder when true.", type: :flag, default: false
+  opt :vulnerabilities, "Include any tests that test vulnerability report/api", type: :flag, default: false
   opt :excludes, "List of words used to exclude tests by matching against their names.", type: :strings
   opt :unsafe, "Include any tests that perform unsafe requests (POST, PUT, DELETE, PATCH)", type: :flag, default: false
   opt :influxdb_url, "URL of an Influx DB server where GPT can optionally upload test run statistics.", type: :string, default: ENV['GPT_INFLUXDB_URL'] || nil
@@ -62,9 +63,11 @@ env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file, options_file
 start_time = Time.now
 
 GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL'])
-RunK6.check_large_projects_visibility(env_vars: env_vars) unless ENV['GPT_SKIP_VISIBILITY_CHECK']
+RunK6.check_large_projects_visibility(env_vars: env_vars) unless ENV['GPT_SKIP_VISIBILITY_CHECK'] || env_vars['GPT_LARGE_PROJECT_CHECK_SKIP']
 
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], env_vars: env_vars)
+opts[:vulnerabilities] = true unless env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'].nil?
+
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes: opts[:excludes], quarantined: opts[:quarantined], scenarios: opts[:scenarios], unsafe: opts[:unsafe], vulnerabilities: opts[:vulnerabilities], env_vars: env_vars)
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
 results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
