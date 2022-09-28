@@ -4,7 +4,7 @@
 @example_uri: /:unencoded_path/pipelines
 @description: Web - Project Pipelines Page. <br>Controllers: `Projects::PipelinesController#index`, `Projects::PipelinesController#index.json`</br>
 @gpt_data_version: 1
-@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/268237
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/268237
 @flags: dash_url
 */
 
@@ -15,8 +15,8 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
 export let thresholds = {
-  'rps': { '15.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
-  'ttfb': { '15.4.0': 1000 }
+  'rps': { '15.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.8 },
+  'ttfb': { '15.4.0': 1000, 'latest': 600 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
