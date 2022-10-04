@@ -40,7 +40,8 @@ class GQLQueries
             $scanner_name: String!,
             $identifier: String!,
             $scanner_id: String!,
-            $severity: VulnerabilitySeverity
+            $severity: VulnerabilitySeverity,
+            $state: VulnerabilityState
             )
  			     {
       	      vulnerabilityCreate(input:{
@@ -54,6 +55,7 @@ class GQLQueries
                     url: "http://localhost/jk",
                     version: "1.1"
                   },
+                  state: $state,
                   identifiers: {
                     name: $identifier,
                     url: "http://localhost"
@@ -118,6 +120,10 @@ class GQLQueries
     %i[CRITICAL LOW MEDIUM HIGH UNKNOWN INFO].sample
   end
 
+  def state
+    %i[DETECTED DISMISSED RESOLVED CONFIRMED].sample
+  end
+
   def identifier
     prefix = %w[CVE CWE].sample
     "#{prefix}-#{SecureRandom.hex(6)}"
@@ -157,6 +163,7 @@ class GQLQueries
                                                                              description: description,
                                                                              scanner_name: scanner_name,
                                                                              identifier: identifier,
+                                                                             state: state,
                                                                              severity: severity })
 
     if result.data.nil?
