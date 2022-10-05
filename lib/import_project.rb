@@ -27,7 +27,7 @@ class ImportProject
       proj_file = project_tarball
     end
 
-    raise Errno::ENOENT unless File.exist?(proj_file)
+    raise Errno::ENOENT, "Project tarball '#{project_tarball}' is not found." unless File.exist?(proj_file)
 
     proj_file
   end
