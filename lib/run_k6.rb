@@ -156,6 +156,13 @@ module RunK6
     gitlab_settings = GPTCommon.get_env_settings(env_url: env_vars['ENVIRONMENT_URL'], headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
     tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
+    # Skipping Web User test when page is not available
+    # for an unathorized user
+    if tests.include? 'k6/tests/web/web_user.js'
+      check_user_page = HTTP.get("#{env_vars['ENVIRONMENT_URL']}/#{env_vars['ENVIRONMENT_USER']}")
+      tests.delete('k6/tests/web/web_user.js') if check_user_page.status != 200
+    end
+
     unless env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] == 'true'
       large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
       begin
