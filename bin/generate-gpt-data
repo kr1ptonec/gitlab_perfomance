@@ -154,9 +154,9 @@ begin
     root_group = gpt_test_data.create_group(group_name: opts[:root_group])
     vulnerabilities_group = [gpt_test_data.create_group(group_name: opts[:vulnerabilities_group], parent_group: root_group)]
     projects = gpt_test_data.create_projects(project_prefix: opts[:vulnerabilities_projects_prefix], subgroups: vulnerabilities_group, projects_count: opts[:vulnerabilities_projects_count])
-    projects.each do |project|
-      gpt_test_data.create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: opts[:vulnerabilities_count])
-    end
+    abort(Rainbow("Ultimate license not found in #{@env_url} gitlab instance, exiting").yellow) unless gpt_test_data.check_gitlab_ultimate?
+    gpt_test_data.check_vuln_api_supported
+    gpt_test_data.create_vulnerability_test_data(vulnerabilities_count: opts[:vulnerabilities_count], projects: projects)
   end
 
   if opts[:horizontal]
