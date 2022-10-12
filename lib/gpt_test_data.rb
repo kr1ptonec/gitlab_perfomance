@@ -523,18 +523,33 @@ class GPTTestData
     @gql_queries ||= GQLQueries.new("#{@env_url}/api/graphql")
   end
 
-  def create_vulnerability_report(proj_path:, vulnerabilities_count:)
-    abort(Rainbow("EE license not found in #{@env_url} gitlab instance, exiting").yellow) unless check_gitlab_ultimate?
-    check_vuln_api_supported
+  def create_vulnerability_test_data(vulnerabilities_count:, projects:)
+    threads = [] # In order to call vulnerabilities mutation in parallel instead of sequentially
+    total_count = vulnerabilities_count * projects.size
+    semaphore = Mutex.new
+    progress_bar_obj = ProgressBar.create(title: 'Generating vulnerabilities', total: total_count, format: "%t: %c from %C |%b>%i| %E %a")
+    projects.each do |project|
+      threads << Thread.new(project) do
+        create_vulnerability_report(proj_path: project['path_with_namespace'], vulnerabilities_count: vulnerabilities_count, progress_bar: progress_bar_obj, semaphore: semaphore)
+      end
+    end
+    threads.each(&:join)
+
+    projects.each do |project|
+      raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." \
+          unless vulnerabilities_count_matches?(proj_path: project['path_with_namespace'], vulnerabilities_count: vulnerabilities_count)
+    end
+  end
+
+  def create_vulnerability_report(proj_path:, vulnerabilities_count:, progress_bar:, semaphore:)
     project_details = check_project_exists(proj_path: proj_path)
     project_id_path = "gid://gitlab/Project/#{project_details['id']}"
-    progress_bar = ProgressBar.create(title: 'Generating vulnerabilities', total: vulnerabilities_count, format: "%t: %c from %C |%b>%i| %E %a")
     vulnerabilities_count.times do
       gql_queries.create_vulnerability_data(project_id_path)
-      progress_bar.increment
+      semaphore.synchronize do
+        progress_bar.increment
+      end
     end
-
-    raise VulnerabilitiesCountError, "Creation of Vulnerability data has failed - Data count does not match between project data and parameter passed." unless vulnerabilities_count_matches?(proj_path: proj_path, vulnerabilities_count: vulnerabilities_count)
   end
 
   def vulnerabilities_count_matches?(proj_path:, vulnerabilities_count:)
