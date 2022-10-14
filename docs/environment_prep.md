@@ -49,6 +49,8 @@ All data will be generated under a group named `gpt` and split into 2 areas, Ver
 * Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment, e.g. Gitaly Sharded or Gitaly Cluster) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Using Custom Large Projects](#using-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
 * Horizontal: This area consists of a large number of subgroups that in turn have a large number of projects each. All of these subgroups are saved under the parent subgroup `gpt/many_groups_and_projects`
 
+GPT Data Generator provides an option to create [vulnerability test data](https://docs.gitlab.com/ee/user/application_security/vulnerability_report/). Please see [Vulnerabilities Data Setup](#vulnerabilities-data-setup) for more information.
+
 To help visualize this here is a diagram of how the data looks:
 
 ```mermaid
@@ -176,17 +178,18 @@ Options:
   --large-project-name=<s>         Name for large project to import.
   --large-project-tarball=<s>      Location of custom large project tarball to import. Can be local or remote.
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
+  --vulnerability-data             Creates a separate group and projects for creating vulnerabilities data
   -u, --unattended                 Skip all user prompts and run through generation automatically.
   -f, --force                      Alternative flag for unattended. Skip all user prompts and run through generation automatically.
   -c, --clean-up                   Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.
-  -l, --clean-up-mode=<s>          Specify 'vertical' or 'horizontal' to clean up only Vertical or Horizontal GPT data. Requires the --clean-up param to also be set. (Default: none)
+  -l, --clean-up-mode=<s>          Specify 'vertical', 'horizontal' or 'vulnerabilities' to clean up only Vertical, Horizontal or Vulnerabilities GPT data. Requires the --clean-up param to
+                                   also be set. (Default: none)
   -k, --skip-project-validation    Skip large project metadata validation
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
   -h, --help                       Show help message
 
 Environment Variables:
-  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set. (Default:
-nil)
+  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set.  (Default: nil)
 
 Examples:
   Generate horizontal and vertical data using 10k.json environment file:
@@ -362,6 +365,77 @@ Validating project 'gpt/large_projects/gitlabhq1' imported successfully...
 █ GPT data generation finished after 89 minutes 16 seconds.
 
 █ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2022-01-29_181033.log
+```
+
+#### Vulnerabilities Data Setup
+
+[Vulnerability test data](https://docs.gitlab.com/ee/user/application_security/vulnerability_report/) is an optional data setup and it only supported on GitLab instances with a Ultimate license.
+It can be enabled with `--vulnerabilities-data` option during data generation and the following section should be added to the [Environment Config File](../k6/config/environments) under `gpt_data`.
+
+```json
+{
+  [...]
+  "gpt_data": {
+    "vulnerabilities_projects": {
+      "group": "vulnerabilities_group",
+      "projects": 3,
+      "project_prefix": "gpt-vulnerabilities-proj",
+      "vulnerabilities_count": 1000
+    }
+  }
+  [...]
+}
+```
+
+The details are as below:
+
+* `vulnerabilities_projects` - Contains information about projects with "vulnerabilities" data.
+  * `group` - The name of the group that will contain projects with "vulnerabilities" data.
+  * `projects` - The number of projects with vulnerabilities that the group will have.
+  * `project_prefix` - Prefix that vulnerabilities projects will use.
+  * `vulnerabilities_count` - The number of vulnerabilities that will be created in each of the projects.
+
+Docker command usage examples:
+
+```sh
+# Generate vulnerabilities data along with horizontal and vertical data using 10k.json file
+docker run -it gitlab/gpt-data-generator --environment 10k.json --vulnerability-data
+
+# Generate only vulnerabilities data using 10k.json file
+docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --no-vertical --vulnerability-data
+```
+
+Command examples if you are using `bin/generate-gpt-data`:
+
+```sh
+# Generate vulnerabilities data along with horizontal and vertical data using 10k.json file
+bin/generate-gpt-data --environment 10k.json --vulnerability-data
+
+# Generate only vulnerabilities data using 10k.json file
+bin/generate-gpt-data --environment 10k.json --no-horizontal --no-vertical --vulnerability-data
+```
+
+Here's the visual representation of how the projects with vulnerabilities data will be created under `gpt` root group:
+
+```mermaid
+graph LR
+gpt-->vulnerabilities_group
+
+  subgraph "Vulnerabilities data"
+        vulnerabilities_group-->gpt-vulnerabilities-proj-1
+        vulnerabilities_group-->gpt-vulnerabilities-proj-2
+  end
+```
+
+Clean up vulnerabilities data:
+
+GPT Data Generator provides an option to clean up only vulnerabilities group by using `--clean-up-mode vulnerabilities`.
+It deletes the `group` specified under `vulnerabilities_projects` section of the [Environment Config File](../k6/config/environments).
+
+Here is a command example:
+
+```sh
+bin/generate-gpt-data --environment 10k.json --clean-up --clean-up-mode vulnerabilities
 ```
 
 #### Advanced Setup
