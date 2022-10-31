@@ -12,14 +12,10 @@ include:
 ##      Security Scanning      ##
 #################################
 
-.on_merge_request_and_merged_events:
-  rules:
-    - if: '$CI_BUILD_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
-
 gemnasium-dependency_scanning:
   stage: check
   rules:
-    - !reference [.on_merge_request_and_merged_events, rules]
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
 container_scanning:
   stage: check
@@ -27,9 +23,9 @@ container_scanning:
     DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
     DOCKERFILE_PATH: Dockerfile.gpt
   rules:
-    - !reference [.on_merge_request_and_merged_events, rules]
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
 
-container_scanning 2/2:
+container_scanning_generator:
   extends: container_scanning
   variables:
     DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gpt-data-generator:latest

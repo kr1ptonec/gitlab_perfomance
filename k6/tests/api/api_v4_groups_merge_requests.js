@@ -4,7 +4,7 @@
 @example_uri: /api/v4/groups/:environment_root_group/merge_requests
 @description: [List groups merge requests](https://docs.gitlab.com/ee/api/merge_requests.html#list-group-merge-requests)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/301204
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/301204, https://gitlab.com/gitlab-org/gitlab/-/issues/377515
 */
 
 import http from "k6/http";
