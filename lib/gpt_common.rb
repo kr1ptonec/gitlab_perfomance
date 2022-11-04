@@ -57,7 +57,11 @@ module GPTCommon
   def check_gitlab_env_and_token(env_url:)
     # Check that environment can be reached and that token is valid
     GPTLogger.logger.info "Checking that GitLab environment '#{env_url}' is available, supported and that provided Access Token works..."
+    start_time = Time.now
     check_res = make_http_request(method: 'get', url: "#{env_url}/api/v4/version", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
+    end_time = ((Time.now - start_time) * 1000.0).to_i
+    GPTLogger.logger.info "Response time - '#{end_time}'"
+    # require 'pry'; binding.pry
     raise "Environment access token check has failed:\n#{check_res.status} - #{JSON.parse(check_res.body.to_s)}" if check_res.status.client_error? || check_res.status.server_error?
 
     gitlab_version = Semantic::Version.new(JSON.parse(check_res.body.to_s)['version'].match(/\d+\.\d+\.\d+/)[0])
