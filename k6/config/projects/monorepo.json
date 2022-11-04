@@ -7,22 +7,33 @@
     "pipelines_count": 1
   },
   "branch": "sit-impedit-ipsam-ut-aperiam-deserunt-quas",
+  "branch_search": "sit",
   "commit_sha": "fc6d568a",
   "commit_sha_signed": "5506cf49",
-  "compare_commits_sha": ["e7edda33", "7518eff3"],
+  "compare_branches": ["sit-impedit-ipsam-ut-aperiam-deserunt-quas", "master"],
   "file_blame_path": "arch%2fx86%2fMakefile",
   "file_raw_path": "kernel%2fbpf%2farraymap%2ec",
   "file_rendered_path": "Documentation%2fRCU%2fDesign%2fData-Structures%2fData-Structures%2erst",
-  "file_source_path": "scripts%2fMakefile%2ebuild",  
+  "file_source_path": "scripts%2fMakefile%2ebuild",
   "dir_path": "crypto",
-  "git_push_data": {
+  "git_clone_data": ["e033e7d4a8081852b2cca53e530e2c0f4e6769c0", "8968be90f31876b350a9318429029031ee6c2f79"],
+  "git_pull_data": [
+    {
+    "want_commit_sha": "8968be90f31876b350a9318429029031ee6c2f79",
+    "have_commit_sha": "361d9a4101bb067590cbce6d29c863f6b9c0e2b1"
+    }
+  ],
+  "git_push_data": [
+    {
     "branch_current_head_sha": "e7edda335d998421ad35c4b8a9b652ad85d6fda5",
     "branch_new_head_sha": "c62497c5643b2b782b97160a1d4cd146eb9a7712",
     "branch_name": "omnis-sapiente-est-provident-nesciunt-qui-ab"
-  },
+    }
+  ],
   "pipeline_sha": "0c99ee44b8921b872089a7374c733310d995fd92",
   "mr_commits_iid": "6688",
   "mr_discussions_iid": "6695",
+  "mr_changes_iid": "6689",
   "search": {
     "projects": ["linux", "username", "merge", "remove", "test", "project", "public"],
     "issues": ["Eum", "id", "open", "rem", "ut", "Qui", "et"],
