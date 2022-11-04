@@ -1,9 +1,11 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/blame/master/:file_path`
+@example_uri: /:unencoded_path/blame/master/:file_blame_path
 @description: Web - Project File Blame Page. <br>Controllers: `Projects::BlameController#show`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/220950, https://gitlab.com/gitlab-org/gitlab/-/issues/225174
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/220950
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/217572, https://gitlab.com/gitlab-org/gitlab/-/issues/225174
 @flags: dash_url
 */
 
@@ -13,10 +15,14 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'rps': { '13.1.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.01, '15.2.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.01, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2 },
+  'ttfb': { '13.1.0': 20000, '15.2.0': 7000, 'latest': 2400 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.01)
-export let ttfbThreshold = getTtfbThreshold(20000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

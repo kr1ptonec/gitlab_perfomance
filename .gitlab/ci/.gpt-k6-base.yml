@@ -14,7 +14,7 @@ stages:
 .k6-compare-base:
   extends: .k6-base
   services:
-    - docker:stable-dind
+    - docker:20-dind
   tags:
     - performance
   variables:

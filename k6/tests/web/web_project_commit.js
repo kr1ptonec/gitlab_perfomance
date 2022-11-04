@@ -1,9 +1,11 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/commit/:commit_sha`
+@example_uri: /:unencoded_path/commit/:commit_sha
 @description: Web - Commit Details Page. <br>Controllers: `Projects::CommitController#show`, `Projects::CommitController#branches`, `Projects::CommitController#merge_requests.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/232509
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/333292
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/232509, https://gitlab.com/gitlab-org/gitlab/-/issues/322559
 @flags: dash_url
 */
 
@@ -13,11 +15,15 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
 
+export let thresholds = {
+  'rps': { '13.9.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, '14.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
+  'ttfb': { '13.9.0': 12500, '14.0.0': 10000, 'latest': 3500 }
+};
 export let endpointCount = 3
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.2, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(12500)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

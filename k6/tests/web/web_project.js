@@ -1,8 +1,10 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project`
+@example_uri: /:unencoded_path
 @description: Web - Project Page. <br>Controllers: `ProjectsController#show`, `Projects::BlobController#show`</br>
 @gpt_data_version: 1
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334444
 */
 
 import http from "k6/http";
@@ -10,10 +12,14 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
+export let thresholds = {
+  'rps': { 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { 'latest': 800 }
+};
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(750)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

@@ -10,12 +10,15 @@
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, createProject, createBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { createProject, getProjectDefaultBranch, createBranch, deleteGroup, searchAndCreateGroup } from "../../lib/gpt_scenario_functions.js";
 
+export let thresholds = {
+  'ttfb': { 'latest': 1500 }
+};
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -34,16 +37,17 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
-  let groupId = createGroup("group-api-v4-create-branch");
+  let groupId = searchAndCreateGroup("group-api-v4-create-branch");
   let projectId = createProject(groupId);
-  let data = { groupId, projectId };
+  let projectDefaultBranch = getProjectDefaultBranch(projectId);
+  let data = { groupId, projectId, projectDefaultBranch };
   return data;
 }
 
 export default function(data) {
   group("API - Create New Branch", function() {
     let branchName = `test-branch-${__VU}-${__ITER}`;
-    let createBranchRes = createBranch(data.projectId, branchName);
+    let createBranchRes = createBranch(data.projectId, data.projectDefaultBranch,  branchName);
     /20(0|1|4)/.test(createBranchRes.status) ? successRate.add(true) : successRate.add(false) && logError(createBranchRes);
   });
 }

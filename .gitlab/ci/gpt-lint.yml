@@ -10,7 +10,7 @@ check:rubocop:
   script:
     - rubocop --parallel
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
@@ -23,7 +23,7 @@ check:yamllint:
   script:
     - yamllint .gitlab-ci.yml .gitlab/ci/
   only:
-    - master
+    - main
     - merge_requests
   except:
     - schedules
@@ -36,8 +36,24 @@ check:eslint:
     - npm install eslint@^7.0.0 --global
     - eslint './**/*.js'
   only:
-    - master
+    - main
     - merge_requests
+  except:
+    - schedules
+    - tags
+
+check:markdown:
+  stage: check
+  image: node:alpine
+  script:
+    - npm install markdownlint-cli --global
+    - markdownlint --config .markdownlint.yml docs
+  only:
+    refs:
+      - main
+      - merge_requests
+    changes:
+      - docs/*
   except:
     - schedules
     - tags

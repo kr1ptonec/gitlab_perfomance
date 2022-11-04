@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/languages`
+@example_uri: /api/v4/projects/:encoded_path/languages
 @description: [Get languages used in a project with percentage value](https://docs.gitlab.com/ee/api/projects.html#languages)
 @gpt_data_version: 1
 */

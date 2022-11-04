@@ -1,8 +1,10 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/issues`
+@example_uri: /api/v4/projects/:encoded_path/issues
 @description: [List project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334434
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/211373
 @gpt_data_version: 1
 */
 
@@ -11,8 +13,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds(0.6)
-export let ttfbThreshold = getTtfbThreshold(2000)
+export let thresholds = {
+  'rps': { '13.12.0': 0.6 },
+  'ttfb': { '13.12.0': 2000, 'latest': 500 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -32,7 +38,7 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Issues List", function() {
+  group("API - Project Issues List", function() {
     let project = selectRandom(projects);
 
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };

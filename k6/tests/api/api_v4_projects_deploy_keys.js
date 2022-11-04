@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/deploy_keys`
+@example_uri: /api/v4/projects/:encoded_path/deploy_keys
 @description: [Get a list of a project’s deploy keys](https://docs.gitlab.com/ee/api/deploy_keys.html#list-project-deploy-keys)
 @gpt_data_version: 1
 */

@@ -16,10 +16,16 @@
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 250,
+      "subgroups": 1000,
       "subgroup_prefix": "gpt-subgroup-",
       "projects": 10,
       "project_prefix": "gpt-project-"
+    },
+    "vulnerabilities_projects": {
+      "group": "vulnerabilities_group",
+      "projects": 3,
+      "project_prefix": "gpt-vulnerabilities-proj",
+      "vulnerabilities_count": 1000
     }
   }
 }

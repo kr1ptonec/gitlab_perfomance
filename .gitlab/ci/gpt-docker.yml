@@ -3,7 +3,7 @@
 .gpt-docker-base:
   extends: .k6-base
   services:
-    - docker:stable-dind
+    - docker:20-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375
@@ -21,7 +21,7 @@ check:gpt-docker:
     - docker build -f Dockerfile.gpt -t gitlab/gitlab-performance-tool:test .
     - docker run --rm -e ACCESS_TOKEN=$GPT_CHECK_STAGING_ACCESS_TOKEN gitlab/gitlab-performance-tool:test -e staging.json -t api_v4_projects_project.js api_v4_groups_group.js
   only:
-    - master
+    - main
     - merge_requests
     - tags
   except:
@@ -61,11 +61,18 @@ gpt-data-generator-build-docker:
     - GPT_DATA_GENERATOR_VERSION=${GPT_DATA_GENERATOR_VERSION:=$(cat bin/generate-gpt-data | grep -E "^gpt_data_version.*'[0-9]+.[0-9]+.[0-9]+'" | grep -Eo "[0-9]+.[0-9]+.[0-9]+")}
     - apk add -u --no-cache docker
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -f Dockerfile.gpt-data-generator -t gpt-data-generator:$GPT_DATA_GENERATOR_VERSION .
-    - docker tag gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
-    - docker tag gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+    - docker login -u $GPT_DOCKER_HUB_USER -p $GPT_DOCKER_HUB_PASSWORD
+    - docker build -f Dockerfile.gpt-data-generator -t gitlab/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION .
+    - docker tag gitlab/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
     - docker push $CI_REGISTRY_IMAGE/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
-    - docker push $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+    - docker push gitlab/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION
+    - |
+      if echo $GPT_DATA_GENERATOR_VERSION | grep -qv ".*beta.*"; then
+        docker tag gitlab/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+        docker tag gitlab/gpt-data-generator:$GPT_DATA_GENERATOR_VERSION gitlab/gpt-data-generator:latest
+        docker push $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+        docker push gitlab/gpt-data-generator:latest
+      fi
   only:
     refs:
       - schedules

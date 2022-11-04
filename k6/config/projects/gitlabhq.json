@@ -7,22 +7,33 @@
     "pipelines_count": 11
   },
   "branch": "10-0-stable",
+  "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
-  "compare_commits_sha": ["aec887ab", "5bfb7558"],
+  "compare_branches": ["12-2-stable", "12-1-stable"],
   "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "file_raw_path": "doc%2fapi%2fprojects%2emd",
   "file_rendered_path": "CHANGELOG%2emd",
-  "file_source_path": "fixtures%2femojis%2findex%2ejson",  
+  "file_source_path": "fixtures%2femojis%2findex%2ejson",
   "dir_path": "spec%2Flib%2Fgitlab",
-  "git_push_data": {
-    "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
-    "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
-    "branch_name": "12-1-auto-deploy-20190714"
-  },
+  "git_clone_data": ["8f9beefac3774b30e911fb00a68f4c7a5244cf27", "3f242b6bb267fea02de29c67cc5cf0384020662e"],
+  "git_pull_data": [
+    {
+    "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+    "have_commit_sha": "92d536a03120b7095b2a78553e76f1913c30e7a9"
+    }
+  ],
+  "git_push_data": [
+    {
+      "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+      "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
+      "branch_name": "12-1-auto-deploy-20190714"
+    }
+  ],
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
-  "mr_commits_iid": "10495",
-  "mr_discussions_iid": "6958",
+  "mr_commits_iid": "4954",
+  "mr_discussions_iid": "8785",
+  "mr_changes_iid": "8785",
   "search": {
     "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],
     "issues": ["gitlab", "bot", "push", "repo", "error", "database", "issue"],

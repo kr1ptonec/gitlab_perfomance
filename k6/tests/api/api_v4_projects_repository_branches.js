@@ -1,8 +1,10 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/branches`
+@example_uri: /api/v4/projects/:encoded_path/repository/branches
 @description: [Get a list of repository branches from a project, sorted by name alphabetically](https://docs.gitlab.com/ee/api/branches.html#list-repository-branches)
 @gpt_data_version: 1
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/30536, https://gitlab.com/gitlab-org/gitlab/-/issues/208738
 */
 
 import http from "k6/http";
@@ -10,9 +12,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-// Endpoint was fixed in 13.7 issue#208738
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let thresholds = {
+  'rps': { '12.8.0': 0.2, '13.8.0': 0.4 },
+  'ttfb': { '12.8.0': 7500, '13.8.0': 3500 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

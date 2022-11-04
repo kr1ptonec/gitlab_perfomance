@@ -1,9 +1,9 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /groups/:id/subgroups`
+@example_uri: /api/v4/groups/:encoded_group_path/subgroups
 @description: [List a group’s subgroups](https://docs.gitlab.com/ee/api/groups.html#list-a-groups-subgroups)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/211504
 */
 
 import http from "k6/http";
@@ -12,7 +12,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
 export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold(1500)
+export let ttfbThreshold = getTtfbThreshold()
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
@@ -32,7 +32,7 @@ export function setup() {
 }
 
 export default function() {
-  group("API - Group Details", function() {
+  group("API - Group Subgroups List", function() {
     let params = { headers: { "Accept": "application/json", "PRIVATE-TOKEN": `${__ENV.ACCESS_TOKEN}` } };
     let res = http.get(`${__ENV.ENVIRONMENT_URL}/api/v4/groups/${horizDataGroup}/subgroups`, params);
     /20(0|1)/.test(res.status) ? successRate.add(true) : (successRate.add(false), logError(res));

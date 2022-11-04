@@ -9,16 +9,16 @@
 ## Checklist
 
 - [ ] Ensure test data for the new endpoint is representative. We recommend using large data ("edge cases") in performance tests. The impact of optimizations is more visible on the big numbers and large data may expose more performance bottlenecks.
-- [ ] Fill in `@endpoint`, `@description`, and `@gpt_data_version` tags with the information regarding the new test.
+- [ ] Fill in `@endpoint`, `@example_uri`, `@description`, and `@gpt_data_version` tags with the information regarding the new test.
   - `@gpt_data_version` should be generally `1` unless you know the test is for data that's in a specific version.
-- [ ] Create a bug if the endpoint response time is above the [`performance main target (500 ms)`](https://about.gitlab.com/handbook/engineering/quality/issue-triage/#severity).
+- [ ] Create a bug if the endpoint response time is above the [`performance main target (200 ms)`](https://about.gitlab.com/handbook/engineering/quality/issue-triage/#severity).
   - Specify created issue link under `@issue` tag.
 - [ ] Consider specifying the additional `@flags`:  
-  - `unsafe` - required for [Unsafe tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#unsafe-tests). Ensure that data before and after the test is consistent.
+  - `unsafe` - required for [Unsafe tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#unsafe-tests). Ensure that data before and after the test is consistent.
   - `search` - labels Search related tests.
   - `dash_url` - labels Web tests with the check if the endpoint path has a dash \ redirect.
-- [ ] [Web tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/k6.md#test-types)
+- [ ] [Web tests](https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#test-types)
   - Specify all called controller methods under the `@description`.
   - Consider creating MR to add the new test to [GitLab Performance SiteSpeed](https://gitlab.com/gitlab-org/quality/performance-sitespeed).
 
-/label ~Quality ~performance ~"Quality:performance"
+/label ~Quality ~performance

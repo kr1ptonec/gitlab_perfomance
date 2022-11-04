@@ -1,8 +1,11 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /users`
+@example_uri: /api/v4/users
 @description: [List users](https://docs.gitlab.com/ee/api/users.html#list-users)
 @gpt_data_version: 1
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/367872
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/346601
 */
 
 import http from "k6/http";
@@ -10,8 +13,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
-export let rpsThresholds = getRpsThresholds()
-export let ttfbThreshold = getTtfbThreshold()
+export let thresholds = {
+  'rps': { '15.2.0': 0.5 },
+  'ttfb': { '15.2.0': 5500, 'latest': 300 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

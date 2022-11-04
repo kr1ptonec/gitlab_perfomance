@@ -22,8 +22,11 @@ module InfluxDB
       gitlab_revision: results_json['revision'],
       gpt_version: results_json['gpt_version']
     }
+    custom_tag_value = ENV['GPT_INFLUXDB_TAG_VALUE'].dup
+    tags[:gpt_custom_tag] = custom_tag_value unless custom_tag_value.to_s.empty?
+
     results_json['test_results'].map do |test_result|
-      measurements = %w[ttfb_avg ttfb_p90 ttfb_p95 rps_result success_rate score]
+      measurements = %w[ttfb_avg ttfb_p90 ttfb_p95 rps_result success_rate score result]
       measurements.map do |measurement|
         prepare_request_body(measurement, tags.merge({ test_name: test_result['name'] }), test_result[measurement], tests_end_time)
       end.join("\n")

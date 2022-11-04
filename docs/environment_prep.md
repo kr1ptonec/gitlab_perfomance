@@ -3,9 +3,9 @@
 * [**GitLab Performance Tool - Preparing the Environment**](environment_prep.md)
 * [GitLab Performance Tool - Running Tests](k6.md)
 
-Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating a User](#creating-a-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
+Before running the GitLab Performance Tool, you'll need to setup the required test data on the environment. This environment preparation is detailed on this page and broken down into 3 parts: [Creating an Admin User](#creating-an-admin-user), [Generating an Access Token](#generating-an-access-token) and [Setting up test data with the GPT Data Generator](#setting-up-test-data-with-the-gpt-data-generator).
 
-**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-master/README.md).**
+**Note: These docs are for GPT `v2`. For GPT `v1` please refer to the docs [here](https://gitlab.com/gitlab-org/quality/performance/-/blob/v1-main/README.md).**
 
 [[_TOC_]]
 
@@ -40,7 +40,7 @@ Remember to keep this Access Token to use with GPT after. After testing has fini
 
 ## Setting up test data with the GPT Data Generator
 
-With User and Access token created you should be ready to now setup data with the [GPT Data Generator](https://gitlab.com/gitlab-org/quality/performance/blob/master/bin/generate-gpt-data) tool. This tool has been designed to set up all the required test data that GPT itself requires.
+With User and Access token created you should be ready to now setup data with the [GPT Data Generator](https://gitlab.com/gitlab-org/quality/performance/blob/main/bin/generate-gpt-data) tool. This tool has been designed to set up all the required test data that GPT itself requires.
 
 To achieve consistent and comparable results GPT is designed primarily to be used with **opinionated test data**. This allows you to validate if the target environment is performing as expected by testing with the exact same data and then [comparing the results](k6.md#comparing-results) with our GitLab [Reference Architectures](https://docs.gitlab.com/ee/administration/reference_architectures/).
 
@@ -48,6 +48,8 @@ All data will be generated under a group named `gpt` and split into 2 areas, Ver
 
 * Vertical: This area consists of one or more large [Projects](https://docs.gitlab.com/ee/user/project/) (one for each Storage node in the environment, e.g. Gitaly Sharded or Gitaly Cluster) that are considered a good and representative size for performance testing. The default project for this is a sanitized version of our own [GitLab FOSS](https://gitlab.com/gitlab-org/gitlab-foss/) project (named `gitlabhq` in this case). Please refer to [Using Custom Large Projects](#using-custom-large-projects) if you want to run additional tests against a different large project. These projects are saved under the subgroup `gpt/large_projects`.
 * Horizontal: This area consists of a large number of subgroups that in turn have a large number of projects each. All of these subgroups are saved under the parent subgroup `gpt/many_groups_and_projects`
+
+GPT Data Generator provides an option to create [vulnerability test data](https://docs.gitlab.com/ee/user/application_security/vulnerability_report/). Please see [Vulnerabilities Data Setup](#vulnerabilities-data-setup) for more information.
 
 To help visualize this here is a diagram of how the data looks:
 
@@ -69,10 +71,20 @@ graph LR
     end
 ```
 
-In this section we'll detail how to use the GPT Data Generator to set up the test data on your GitLab Environment broken down into two parts:
+In this section we'll detail how to use the GPT Data Generator to set up the test data on your GitLab Environment.
 
-1. [Preparing the Environment Config File](#preparing-the-environment-file)
-1. [Running the GPT Data Generator tool](#running-the-gpt-data-generator-tool)
+### Check that the Environment is ready
+
+Before using GPT Data Generator against your environment it's strongly recommended to check and confirm your environment is in working order and ready to have data generated.
+
+There are various ways this can be achieved but for the purposes of the Generator one key way to check if the environment is ready is to attempt a [Project Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html) and verify its success as this process touches all of the critical components of a GitLab setup.
+
+For convenience here are two potential ways that you can easily do a Project Import and verify the environment is ready to have Generator run against it:
+
+* Create a project from the `Sample GitLab Project` [template](https://docs.gitlab.com/ee/user/project/working_with_projects.html#project-templates) - Creating a project from a template uses the same Import mechanism behind the scenes. If this project's creation is a success and matches the [source](https://gitlab.com/gitlab-org/sample-data-templates/sample-gitlab-project) in terms of not only source code but also Issues and MRs then this suggests the environment is ready.
+* As an alternative you can also do a project import directly and verify after that it has been successful. If you don't have a project export to hand you can use this [small project template](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/main/projects_export/small-project_13.0.0.tar.gz) instead. Once imported it should have 2 files, 1 Issue and 1 MR created and if this is what appears then this suggests the environment is ready.
+
+If any issues are found in either the above checks - from creation through to validating everything has imported correctly - then this suggests there's an issue with the Environment that should be addressed before running Generator.
 
 ### Preparing the Environment File
 
@@ -99,7 +111,7 @@ Typically all that's needed to be done for this file is to copy one of the exist
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 250,
+      "subgroups": 1000,
       "subgroup_prefix": "gpt-subgroup-",
       "projects": 10,
       "project_prefix": "gpt-project-"
@@ -113,7 +125,7 @@ Details for each of the settings are as follows. Some are also available to be c
 * The environment's details:
   * `name` - The name of the environment. Mainly used in output and results. (Environment variable: `ENVIRONMENT_NAME`)
   * `url` - Full URL of the environment, used by all of the tests and in other areas. (Environment variable: `ENVIRONMENT_URL`)
-  * `user` - The name of the user prepared as part of the [Creating a User](#creating-a-user) step.
+  * `user` - The name of the user prepared as part of the [Creating an Admin User](#creating-an-admin-user) step.
   * `config`- Additional details about the environment that are used to adjust test results accordingly.
     * `latency` - The network latency (in ms) between where the Tool will be running and the environment. (Environment variable: `ENVIRONMENT_LATENCY`)
   * `storage_nodes` - Array of [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment. Set it to `["default"]` if you have a single [Gitaly Shard](https://docs.gitlab.com/ee/administration/gitaly/) node or [Gitaly Cluster](https://docs.gitlab.com/ee/administration/gitaly/praefect.html). If you have multiple Gitaly Shards or Clusters, you should list them in full to ensure that the test data is spread across all storages evenly, which in turn will lead to accurate performance results. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment.
@@ -125,13 +137,14 @@ Details for each of the settings are as follows. Some are also available to be c
   * `many_groups_and_projects` - Contains information about the "horizontal" data.
     * `group` - The name of the Group that will contain the "horizontal" data. (Default: `many_groups_and_projects`).
     * `subgroups` - Number of subgroups that `group` have. The number of the subgroups should be tuned to your environment's requirements.
+      * **Note**: For [Reference Architectures with up to 1,000 users](https://docs.gitlab.com/ee/administration/reference_architectures/1k_users.html) set `subgroups` to `500`.
     * `subgroup_prefix` - Prefix that the subgroups use. (Default: `gpt-subgroup-`).
     * `projects` - Number of projects that each subgroup have. The number of the projects should be tuned to your environment's requirements.
     * `project_prefix` - Prefix that the projects use. (Default: `gpt-project-`).
 
 **For a new environment the following settings will typically only need to be changed: `name`, `url`, `user` and `storage_nodes`. Environment config files typically should be saved to the `k6/config/environments` directory although you can save it elsewhere if desired.**
 
-**Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/master/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
+**Note:** You should ensure any environment config file has a unique filename compared to the [default config files](https://gitlab.com/gitlab-org/quality/performance/-/tree/main/k6/config/environments) or any other custom ones to avoid any clashes, specifically when using Docker where files can be placed in different directories.
 
 ### Running the GPT Data Generator tool
 
@@ -139,12 +152,12 @@ When the environment config file is in place the [GPT Data Generator](../bin/gen
 
 #### Docker (Recommended)
 
-The recommended way to run the GPT Data Generator is with our Docker image, [registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator](https://gitlab.com/gitlab-org/quality/performance/container_registry), which can also be used in [airgapped environments](#airgapped-environments).
+The recommended way to run the GPT Data Generator is with our Docker image, [gitlab/gpt-data-generator](https://gitlab.com/gitlab-org/quality/performance/container_registry), which can also be used in [airgapped environments](#airgapped-environments).
 
-The full options for running the tool can be seen by getting the help output via `docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --help`:
+The full options for running the tool can be seen by getting the help output via `docker run -it gitlab/gpt-data-generator --help`:
 
 ```txt
-GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.26 - opinionated test data for the GitLab Performance Tool
 
 Usage: generate-gpt-data [options]
 
@@ -165,28 +178,30 @@ Options:
   --large-project-name=<s>         Name for large project to import.
   --large-project-tarball=<s>      Location of custom large project tarball to import. Can be local or remote.
   --storage-nodes=<s+>             Repository storages that will be used to import vertical data.
+  --vulnerability-data             Creates a separate group and projects for creating vulnerabilities data
   -u, --unattended                 Skip all user prompts and run through generation automatically.
   -f, --force                      Alternative flag for unattended. Skip all user prompts and run through generation automatically.
-  -c, --clean-up                   Clean up GPT data
+  -c, --clean-up                   Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.
+  -l, --clean-up-mode=<s>          Specify 'vertical', 'horizontal' or 'vulnerabilities' to clean up only Vertical, Horizontal or Vulnerabilities GPT data. Requires the --clean-up param to
+                                   also be set. (Default: none)
   -k, --skip-project-validation    Skip large project metadata validation
   -m, --max-wait-for-delete=<i>    Maximum wait time(seconds) for groups and projects to be deleted (default: 300)
   -h, --help                       Show help message
 
 Environment Variables:
-  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set. (Default:
-nil)
+  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set.  (Default: nil)
 
 Examples:
   Generate horizontal and vertical data using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json
+    docker run -it gitlab/gpt-data-generator --environment 10k.json
   Generate only horizontal using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --horizontal --no-vertical
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --horizontal --no-vertical
   Generate only vertical data using 10k.json environment file:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --vertical
   Generate only horizontal data with 10 subgroups and 100 projects in each:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
+    docker run -it gitlab/gpt-data-generator --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical
   Generate only vertical data using custom project tarball path:
-    docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
+    docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz
 ```
 
 As standard with Docker you can mount several volumes to get your own config files into the container and results out. The image provides several specific mount points for you to do this as detailed below:
@@ -200,7 +215,11 @@ As standard with Docker you can mount several volumes to get your own config fil
 Here's an example of how you would run the Docker image with all pieces of config and results mounted (replacing placeholders as appropriate):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 Typically you will only need to run the tool directly without any options. Doing this will create all the data that GPT requires and then be ready to go. In addition to this GPT Data Generator is idempotent meaning you can run it again in the future when the test data may have changed and the tool will make the specific changes as required.
@@ -227,7 +246,7 @@ Before running some setup is required for the GPT Data Generator tool specifical
 1. First, set up [`Ruby`](https://www.ruby-lang.org/en/documentation/installation/) and [`Ruby Bundler`](https://bundler.io) if they aren't already available on the machine.
 1. Next, install the required Ruby Gems via Bundler
     * `bundle install`
-1. Add your custom [Environment Config file](#setup-environment-file) to its respective directory. From the tool's root folder this would be [`k6/config/environments`](../k6/config/environments).
+1. Add your custom [Environment Config file](#configure-environment-config-file) to its respective directory. From the tool's root folder this would be [`k6/config/environments`](../k6/config/environments).
 
 Once setup is done you can run the tool with the `bin/generate-gpt-data` script. The options for running the tests are the same as when running in Docker but the examples change to the following:
 
@@ -255,13 +274,20 @@ The Generator requires access by default to the internet to download required fi
 
 For environments that don't have internet access you'll need to download the default large project import file then in its path via the `--large-project-tarball` option. The file to use is dependent on your GitLab environment's version. To download the correct file select the link from below as instructed:
 
-* [For GitLab environments with versions `13.0.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz)
-* [For GitLab environments with versions between `12.5.0` and `12.10.0`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz)
+* [For GitLab environments with versions `15.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz)
+* [For GitLab environments with versions between `14.0` and `14.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz)
+* [For GitLab environments with versions between `13.0` and `13.12`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz)
+* [For GitLab environments with versions between `12.5` and `12.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_12.5.0.tar.gz)
 
 With our recommended way of running Generator via Docker you'll have to make the file available to the container via a mounted folder, in this case `/projects`. All that's required is to download the above file into it's own folder on the host machine and then to mount it to the `/projects` folder in the container accordingly (with the `--large-project-tarball` option set also):
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_13.0.0.tar.gz
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  -v <HOST PROJECT FOLDER>:/projects \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_15.0.0.tar.gz
 ```
 
 ##### Environments running behind a Proxy
@@ -271,7 +297,13 @@ For environments that do have internet access but through a http proxy the Gener
 With our recommended way of running Generator via Docker you'll need to pass this environment variable in directly in the command, for example:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -e PROXY_URL=<URL> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results -v <HOST PROJECT FOLDER>:/projects registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -e PROXY_URL=<URL> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  -v <HOST PROJECT FOLDER>:/projects \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json
 ```
 
 #### Location and Network conditions
@@ -295,19 +327,19 @@ The changes are as follows:
 The tool's output will look like the following:
 
 ```txt
-GPT Data Generator v1.0.17 - opinionated test data for the GitLab Performance Tool
+GPT Data Generator v1.0.26 - opinionated test data for the GitLab Performance Tool
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Creating group gpt
 Creating group gpt/many_groups_and_projects
-Creating 250 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
-..........................................................................................................................................................................................................................................................
-Checking for existing projects under groups...
-............................................................................................................................................................................................
-..............................................................
-Creating 10 projects each under 250 subgroups with name prefix 'gpt-project-'
-....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
-<-> Horizontal data: successfully generated after 4 minutes 21 seconds!
+Creating 1000 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
+Generating groups: 1000 from 1000 |=========================================================>| Time: 00:01:04 Time: 00:01:04
+
+Checking for existing projects under groups: 1000 from 1000 |===============================>| Time: 00:00:01 Time: 00:00:01
+
+Creating 10 projects each under 1000 subgroups with name prefix 'gpt-project-'
+Generating projects: 10000 from 10000 |=====================================================>| Time: 00:37:16 Time: 00:37:16
+<-> Horizontal data: successfully generated after 38 minutes 21 seconds!
 
 | Vertical data: importing large projects for GPT...
 Group gpt already exists
@@ -316,10 +348,10 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Disabling Max Import Size limit on environment...
 Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 13.8.0-pre 852ea7c0283
+Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
 
@@ -330,9 +362,80 @@ http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
 Validating project 'gpt/large_projects/gitlabhq1' imported successfully...
 
 | Vertical data: successfully generated after 40 minutes 55 seconds!
-█ GPT data generation finished after 49 minutes 16 seconds.
+█ GPT data generation finished after 89 minutes 16 seconds.
 
-█ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2021-01-14_132605.log
+█ Logs: results/generate-gpt-data_10k.testbed.gitlab.net_2022-01-29_181033.log
+```
+
+#### Vulnerabilities Data Setup
+
+[Vulnerability test data](https://docs.gitlab.com/ee/user/application_security/vulnerability_report/) is an optional data setup and it only supported on GitLab instances with a Ultimate license.
+It can be enabled with `--vulnerabilities-data` option during data generation and the following section should be added to the [Environment Config File](../k6/config/environments) under `gpt_data`.
+
+```json
+{
+  [...]
+  "gpt_data": {
+    "vulnerabilities_projects": {
+      "group": "vulnerabilities_group",
+      "projects": 3,
+      "project_prefix": "gpt-vulnerabilities-proj",
+      "vulnerabilities_count": 1000
+    }
+  }
+  [...]
+}
+```
+
+The details are as below:
+
+* `vulnerabilities_projects` - Contains information about projects with "vulnerabilities" data.
+  * `group` - The name of the group that will contain projects with "vulnerabilities" data.
+  * `projects` - The number of projects with vulnerabilities that the group will have.
+  * `project_prefix` - Prefix that vulnerabilities projects will use.
+  * `vulnerabilities_count` - The number of vulnerabilities that will be created in each of the projects.
+
+Docker command usage examples:
+
+```sh
+# Generate vulnerabilities data along with horizontal and vertical data using 10k.json file
+docker run -it gitlab/gpt-data-generator --environment 10k.json --vulnerability-data
+
+# Generate only vulnerabilities data using 10k.json file
+docker run -it gitlab/gpt-data-generator --environment 10k.json --no-horizontal --no-vertical --vulnerability-data
+```
+
+Command examples if you are using `bin/generate-gpt-data`:
+
+```sh
+# Generate vulnerabilities data along with horizontal and vertical data using 10k.json file
+bin/generate-gpt-data --environment 10k.json --vulnerability-data
+
+# Generate only vulnerabilities data using 10k.json file
+bin/generate-gpt-data --environment 10k.json --no-horizontal --no-vertical --vulnerability-data
+```
+
+Here's the visual representation of how the projects with vulnerabilities data will be created under `gpt` root group:
+
+```mermaid
+graph LR
+gpt-->vulnerabilities_group
+
+  subgraph "Vulnerabilities data"
+        vulnerabilities_group-->gpt-vulnerabilities-proj-1
+        vulnerabilities_group-->gpt-vulnerabilities-proj-2
+  end
+```
+
+Clean up vulnerabilities data:
+
+GPT Data Generator provides an option to clean up only vulnerabilities group by using `--clean-up-mode vulnerabilities`.
+It deletes the `group` specified under `vulnerabilities_projects` section of the [Environment Config File](../k6/config/environments).
+
+Here is a command example:
+
+```sh
+bin/generate-gpt-data --environment 10k.json --clean-up --clean-up-mode vulnerabilities
 ```
 
 #### Advanced Setup
@@ -350,7 +453,11 @@ If a non Admin user is desired it needs to be at least a [`maintainer`](https://
 
 ##### Using Custom Large Projects
 
-The GitLab Performance Tool can also be used to run performance tests against a target GitLab environment with a different large project imported into each storage node as an advanced use case. To enable this GPT Data Generator can be changed to import the custom project instead of (or in addition to in subsequent runs) the default `gitlabhq` project along with GPT being configured to use data points from the project also.
+The GitLab Performance Tool can also be used to run performance tests against a target GitLab environment with a different large project as an advanced use case:
+
+* If project already exists on environment it can be used as a custom performance target.
+* If project doesn't exist on environment it can imported with the GPT Data Generator into each storage node.
+  * To enable this Generator can be changed to import the custom project instead of (or in addition to in subsequent runs) the default `gitlabhq` project along with GPT being configured to use data points from the project also.
 
 Note though that in this use case it won't be as useful for validating that the GitLab environment itself is performing to expectations but rather how the specific project performs in GitLab. This is because validation of the environment's performance is confirmed by comparing like for like test results, hence the need for opinionated test data. It's therefore recommended that any testing with custom large projects is always done in addition to tests with the [default opinionated data](#setting-up-test-data-with-the-gpt-data-generator).
 
@@ -374,22 +481,33 @@ First you will need to create the [Project Config File](..k6/config/projects). T
     "pipelines_count": 11
   },
   "branch": "10-0-stable",
+  "branch_search": "stable",
   "commit_sha": "8f9beefa",
   "commit_sha_signed": "6526e91f",
-  "compare_commits_sha": ["aec887ab", "5bfb7558"],
+  "compare_branches": ["12-2-stable", "12-1-stable"],
   "file_blame_path": "spec%2fmodels%2fproject_spec%2erb",
   "file_raw_path": "doc%2fapi%2fprojects%2emd",
   "file_rendered_path": "CHANGELOG%2emd",
   "file_source_path": "fixtures%2femojis%2findex%2ejson",  
   "dir_path": "spec%2Flib%2Fgitlab",
-  "git_push_data": {
-    "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
-    "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
-    "branch_name": "12-1-auto-deploy-20190714"
-  },
+  "git_clone_data": ["8f9beefac3774b30e911fb00a68f4c7a5244cf27", "3f242b6bb267fea02de29c67cc5cf0384020662e"],
+  "git_pull_data": [
+    {
+    "want_commit_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+    "have_commit_sha": "92d536a03120b7095b2a78553e76f1913c30e7a9"
+    }
+  ],
+  "git_push_data": [
+    {
+      "branch_current_head_sha": "8606c89683c913641243fc667edeb90600fe1a0e",
+      "branch_new_head_sha": "8bcb4fd6f5780ebe9dc1ec80904b060b89a937d2",
+      "branch_name": "12-1-auto-deploy-20190714"
+    }
+  ],
   "pipeline_sha": "bca0bc9e5ed1da25aff3d407eddfc0fe1606ec2b",
-  "mr_commits_iid": "10495",
-  "mr_discussions_iid": "6958",
+  "mr_commits_iid": "4954",
+  "mr_discussions_iid": "8785",
+  "mr_changes_iid": "8785",
   "search": {
     "projects": ["gitlab", "username", "merge", "remove", "test", "project", "public"],
     "issues": ["gitlab", "bot", "push", "repo", "error", "database", "issue"],
@@ -413,22 +531,29 @@ Details for each of the settings are as follows. You should aim to have each of 
   * `issue_count` - Total count of issues in the Project.
   * `pipelines_count` - Total count of pipelines in the Project.
 * `branch` - The name of a large branch available in the project. The size of the branch should be tuned to your environment's requirements.
+* `branch_search` - Term to be used for searching Branches. You should aim to have this return a good number of different branches in the results that would be representative of your environment's requirements.
 * `commit_sha` - The SHA reference of a large commit available in the project. The size of the commit should be tuned to your environment's requirements.
 * `commit_sha_signed` - The SHA reference of a [signed commit](https://docs.gitlab.com/ee/user/project/repository/gpg_signed_commits/) available in the project.
-* `compare_commits_sha` - The SHA references of two commits on the same branch that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the commits should be tuned to your environment's requirements.
+* `compare_branches` - The names of two branches that will be [compared](https://docs.gitlab.com/ee/api/repositories.html#compare-branches-tags-or-commits). The difference between the branches should be tuned to your environment's requirements.
 * `file_blame_path` - The relative path to a file in your project that is itself large and also has a large showable File Blame history.
 * `file_raw_path` - The relative path to a moderate sized file in your project that would be will be downloaded at scale. Ensure this file isn't too big or the test will likely max out the available network speeds.
 * `file_rendered_path` - The relative path to a large sized file in your project that would be shown rendered, e.g. a markdown file.
 * `file_source_path` - The relative path to a large sized file in your project that would be shown as source code, e.g. a json file.
 * `dir_path`- The relative path of a directory in your project that contains many files. Note that the directory must contain at least 100 files.
+* `git_clone_data` - Git clone data contains an array of commit SHAs that will be cloned during the git clone test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git clone test, please refer to [`Git Clone test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements. Commits will be randomly selected from the array during the test.
+* `git_pull_data` - Git pull data that will be used for git pull test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git pull test, please refer to [`Git Pull test documentation`](test_docs/git_pull.md). The size of the commits should be tuned to your environment's requirements.
+  * `have_commit_sha` - The commit SHA client has locally.
+  * `want_commit_sha` - The commit SHA client wants to pull from the server.
+* `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
 * `git_push_data` - Git push data that will be used for git push test. No need to change anything if you're using `gitlabhq`. To test a custom project or learn more about git push test, please refer to [`Git Push test documentation`](test_docs/git_push.md). The size of the commits should be tuned to your environment's requirements.
   * `branch_current_head_sha` - The head commit of the `branch_name` branch.
   * `branch_new_head_sha` - Any commit SHA that older then `branch_current_head_sha` on the `branch_name` branch.
   * `branch_name` - Existing branch name.
-* `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `pipeline_sha` - The commit SHA of a pipeline available in the project that has a large number of jobs. The size of the pipeline should be tuned to your environment's requirements.
+* `mr_commits_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of commits. The size of the MR should be tuned to your environment's requirements.
 * `mr_discussions_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of discussions / comments. The size of the MR discussions should be tuned to your environment's requirements.
-* `search` - A list of search terms to used against [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (this needs to be configured on the environment specifically). Each item is an array of seach words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
+* `mr_changes_iid` - The [iid](https://docs.gitlab.com/ee/api/#id-vs-iid) of a merge request available in the project that has a large number of changes. The size of the MR changes should be tuned to your environment's requirements. This can be the same as `mr_commits_iid` if the MR has both high commits and changes.
+* `search` - A list of search terms to used against [Search through GitLab](https://docs.gitlab.com/ee/user/search/) and [GitLab Advanced Search](https://docs.gitlab.com/ee/user/search/advanced_global_search.html) (the latter needs to be configured on the environment specifically). Each item is an array of search words that we use to compose a search term for the specified scope against both the API and Web UI. Currently the ones shown above are supported at this time. Note: for `user` and `milestone` scope we select a random item from the array, for all other scopes we compose a random 3 item search term from their respective arrays.
   * `projects` - [Projects Scope](https://docs.gitlab.com/ee/api/search.html#scope-projects) search term array.
   * `issues` - [Issues Scope](https://docs.gitlab.com/ee/api/search.html#scope-issues) search term array.
   * `commits` - [Commits Scope](https://docs.gitlab.com/ee/api/search.html#scope-commits-starter) search term array.
@@ -443,7 +568,7 @@ Project config files typically should be saved to the `k6/config/projects` direc
 
 The [Environment Config File](../k6/config/environments) will need to be tweaked to point both of the GPT tools to use the new project, specifically the `gpt_data > large_projects` section:
 
-```txt
+```json
 {
   [...]
   "gpt_data": {
@@ -458,12 +583,35 @@ The [Environment Config File](../k6/config/environments) will need to be tweaked
 
 For this use case the `project` setting should be changed to the name of the Project Config file.
 
+If you are planning to run GPT against a project that _already exists_ on the target GitLab environment the `gpt_data` section needs to be tweaked further:
+
+```json
+{
+  [...]
+  "gpt_data": {
+    "root_group": "gpt",
+    "skip_check_version": "true",
+    "large_projects": {
+      "root_group": "root_group",
+      "group": "large_projects",
+      "project": "custom_existing_project"
+    },
+  [...]  
+}
+```
+
+* `"skip_check_version": "true"` disables GPT data version check.
+* `gpt_data > large_projects > root_group` overwrites `gpt_data > root_group` for the custom large project and contains its root group.
+  * If the custom large project path has only one group like `group/custom_large_proj` omit the `"group"` setting or leave it blank.
+
+Note that in this case when the custom large project already exists on the target GitLab environment the next step [Setup Custom Test Data using the GPT Data Generator](#setup-custom-test-data-using-the-gpt-data-generator) can be skipped and you can start running the GPT.
+
 ###### Setup Custom Test Data using the GPT Data Generator
 
 Finally to import the data itself you will need to have the project's [export tarball file](https://docs.gitlab.com/ee/user/project/settings/import_export.html#exporting-a-project-and-its-data) available. When ready you can then set up all of the test data, with custom project, as follows:
 
 ```sh
-docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --project-name=<PROJECT NAME>
+docker run -it gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/home/user/<CUSTOM PROJECT TARBALL>.tar.gz --large-project-name=<PROJECT NAME>
 ```
 
 Some notes you should consider on the above:
@@ -493,7 +641,21 @@ Both of these can easily be deleted by an admin user with data specifically easi
 The Generator can also be used to delete the root group by passing the `--clean-up` param:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up
+```
+
+In addition to this it's possible to only delete one of the subsets of data (Vertical or Horizontal). This can be done by passing the `--clean-up-mode` param with either of the values `vertical` or `horizontal` respectively in addition to `--clean-up`. Below is an example of how to clean up only horizontal data:
+
+```sh
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --clean-up --clean-up-mode='horizontal'
 ```
 
 # Troubleshooting
@@ -519,9 +681,14 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 1. List all [repository storages](https://docs.gitlab.com/ee/administration/repository_storage_paths.html) on the target GitLab environment under the `storage_nodes` setting in the [Environment Config file](#preparing-the-environment-file) following the documentation. Repository storages settings can be found under **Admin Area > Settings > Repository > Repository storage** on the GitLab environment. As an example, suppose we have 2 storage nodes `"storage_nodes": ["default", "storage2"]`.
 1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly Shard itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
 1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the correct GitLab FOSS Project Tarball specifying these options:
-    * Download the correct GitLab FOSS Project Tarball file. For GitLab environments running on `13.0.0` or higher it's [`gitlabhq_export_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_13.0.0.tar.gz). For GitLab environments running on versions between `12.5.0` and `12.10.0` it's [`gitlabhq_export.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/master/projects_export/gitlabhq_export_12.5.0.tar.gz).
+    * Download the correct GitLab FOSS Project Tarball file:
+      * [For GitLab environments with versions `15.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz)
+      * [For GitLab environments with versions between `14.0` and `14.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz)
+      * [For GitLab environments with versions between `13.0` and `13.12`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz)
+      * [For GitLab environments with versions between `12.5` and `12.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_12.5.0.tar.gz)
     * Select the `gpt/large_projects` group for "Project URL"
     * Enter project name in "Project slug" following this structure `<PROJECT NAME><STORAGE NODE SEQUENCE NUMBER>`. In our example it would be `gitlabhq1` for the `default` node and `gitlabhq2` for `storage2` node.
+1. Update [descriptions](https://docs.gitlab.com/ee/user/project/settings/#general-project-settings) for the imported projects with `Version: 1`. Before running the tests, GPT automatically checks that the target project has expected GPT data version by parsing the project description.
 1. After this has been completed for every Gitaly storage listed in `storage_nodes` as required, change the [`Repository storage paths`](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) settings back to all storage paths.
     * To verify that vertical data was imported correctly head to **Admin Area > Overview > Projects**. Click on each imported project and ensure it has a correct `Gitaly storage name`. In our example `gitlabhq1` should be on `default` gitaly storage and `gitlabhq2` should be on `storage2`.
 
@@ -539,7 +706,12 @@ Groups and / or Projects can sometimes fail to be created due to response timeou
 
 GPT Data Generator uses [threads](https://ruby-doc.org/core-2.7.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
 
-If you're regularly seeing timeout errors increasing the connection timeout by setting the `GPT_POOL_TIMEOUT` environment variable in seconds may help. Another option could be to decrease the pool size via the  `GPT_POOL_SIZE` environment variable from the default value to 1 to disable running concurrent requests.
+If you're regularly seeing timeout or 500 errors this may likely be the environment struggling under the strain of creating so many groups or projects at once. The following settings configure the behavior of the Generator and it may be useful to change these if you frequently see errors as described:
+
+* `GPT_GENERATOR_POOL_SIZE` - The number of concurrent thread processes the Generator will use when generating. Set to `10` by default. Set lower if you frequently see timeout or 500 errors.
+* `GPT_GENERATOR_POOL_TIMEOUT` - How long each process will wait for a response from the environment in seconds. Set to `60` by default. Set higher if seeing frequent timeout errors.
+* `GPT_GENERATOR_RETRY_COUNT` - The amount of times the process will retry creating data if it failed. Set to `10` by default. Set higher if you continue to see 500 errors infrequently.
+* `GPT_GENERATOR_RETRY_WAIT` - The number of seconds the process will wait between each retry. Set to `1` by default. Set this higher if you continue to see 500 errors infrequently. Can be used with or instead of `GPT_GENERATOR_RETRY_COUNT`.
 
 ## Large Project import issues
 
@@ -557,7 +729,7 @@ Import process time depends on the size of the project. With the standard GPT da
 * If it's stuck on `Waiting until Project '<X>' has imported successfully...` it means that the [`POST` request to Import API](https://docs.gitlab.com/ee/api/project_import_export.html#import-a-file) was successful and project import is in progress. If you navigate to the target environment, you should be able to see the project listed in GitLab as importing. As such, there may be a problem happening in the import process. To help debug if there is an issue:
   * Explore the [Target GitLab environment's logs](https://docs.gitlab.com/ee/administration/logs.html) to see if there is a problem being reported. Import typically happens on the [Sidekiq](https://docs.gitlab.com/ee/administration/logs.html#sidekiq-logs) and [Gitaly](https://docs.gitlab.com/ee/administration/logs.html#gitaly-logs) nodes so these logs should be prioritised. If you find an error or if you need further help investigating the import failure please go through the available [support options](https://about.gitlab.com/support/).
   * As an additional check you can try to import a project manually via [Import UI](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) to ensure that import is working directly on the target environment. If it works manually, please refer to [these instructions](#repository-storages-config-cant-be-updated-via-application-settings-api) to import large projects via UI.
-  * We have some smaller project tarballs that we use for these kind of debugging purposes that shouldn't take as long to complete importing. For GitLab versions between `12.8.0` and `12.10.0` there's [`small-project_12.8.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/small-project_12.8.0.tar.gz) and for GitLab versions `13.0.0` or higher there's [`small-project_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/master/projects_export/small-project_13.0.0.tar.gz).
+  * We have some smaller project tarballs that we use for these kind of debugging purposes that shouldn't take as long to complete importing. For GitLab versions between `12.8.0` and `12.10.0` there's [`small-project_12.8.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/main/projects_export/small-project_12.8.0.tar.gz) and for GitLab versions `13.0.0` or higher there's [`small-project_13.0.0.tar.gz`](https://gitlab.com/gitlab-org/quality/performance-data/-/blob/main/projects_export/small-project_13.0.0.tar.gz).
 
 ### Import has failed
 
@@ -574,15 +746,19 @@ Both issues are caused by the application problems with the target GitLab enviro
 
 GPT Data Generator will validate the project after to ensure it's imported fully. If there's an issue with the project Generator will report the problem accordingly.
 
-If for some reason the import has failed it may be due to a known import issue. A list of current [import issues can be found here](https://gitlab.com/gitlab-org/gitlab/-/issues?scope=all&utf8=%E2%9C%93&state=opened&label_name[]=bug&label_name[]=Category%3AImporters).
+There was a [known bug](https://gitlab.com/gitlab-org/gitlab/-/issues/332313) in GitLab version 13.12 or older which was fixed in version 14.0. If you are running an older GitLab version, please [follow this workaround](https://gitlab.com/gitlab-org/gitlab/-/issues/332313#workaround) to resolve the impartial import by disabling and deleting the `import_export_project_cleanup_worker` job in Sidekiq.
 
-Unfortunately when this happens the project will need to be reimported. Please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node.
-
-After that run the Generator once more to validate that the test data was setup correctly skipping the horizontal check:
+After it's done, rerun the GPT Data Generator to set up Vertical data once again skipping the horizontal check:
 
 ```sh
-docker run -it -e ACCESS_TOKEN=<TOKEN> -v <HOST CONFIG FOLDER>:/config -v <HOST RESULTS FOLDER>:/results registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
+docker run -it \
+  -e ACCESS_TOKEN=<TOKEN> \
+  -v <HOST CONFIG FOLDER>:/config \
+  -v <HOST RESULTS FOLDER>:/results \
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --no-horizontal
 ```
+
+If the Large Project validation error persists, please delete the project that hit this error and follow the instructions [above](#repository-storages-config-cant-be-updated-via-application-settings-api) to manually import the project to a correct node. After that run the command above to validate that the test data was setup correctly.
 
 Example of successful validation output:
 
@@ -599,4 +775,12 @@ Existing large project gpt/large_projects/gitlabhq1 is valid. Skipping project i
 █ GPT data generation finished after 0 seconds.
 ```
 
-If you still see a Large Project validation error at this point, please look through the known Import issues listed above and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
+If you still see a Large Project validation error at this point, please look through the [known Import issues](https://gitlab.com/gitlab-org/gitlab/-/issues?sort=created_date&state=opened&label_name[]=Category:Importers&label_name[]=type::bug) and if you don't see anything related, raise a [bug](https://gitlab.com/gitlab-org/gitlab/-/issues/new?issuable_template=Bug) in GitLab project.
+
+### Import failed with 413 Request Entity Too Large error
+
+`413 Request Entity Too Large` can appear due to the limit in Load Balancer configuration for a maximum allowed size of the client request body. If using GitLab Charts, you can set [`gitlab.webservice.ingress.proxyBodySize`](https://docs.gitlab.com/charts/charts/gitlab/webservice/#proxybodysize) to `0` to disable this limit.
+
+## Create group request failed with 403 error
+
+If you are seeing `403 Forbidden` error when GPT Data Generator tries to create a `gpt` root group, please ensure that the user has access to create groups. Navigate to `http://<env_url>/admin/users/<username>` and check that `Can create groups` is enabled. If it's not, edit the user and update this field.

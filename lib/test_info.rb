@@ -28,11 +28,12 @@ module TestInfo
 
       info[:name] = File.basename(test_file, '.js')
       info[:type] = test_file.split("/")[-2]
-      info[:link] = "https://gitlab.com/gitlab-org/quality/performance/blob/master/k6/tests/#{info[:type]}/#{info[:name]}.js"
+      info[:link] = "https://gitlab.com/gitlab-org/quality/performance/blob/main/k6/tests/#{info[:type]}/#{info[:name]}.js"
       info[:link_md] = "[#{info[:name]}](#{info[:link]})"
 
       info[:description] = get_test_tag_value(test_file, 'description')
       info[:endpoint] = get_test_tag_value(test_file, 'endpoint') || 'No documentaion'
+      info[:example_uri] = get_test_tag_value(test_file, 'example_uri')
       info[:issues] = get_test_tag_value(test_file, 'issue')
       info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
       info[:flags] = get_test_tag_value(test_file, 'flags')
@@ -45,12 +46,43 @@ module TestInfo
     info_list
   end
 
+  def get_test_urls(tests_info, env_vars)
+    env_url = env_vars['ENVIRONMENT_URL']
+    large_project = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
+    horizontal_data = JSON.parse(env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'])
+    additional_data = { "environment_root_group" => env_vars['ENVIRONMENT_ROOT_GROUP'], "user" => env_vars['ENVIRONMENT_USER'] }
+    test_data = large_project.merge(horizontal_data, additional_data)
+
+    tests_info.each do |test_info|
+      if test_info[:example_uri].nil?
+        test_info[:url] = ''
+        next
+      elsif !test_info[:example_uri].include?(':')
+        test_info[:url] = "#{env_url}#{test_info[:example_uri]}"
+        next
+      end
+
+      # Substitute all options like `:encoded_path` with test data from target env
+      endpoint = test_info[:example_uri].gsub(/(\/|=):(\w+)/) do |match|
+        test_option = match.gsub(/[^0-9A-Za-z_]/, '')
+        if test_data[test_option].nil?
+          test_info[:example_uri] = nil
+          next
+        else
+          "/#{test_data[test_option]}"
+        end
+      end
+      test_info[:url] = test_info[:example_uri].nil? ? '' : "#{env_url}#{endpoint}"
+    end
+    tests_info
+  end
+
   # Check
 
   def test_has_unsafe_requests?(test_file)
-    return true if get_test_tag_value(test_file, 'flags')&.include?('unsafe')
+    return true if test_has_flag?(test_file, 'unsafe')
 
-    write_methods = %w[post put del patch]
+    write_methods = %w[put del patch]
     File.open(test_file, "r") do |test_file_content|
       test_file_content.each_line do |line|
         line_has_write_method = write_methods.any? { |write_method| line.include?("http.#{write_method}") }
@@ -59,6 +91,11 @@ module TestInfo
     end
 
     false
+  end
+
+  # check if k6 test has a specific flag
+  def test_has_flag?(test_file, flag)
+    get_test_tag_value(test_file, 'flags')&.include?(flag)
   end
 
   def test_supported_by_gitlab_version?(test_file, gitlab_version)
@@ -99,7 +136,7 @@ module TestInfo
     return false if test_required_gpt_data.nil? || test_required_gpt_data.empty?
 
     if test_required_gpt_data && gpt_data_version == '-'
-      warn Rainbow("GPT test data version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GPT test data version '#{test_required_gpt_data}' and up. Check that the test data was setup correctly using the GPT Data Generator. Skipping...").yellow
+      warn Rainbow("GPT test data version wasn't able to be determined. Test '#{File.basename(test_file)}' requires GPT test data version '#{test_required_gpt_data}' and up. Check that the test data was setup correctly using the GPT Data Generator.\nIf you are running against a custom large project please disable this version check by adding `\"skip_check_version\": \"true\"` under `gpt_data` in Environment Config file.\nSkipping...").yellow
       return false
     end
 

@@ -1,9 +1,11 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group/:project/blob/master/:file_path`
+@example_uri: /:unencoded_path/blob/master/:file_source_path
 @description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/247878
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/372653, https://gitlab.com/gitlab-org/gitlab/-/issues/247878
+@previous_issues: https://gitlab.com/gitlab-org/quality/performance-sitespeed/-/issues/11
 */
 
 import http from "k6/http";
@@ -11,11 +13,15 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
+export let thresholds = {
+  'rps': { '13.11.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
+  'ttfb': { '13.11.0': 5000, 'latest': 4000 }
+};
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(5000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

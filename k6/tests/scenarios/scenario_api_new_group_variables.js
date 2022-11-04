@@ -10,7 +10,7 @@ import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
-import { createGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
+import { searchAndCreateGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
@@ -34,7 +34,7 @@ export function setup() {
   console.log(`TTFB P90 Threshold: ${ttfbThreshold}ms`)
   console.log(`Success Rate Threshold: ${parseFloat(__ENV.SUCCESS_RATE_THRESHOLD)*100}%`)
 
-  let groupId = createGroup("group-api-v4-new-variables");
+  let groupId = searchAndCreateGroup("group-api-v4-new-variables");
   let data = { groupId };
   return data;
 }

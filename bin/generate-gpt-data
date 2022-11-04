@@ -17,7 +17,7 @@ require 'uri'
 
 k6_dir = Pathname.new(File.expand_path('../k6', __dir__)).relative_path_from(Dir.pwd)
 
-gpt_data_version = '1.0.18'
+gpt_data_version = '1.0.26'
 puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data for the GitLab Performance Tool").color(230, 83, 40)
 
 opts = Optimist.options do
@@ -38,9 +38,11 @@ opts = Optimist.options do
   opt :large_project_name, "Name for large project to import.", short: :none, type: :string
   opt :large_project_tarball, "Location of custom large project tarball to import. Can be local or remote.", short: :none, type: :string
   opt :storage_nodes, "Repository storages that will be used to import vertical data.", short: :none, type: :strings
+  opt :vulnerability_data, "Creates a separate group and projects for creating vulnerabilities data", short: :none, type: :boolean, default: false
   opt :unattended, "Skip all user prompts and run through generation automatically.", type: :flag, default: false
   opt :force, "Alternative flag for unattended. Skip all user prompts and run through generation automatically.", type: :flag, default: false
-  opt :clean_up, "Clean up GPT data", type: :flag, default: false
+  opt :clean_up, "Clean up GPT data. Defaults to all data but can be customised with the --clean-up-mode param.", type: :flag, default: false
+  opt :clean_up_mode, "Specify 'vertical', 'horizontal' or 'vulnerabilities' to clean up only Vertical, Horizontal or Vulnerabilities GPT data. Requires the --clean-up param to also be set.", type: :string, default: 'none'
   opt :skip_project_validation, "Skip large project metadata validation", type: :flag, default: false
   opt :max_wait_for_delete, "Maximum wait time(seconds) for groups and projects to be deleted", type: :integer, default: 300
   opt :help, 'Show help message'
@@ -48,15 +50,15 @@ opts = Optimist.options do
   banner "  ACCESS_TOKEN             A valid GitLab Personal Access Token for the specified environment. The token should have admin access and all permissions set.  (Default: nil)"
   banner "\nExamples:"
   banner "  Generate horizontal and vertical data using 10k.json environment file:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json"
   banner "  Generate only horizontal using 10k.json environment file:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --horizontal --no-vertical"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --horizontal --no-vertical"
   banner "  Generate only vertical data using 10k.json environment file:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical"
   banner "  Generate only horizontal data with 10 subgroups and 100 projects in each:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gpt-data-generator' : $PROGRAM_NAME} --environment_url 10k.testbed.gitlab.net --subgroups 10 --projects 100 --no-vertical"
   banner "  Generate only vertical data using custom project tarball path:"
-  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it registry.gitlab.com/gitlab-org/quality/performance/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz"
+  banner "    #{ENV['GPT_DOCKER'] ? 'docker run -it gitlab/gpt-data-generator' : $PROGRAM_NAME} --environment 10k.json --no-horizontal --vertical --large-project-tarball=/home/user/test-project.tar.gz"
 end
 
 raise Rainbow("Environment Variable ACCESS_TOKEN has not been set. Unable to create required test data. Exiting...").red unless ENV['ACCESS_TOKEN']
@@ -68,16 +70,26 @@ if opts[:environment]
 
   env_file_vars = JSON.parse(File.read(env_file))
 
+  # General
   opts[:environment_url] ||= env_file_vars['environment']['url']
   opts[:root_group] ||= env_file_vars['gpt_data']['root_group']
+  opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
+
+  # Horizontal
   opts[:group] ||= env_file_vars['gpt_data']['many_groups_and_projects']['group']
   opts[:subgroup_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroup_prefix']
   opts[:subgroups] ||= env_file_vars['gpt_data']['many_groups_and_projects']['subgroups']
   opts[:project_prefix] ||= env_file_vars['gpt_data']['many_groups_and_projects']['project_prefix']
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
 
-  opts[:storage_nodes] ||= env_file_vars['environment']['storage_nodes']
+  # Vulnerabilities data
+  opts[:vulnerabilities_perf] ||= env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
+  opts[:vulnerabilities_group] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['group'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_projects_prefix] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['project_prefix'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_projects_count] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['projects'] if opts[:vulnerabilities_perf]
+  opts[:vulnerabilities_count] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['vulnerabilities_count'] if opts[:vulnerabilities_perf]
 
+  # Vertical
   opts[:vert_group] ||= env_file_vars['gpt_data']['large_projects']['group']
   large_project_file_name = env_file_vars['gpt_data']['large_projects']['project']
 
@@ -89,7 +101,10 @@ if opts[:environment]
   opts[:large_project_metadata] ||= large_projects_data['metadata']
 end
 
-raise Rainbow("Some generate-gpt-data option(s) are not defined. Exiting...\nOptions: #{opts}").red if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
+if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
+  empty_options = opts.reject { |key, _| key == :large_project_tarball }.filter_map { |opt, value| opt if value.nil? }
+  raise "These GPT Data Generator option(s) are not defined: '#{empty_options.join(', ')}'. Exiting..."
+end
 
 # GPT logger setup
 start_time = Time.now
@@ -99,21 +114,50 @@ results_file_prefix = "#{URI(opts[:environment_url]).host}_#{start_time.strftime
 ENV['GPT_LOGGER_PATH'] = "#{results_home}/generate-gpt-data_#{results_file_prefix}.log"
 unattended = opts[:unattended] || opts[:force]
 
-GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified group `#{opts[:root_group]}` on #{opts[:environment_url]}. Note that this may take some time.") unless unattended || opts[:clean_up]
+GPTCommon.show_warning_prompt("The GPT Data Generator will inject the data into the specified group `#{opts[:root_group]}` with Public visibility on #{opts[:environment_url]}. Note that this may take some time.") unless unattended || opts[:clean_up]
 
 # Generate opinionated test data
 begin
   gpt_test_data = GPTTestData.new(gpt_data_version: gpt_data_version, unattended: unattended, env_url: opts[:environment_url], storage_nodes: opts[:storage_nodes], max_wait_for_delete: opts[:max_wait_for_delete], skip_project_validation: opts[:skip_project_validation])
 
   if opts[:clean_up]
-    GPTCommon.show_warning_prompt("\nThe GPT Data Generator will clean up the data it previously generated on the environment.") unless unattended
     root_group = gpt_test_data.check_group_exists(grp_path: opts[:root_group])
-    gpt_test_data.delete_group(group: root_group) if root_group
-    GPTLogger.logger.info Rainbow("\nData clean up completed successfully!").green
+    abort('No Root group found') unless root_group
+
+    group_to_delete = case opts[:clean_up_mode].downcase
+                      when 'horizontal'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:group]}")
+                      when 'vertical'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vert_group]}")
+                      when 'vulnerabilities'
+                        gpt_test_data.check_group_exists(grp_path: "#{root_group['full_path']}/#{opts[:vulnerabilities_group]}")
+                      else
+                        root_group
+                      end
+
+    unless group_to_delete
+      GPTLogger.logger.warn Rainbow('No group found. Exiting...').yellow
+      exit
+    end
+
+    GPTCommon.show_warning_prompt("\nThe GPT Data Generator will clean up the data it previously generated in '#{group_to_delete['full_path']}' group on the environment.") unless unattended
+    gpt_test_data.delete_group(group: group_to_delete)
+    GPTLogger.logger.info Rainbow("\n'#{group_to_delete['full_path']}' group data clean up completed successfully!").green
     exit
   end
 
   gpt_test_data.check_users_with_group_name(grp_path: opts[:root_group])
+
+  if opts[:vulnerability_data]
+    raise Rainbow("Secure projects and group not defined in ENV file in k6/config/environments..exiting").red unless opts[:vulnerabilities_perf]
+
+    root_group = gpt_test_data.create_group(group_name: opts[:root_group])
+    vulnerabilities_group = [gpt_test_data.create_group(group_name: opts[:vulnerabilities_group], parent_group: root_group)]
+    projects = gpt_test_data.create_projects(project_prefix: opts[:vulnerabilities_projects_prefix], subgroups: vulnerabilities_group, projects_count: opts[:vulnerabilities_projects_count])
+    abort(Rainbow("Ultimate license not found in #{@env_url} gitlab instance, exiting").yellow) unless gpt_test_data.check_gitlab_ultimate?
+    gpt_test_data.check_vuln_api_supported
+    gpt_test_data.create_vulnerability_test_data(vulnerabilities_count: opts[:vulnerabilities_count], projects: projects)
+  end
 
   if opts[:horizontal]
     GPTCommon.show_warning_prompt("\nFor the creation of `horizontal` data with large projects, the GPT Data Generator will need to change the Repository Storages setting on the target GitLab environment. This is to facilitate the creation of numerous Groups and Projects evenly across each Storage node. As such, it will change this setting to point to all nodes as set in the `storage_nodes` option and then create the data.\n\nWhile the Generator is doing this any other projects created or imported during this time will be stored on one of these nodes randomly.\nThe original setting will be restored after the the tool is finished.") unless unattended
@@ -156,7 +200,6 @@ rescue StandardError, HTTP::Error => e
   GPTLogger.logger.error Rainbow("\nGPT data generation failed:\n#{e.exception}\n Traceback:#{e.backtrace}").red
   exit 1
 ensure
-
   unless gpt_test_data.nil?
     gpt_test_data.restore_soft_delete_settings unless ENV['SKIP_CHANGING_ENV_SETTINGS']
     gpt_test_data.restore_max_import_size_setting unless ENV['SKIP_CHANGING_ENV_SETTINGS']

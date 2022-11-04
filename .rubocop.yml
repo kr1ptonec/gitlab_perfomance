@@ -10,6 +10,7 @@ inherit_gem:
 
 AllCops:
   TargetRubyVersion: 2.7
+  NewCops: enable
   Exclude:
     - 'vendor/**/*'
     - 'node_modules/**/*'
@@ -48,7 +49,7 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 
 Metrics/AbcSize:
-  Max: 70.0
+  Max: 80.0
 
 Style/StringConcatenation:
   Enabled: false
@@ -60,3 +61,6 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Enabled: true
   Max: 19
+
+Style/KeywordParametersOrder:
+  Enabled: false

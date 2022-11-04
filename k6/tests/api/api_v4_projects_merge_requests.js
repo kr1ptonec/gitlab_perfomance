@@ -1,9 +1,11 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/merge_requests`
+@example_uri: /api/v4/projects/:encoded_path/merge_requests
 @description: [Get all merge requests for this project](https://docs.gitlab.com/ee/api/merge_requests.html#list-project-merge-requests)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/250356
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/332392
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/33150, https://gitlab.com/gitlab-org/gitlab/-/issues/209780, https://gitlab.com/gitlab-org/gitlab/-/issues/250356
 */
 
 import http from "k6/http";
@@ -11,9 +13,12 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
-// Endpoint is below target threshold. Custom limits applied until fixed.
-export let rpsThresholds = getRpsThresholds(0.6)
-export let ttfbThreshold = getTtfbThreshold(2000)
+export let thresholds = {
+  'rps': { '13.1.0': 0.2, '13.4.0': 0.4, '14.0.0': 0.6 },
+  'ttfb': { '13.1.0': 5000, '13.4.0': 2000, '14.0.0': 1000, 'latest': 400 },
+};
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

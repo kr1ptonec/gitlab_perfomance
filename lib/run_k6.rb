@@ -15,28 +15,29 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.30.0'
+    k6_version = ENV['K6_VERSION'] || '0.39.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
     end
 
+    raise "CPU type #{OS.host_cpu} is unsupported. Supported CPU types are x86 or Arm (64 bit)." unless OS.host_cpu.match?(/x86_64|aarch64|arm/)
+
+    cpu_arch = OS.host_cpu == 'aarch64' ? 'arm64' : 'amd64'
     if OS.linux?
-      k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux#{OS.bits}.tar.gz"
+      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux-#{cpu_arch}.tar.gz"
       warn Rainbow("k6 not found or different version detected. Downloading k6 v#{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.mac?
-      k6_url = ENV['K6_URL'] || "https://github.com/loadimpact/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-mac.zip"
+      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-macos-#{cpu_arch}.zip"
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('unzip', '-j', '-o', k6_archive.path, '-d', File.dirname(k6_archive.path))
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
-    elsif OS.windows?
-      raise "k6 not found or wrong version detected. Please install k6 version #{k6_version} on your machine and ensure it's found on the PATH"
     end
 
     File.join(File.dirname(k6_archive.path), 'k6')
@@ -62,7 +63,7 @@ module RunK6
     options_env_vars
   end
 
-  def setup_env_vars(k6_dir:, env_file:, options_file:)
+  def setup_env_file_vars(k6_dir:, env_file:)
     env_vars = {}
     env_file_vars = JSON.parse(File.read(env_file))
 
@@ -73,15 +74,23 @@ module RunK6
     env_vars['ENVIRONMENT_ROOT_GROUP'] = env_file_vars['gpt_data']['root_group']
     env_vars['ENVIRONMENT_LARGE_PROJECTS'] = GPTPrepareTestData.prepare_vertical_json_data(k6_dir: k6_dir, env_file_vars: env_file_vars)
     env_vars['ENVIRONMENT_MANY_GROUPS_AND_PROJECTS'] = GPTPrepareTestData.prepare_horizontal_json_data(env_file_vars: env_file_vars)
+    env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'] = GPTPrepareTestData.vulnerabilities_projects_group(env_file_vars: env_file_vars)
+    env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] = env_file_vars['gpt_data']['skip_check_version']
+    env_vars
+  end
+
+  def setup_env_vars(k6_dir:, env_file:, options_file:)
+    env_vars = setup_env_file_vars(k6_dir: k6_dir, env_file: env_file)
 
     env_vars['RPS_THRESHOLD_MULTIPLIER'] = ENV['RPS_THRESHOLD_MULTIPLIER'].dup || '0.8'
     env_vars['SUCCESS_RATE_THRESHOLD'] = ENV['SUCCESS_RATE_THRESHOLD'].dup || '0.99'
-    env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '500'
+    env_vars['TTFB_THRESHOLD'] = ENV['TTFB_THRESHOLD'].dup || '200'
 
     env_vars['GIT_PULL_ENDPOINT_THROUGHPUT'] = ENV['GIT_PULL_ENDPOINT_THROUGHPUT'].dup || '0.1'
+    env_vars['GIT_CLONE_ENDPOINT_THROUGHPUT'] = ENV['GIT_PULL_ENDPOINT_THROUGHPUT'].dup || '0.04'
     env_vars['GIT_PUSH_ENDPOINT_THROUGHPUT'] = ENV['GIT_PUSH_ENDPOINT_THROUGHPUT'].dup || '0.02'
     env_vars['WEB_ENDPOINT_THROUGHPUT'] = ENV['WEB_ENDPOINT_THROUGHPUT'].dup || '0.1'
-    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.01'
+    env_vars['SCENARIO_ENDPOINT_THROUGHPUT'] = ENV['SCENARIO_ENDPOINT_THROUGHPUT'].dup || '0.004'
 
     env_vars['K6_SETUP_TIMEOUT'] = ENV['K6_SETUP_TIMEOUT'].dup || '60s'
     env_vars['K6_TEARDOWN_TIMEOUT'] = ENV['K6_TEARDOWN_TIMEOUT'].dup || '60s'
@@ -96,12 +105,20 @@ module RunK6
     env_vars
   end
 
+  def check_large_projects_visibility(env_vars:)
+    large_projects = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS'])
+    large_projects.each do |large_project|
+      large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/#{large_project['unencoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
+      raise "\nPlease ensure that Large Project '#{large_project['unencoded_path']}' exists and has Public visibility.\nFor more info please refer to https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/k6.md#tests-failing-due-to-sign-in-page-redirect\nExiting..." if large_project_res.uri.to_s.include?("users/sign_in")
+    end
+  end
+
   def prepare_tests(tests:, env_vars:)
     # Prepare specific test data
     GPTPrepareTestData.prepare_git_push_data(env_vars: env_vars) unless tests.grep(/git_push/).empty? || env_vars.empty?
   end
 
-  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, test_excludes: [], env_vars: {})
+  def get_tests(k6_dir:, test_paths:, quarantined:, scenarios:, unsafe:, vulnerabilities:, test_excludes: [], env_vars: {})
     tests = []
     test_paths.each do |test_path|
       # Add any tests found within given and default folders matching name
@@ -118,6 +135,7 @@ module RunK6
       tests += Dir.glob("#{k6_dir}/tests/*/#{File.basename(test_path, File.extname(test_path))}.js")
       tests += Dir.glob("#{ENV['GPT_DOCKER_TESTS_DIR']}/*/#{File.basename(test_path, File.extname(test_path))}.js") if ENV['GPT_DOCKER_TESTS_DIR']
     end
+
     raise "\nNo tests found in specified path(s):\n#{test_paths.join("\n")}\nExiting..." if tests.empty?
 
     tests = tests.uniq { |path| File.basename(path, '.js') }.sort_by { |path| File.basename(path, '.js') }
@@ -126,6 +144,7 @@ module RunK6
     end
 
     tests.reject! { |test| TestInfo.test_has_unsafe_requests?(test) } unless unsafe
+    tests.reject! { |test| TestInfo.test_has_flag?(test, 'vulnerabilities') } unless vulnerabilities
     filter_tests(tests: tests, env_vars: env_vars)
   end
 
@@ -137,11 +156,26 @@ module RunK6
     gitlab_settings = GPTCommon.get_env_settings(env_url: env_vars['ENVIRONMENT_URL'], headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] })
     tests.select! { |test| TestInfo.test_supported_by_gitlab_settings?(test, gitlab_settings) }
 
-    large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
-    large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: false)
-    large_project_description = JSON.parse(large_project_res.body.to_s)['description']
-    gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
-    tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
+    # Skipping Web User test when page is not available
+    # for an unathorized user
+    if tests.include? 'k6/tests/web/web_user.js'
+      check_user_page = HTTP.get("#{env_vars['ENVIRONMENT_URL']}/#{env_vars['ENVIRONMENT_USER']}")
+      tests.delete('k6/tests/web/web_user.js') if check_user_page.status != 200
+    end
+
+    unless env_vars['GPT_LARGE_PROJECT_CHECK_SKIP'] == 'true'
+      large_project_data = JSON.parse(env_vars['ENVIRONMENT_LARGE_PROJECTS']).first
+      begin
+        large_project_res = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/api/v4/projects/#{large_project_data['encoded_path']}", headers: { 'PRIVATE-TOKEN': ENV['ACCESS_TOKEN'] }, fail_on_error: true)
+        large_project_description = JSON.parse(large_project_res.body.to_s)['description']
+        gpt_data_version = large_project_description.match?(/Version: (.*)/) ? large_project_description.match(/Version: (.*)/)[1] : '-'
+      rescue GPTCommon::RequestError => e
+        raise "\nLarge Project request has failed with the error:\n#{e}\nPlease ensure that Large Project exists at this location '#{large_project_data['unencoded_path']}'\nExiting..."
+      rescue TypeError, NoMethodError
+        raise "\nLarge Project's description can't be parsed.\nPlease check if there are any problems with the target environment. If the environment is confirmed working but the problem persists, please run the GPT Data Generator to reimport the Large Project.\nExiting..."
+      end
+      tests.select! { |test| TestInfo.test_supported_by_gpt_data?(test, gpt_data_version) }
+    end
 
     tests
   end
@@ -212,7 +246,7 @@ module RunK6
     results["score"] = [results["rps_result"], results["rps_target"], results["success_rate"]].none?(&:nil?) ? ((results["rps_result"].to_f / results["rps_target"].to_f) * results["success_rate"].to_f).round(2) : 0.0
     results['redo'] = test_redo
 
-    results["issues"] = TestInfo.get_test_tag_value(test_file, 'issues')
+    results["issues"] = TestInfo.get_test_tag_value(test_file, 'issue')
     results["flags"] = TestInfo.get_test_tag_value(test_file, 'flags')
 
     results
@@ -222,6 +256,7 @@ module RunK6
     scores = results.reject { |result| result['score'].nil? || result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
     return nil if scores.length.zero?
 
-    (scores.sum / scores.length).round(2)
+    total_score = (scores.sum / scores.length).round(2)
+    total_score > 100.0 ? 100.0 : total_score
   end
 end

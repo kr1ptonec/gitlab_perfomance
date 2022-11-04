@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/commits`
+@example_uri: /api/v4/projects/:encoded_path/repository/commits
 @description: [Get a list of repository commits in a project](https://docs.gitlab.com/ee/api/commits.html#list-repository-commits)
 @gpt_data_version: 1
 */

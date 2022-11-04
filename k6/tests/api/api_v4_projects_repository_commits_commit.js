@@ -1,6 +1,7 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects/:id/repository/commits/:sha`
+@example_uri: /api/v4/projects/:encoded_path/repository/commits/:commit_sha
 @description: [Get a specific commit identified by the commit hash](https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit)
 @gpt_data_version: 1
 */

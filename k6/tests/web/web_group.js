@@ -1,7 +1,10 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /:group`
+@example_uri: /:unencoded_group_path
 @description: Web - Group Page. <br>Controllers: `GroupsController#show`, `Groups::ChildrenController#index`</br>
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334795
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/353401
 @gpt_data_version: 1
 */
 
@@ -10,11 +13,15 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getManyGroupsOrProjects } from "../../lib/gpt_k6_modules.js";
 
+export let thresholds = {
+  'rps': { '14.8.0': __ENV.WEB_ENDPOINT_THROUGHPUT, '15.0.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
+  'ttfb': { '14.8.0': 500, '15.0.0': 4400, 'latest': 500 }
+};
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT )
 export let webProtoStages = adjustStageVUs(__ENV.WEB_ENDPOINT_THROUGHPUT)
-export let rpsThresholds = getRpsThresholds(__ENV.WEB_ENDPOINT_THROUGHPUT, endpointCount)
-export let ttfbThreshold = getTtfbThreshold()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {

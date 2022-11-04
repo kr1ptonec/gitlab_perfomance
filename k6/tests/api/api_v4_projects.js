@@ -1,22 +1,26 @@
 /*global __ENV : true  */
 /*
 @endpoint: `GET /projects?order_by=id&sort=asc and GET /projects?pagination=keyset&order_by=id&sort=asc`
+@example_uri: /api/v4/projects?order_by=id&sort=asc
 @description: [Get a list of all projects](https://docs.gitlab.com/ee/api/projects.html#list-all-projects)
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/gitlab-org/gitlab/-/issues/211495
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/30181, https://gitlab.com/groups/gitlab-org/-/epics/8164
 */
 
 import http from "k6/http";
 import { group } from "k6";
 import { Rate } from "k6/metrics";
-import { logError, getEnvVersion, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
+import { logError, envVersionIsHigherThan, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
-let envVersion = getEnvVersion()
-let endpoints = envVersion[0] > 12 || (envVersion[0] == 12 && envVersion[1] >= 7) ? ['projects?pagination=offset', 'projects?pagination=keyset'] : ['projects?pagination=offset'];
+let endpoints = envVersionIsHigherThan('12.7.0') ? ['projects?pagination=offset', 'projects?pagination=keyset'] : ['projects?pagination=offset'];
 
+export let thresholds = {
+  'rps': { 'latest': 0.15 },
+  'ttfb': { 'latest': 7000 },
+};
 export let endpointCount = endpoints.length
-export let rpsThresholds = getRpsThresholds(0.05, endpointCount)
-export let ttfbThreshold = getTtfbThreshold(11000)
+export let rpsThresholds = getRpsThresholds(thresholds['rps'], endpointCount)
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 
 let endpoint_thresholds = {

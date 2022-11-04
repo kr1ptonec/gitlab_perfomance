@@ -62,13 +62,27 @@ end
 
 def prepare_message_text(result, results_json = nil)
   environment = ENV['ENVIRONMENT_NAME']&.match?(/docker/i) ? "multiple GitLab versions" : ENV['ENVIRONMENT_NAME'].capitalize
-  message = "#{@opts[:test_name].upcase} tests against #{environment} has"
-  summary = result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing:"
-  summary << "\n• Pipeline - #{ENV['CI_PIPELINE_URL']}" if ENV['CI_PIPELINE_URL']
-  summary << "\n• Metrics Dashboard - #{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] && results_json
-  summary << "\n• Results History Dashboard - #{ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']}" if ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']
-  summary << "\n• Results - #{ENV['GPT_RESULTS_URL']}" if ENV['GPT_RESULTS_URL']
-  summary << "\n• Known Issues - #{ENV['GPT_KNOWN_ISSUES_URL']}" if ENV['GPT_KNOWN_ISSUES_URL']
+  message = "#{@opts[:test_name].upcase} tests against #{environment} have"
+
+  summary = if ENV['CI_SLACK_IGNORE_RESULT'] == 'true'
+              ":checkered_flag: #{message} completed! :checkered_flag:"
+            else
+              result ? ":ci_passing: #{message} passed! :ci_passing:" : ":ci_failing: #{message} failed! :ci_failing:"
+            end
+
+  summary << "\n\n• <#{ENV['CI_PIPELINE_URL']}|Pipeline>" if ENV['CI_PIPELINE_URL']
+
+  # Construct and add Grafana links(s) string
+  if results_json && (ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL'] || ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL'])
+    grafana_str = "\n• <#{ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}|Metrics Dashboard>" if ENV['ENVIRONMENT_GRAFANA_DASHBOARD_URL']
+    grafana_str += " (<#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=2&width=1000&height=750&timeout=180|CPU>, <#{ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']}?from=#{results_json['time']['start_epoch']}&to=#{results_json['time']['end_epoch']}&panelId=17&width=1000&height=750&timeout=180|Memory>)" if ENV['ENVIRONMENT_GRAFANA_GRAPH_IMAGES_URL']
+
+    summary << grafana_str
+  end
+
+  summary << "\n• <#{ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']}|Results History Dashboard>" if ENV['TEST_RESULTS_GRAFANA_DASHBOARD_URL']
+  summary << "\n• <#{ENV['GPT_RESULTS_URL']}|Results>" if ENV['GPT_RESULTS_URL']
+  summary << "\n• <#{ENV['GPT_KNOWN_ISSUES_URL']}|Known Issues>" if ENV['GPT_KNOWN_ISSUES_URL']
   summary
 end
 
