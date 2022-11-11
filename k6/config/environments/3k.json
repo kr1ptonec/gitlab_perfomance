@@ -1,7 +1,7 @@
 {
   "environment": {
     "name": "3k",
-    "url": "http://3k.testbed.gitlab.net",
+    "url": "https://3k.testbed.gitlab.net",
     "user": "root",
     "config": {
       "latency": "0"

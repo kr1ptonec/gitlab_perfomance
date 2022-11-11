@@ -1,7 +1,7 @@
 {
   "environment": {
     "name": "5k",
-    "url": "http://5k.testbed.gitlab.net",
+    "url": "https://5k.testbed.gitlab.net",
     "user": "root",
     "config": {
       "latency": "0"
