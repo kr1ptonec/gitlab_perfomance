@@ -96,7 +96,7 @@ Typically all that's needed to be done for this file is to copy one of the exist
 {
   "environment": {
     "name": "10k",
-    "url": "http://10k.testbed.gitlab.net",
+    "url": "https://10k.testbed.gitlab.net",
     "user": "root",
     "config": {
       "latency": "0"
@@ -328,8 +328,8 @@ The tool's output will look like the following:
 
 ```txt
 GPT Data Generator v1.0.26 - opinionated test data for the GitLab Performance Tool
-Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
+Checking that GitLab environment 'https://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
+Environment and Access Token check complete - URL: https://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Creating group gpt
 Creating group gpt/many_groups_and_projects
 Creating 1000 groups with name prefix 'gpt-subgroup-' under parent group 'gpt/many_groups_and_projects'
@@ -348,17 +348,17 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Disabling Max Import Size limit on environment...
 Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'http://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'https://10k.testbed.gitlab.net'
 
-Checking that GitLab environment 'http://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
-Environment and Access Token check complete - URL: http://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
+Checking that GitLab environment 'https://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
+Environment and Access Token check complete - URL: https://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
 Importing project gitlabhq1...
 Note that this may take some time to upload a file to the target environment.
 
 Project tarball has successfully uploaded and started to be imported with ID '2536'
 Waiting until Project '2536' has imported successfully................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
 Project has successfully imported in 40 minutes 40 seconds:
-http://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
+https://10k.testbed.gitlab.net/gpt/large_projects/gitlabhq1
 Validating project 'gpt/large_projects/gitlabhq1' imported successfully...
 
 | Vertical data: successfully generated after 40 minutes 55 seconds!
@@ -783,4 +783,4 @@ If you still see a Large Project validation error at this point, please look thr
 
 ## Create group request failed with 403 error
 
-If you are seeing `403 Forbidden` error when GPT Data Generator tries to create a `gpt` root group, please ensure that the user has access to create groups. Navigate to `http://<env_url>/admin/users/<username>` and check that `Can create groups` is enabled. If it's not, edit the user and update this field.
+If you are seeing `403 Forbidden` error when GPT Data Generator tries to create a `gpt` root group, please ensure that the user has access to create groups. Navigate to `https://<env_url>/admin/users/<username>` and check that `Can create groups` is enabled. If it's not, edit the user and update this field.
