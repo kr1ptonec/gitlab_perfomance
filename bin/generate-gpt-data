@@ -83,7 +83,7 @@ if opts[:environment]
   opts[:projects] ||= env_file_vars['gpt_data']['many_groups_and_projects']['projects']
 
   # Vulnerabilities data
-  opts[:vulnerabilities_perf] ||= env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
+  opts[:vulnerabilities_perf] ||= env_file_vars['gpt_data'].key?('vulnerabilities_projects')
   opts[:vulnerabilities_group] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['group'] if opts[:vulnerabilities_perf]
   opts[:vulnerabilities_projects_prefix] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['project_prefix'] if opts[:vulnerabilities_perf]
   opts[:vulnerabilities_projects_count] ||= env_file_vars['gpt_data']['vulnerabilities_projects']['projects'] if opts[:vulnerabilities_perf]
@@ -101,8 +101,8 @@ if opts[:environment]
   opts[:large_project_metadata] ||= large_projects_data['metadata']
 end
 
-if opts.reject { |key, _| key == :large_project_tarball }.values.any?(&:nil?)
-  empty_options = opts.reject { |key, _| key == :large_project_tarball }.filter_map { |opt, value| opt if value.nil? }
+if opts.except(:large_project_tarball).values.any?(&:nil?)
+  empty_options = opts.except(:large_project_tarball).filter_map { |opt, value| opt if value.nil? }
   raise "These GPT Data Generator option(s) are not defined: '#{empty_options.join(', ')}'. Exiting..."
 end
 
