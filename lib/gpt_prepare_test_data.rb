@@ -65,7 +65,7 @@ module GPTPrepareTestData
   end
 
   def check_vulnerabilities_group_defined?(env_file_vars:)
-    env_file_vars['gpt_data'].key?('vulnerabilities_projects') ? true : false
+    env_file_vars['gpt_data'].key?('vulnerabilities_projects')
   end
 
   # Git Push Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/main/docs/test_docs/git_push.md
