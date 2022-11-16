@@ -31,7 +31,7 @@ env_file = Dir.glob([@opts[:environment], "#{ENV['GPT_DOCKER_CONFIG_DIR'] || ''}
 raise "Environment config file '#{opts[:environment]}' not found as given or in default folder. Exiting..." unless File.file?(env_file.to_s)
 
 puts "Collecting test info..."
-tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true)
+tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: ["tests"], quarantined: true, scenarios: true, unsafe: true, vulnerabilities: true)
 env_file_vars = RunK6.setup_env_file_vars(k6_dir: k6_dir, env_file: env_file)
 tests_info = TestInfo.get_tests_info(tests)
 test_types = tests_info.map { |test_info| test_info[:type] }.uniq
