@@ -18,7 +18,7 @@ module RunK6
     k6_version = ENV['K6_VERSION'] || '0.41.0'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
-      return k6 if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
+      return Open3.capture2e("which #{k6};")[0].strip if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
     end
 
     raise "CPU type #{OS.host_cpu} is unsupported. Supported CPU types are x86 or Arm (64 bit)." unless OS.host_cpu.match?(/x86_64|aarch64|arm/)

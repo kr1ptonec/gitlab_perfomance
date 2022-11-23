@@ -65,7 +65,7 @@ Metrics/PerceivedComplexity:
 Style/KeywordParametersOrder:
   Enabled: false
 
-FetchEnvVar:
+Style/FetchEnvVar:
   Enabled: false
 
 Cop/AvoidReturnFromBlocks:
