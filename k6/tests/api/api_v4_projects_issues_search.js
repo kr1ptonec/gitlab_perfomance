@@ -2,6 +2,7 @@
 /*
 @endpoint: `GET /projects/:id/issues?search`
 @description: [Search project issues](https://docs.gitlab.com/ee/api/issues.html#list-project-issues)
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/383566
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/326120
 @gpt_data_version: 1
 */
@@ -14,7 +15,7 @@ import { getRandomSearchTerm } from "../../lib/gpt_random_search_term.js"
 
 export let thresholds = {
   'rps': { '15.2.0': 0.15 },
-  'ttfb': { '15.2.0': 12000 },
+  'ttfb': { '15.2.0': 12000, 'latest': 250 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
