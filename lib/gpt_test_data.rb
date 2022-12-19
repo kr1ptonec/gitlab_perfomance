@@ -205,7 +205,13 @@ class GPTTestData
 
   def check_users_with_group_name(grp_path:)
     user_check_res = GPTCommon.make_http_request(method: 'get', url: "#{@env_api_url}/search?scope=users&search=#{grp_path}", headers: @headers, fail_on_error: false, retry_on_error: true)
-    users = JSON.parse(user_check_res.body.to_s)
+
+    begin
+      users = JSON.parse(user_check_res.body.to_s)
+    rescue JSON::ParserError
+      GPTLogger.logger.warn(Rainbow("Check for the root path failed.\nResponse headers: #{user_check_res.headers.to_hash}\nResponse body: #{user_check_res.body}").yellow)
+    end
+
     users&.each do |user|
       raise GroupCheckError, "Root Group path '#{grp_path}' is already taken by user '#{user['username']}'. This isn't allowed on GitLab. To resolve, use a different group name by changing the `root_group` option in the Environment Config File." if user['username'] == grp_path
     end
@@ -285,7 +291,7 @@ class GPTTestData
                 retry_counter += 1
                 sleep @default_retry_wait
                 redo unless retry_counter == @default_retry_count
-                raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
+                raise HTTP::ResponseError, "Creation of group '#{group_name}' has failed with the following error:\nCode: #{grp_res.code}\nResponse headers: #{grp_res.headers.to_hash}\nResponse body: #{grp_res.body}" if !grp_res.status.success? || grp_res.content_type.mime_type != 'application/json'
               end
 
               new_group = grp_res.parse.slice('id', 'name', 'full_path', 'description')
@@ -450,7 +456,7 @@ class GPTTestData
                   retry_counter += 1
                   sleep @default_retry_wait
                   redo unless retry_counter == @default_retry_count
-                  raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
+                  raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse headers: #{grp_res.headers.to_hash}\nResponse body: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
                 end
 
                 new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
