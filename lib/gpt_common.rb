@@ -40,6 +40,8 @@ module GPTCommon
       error_message = "#{method.upcase} request failed!\nCode: #{res.code}\nResponse: #{res.body}\n"
       correlation_id = res.headers.to_hash.transform_keys(&:downcase)['x-request-id']
       error_message = "#{error_message}Correlation ID: #{correlation_id}\n" unless correlation_id.nil?
+      rate_limit_name = res.headers.to_hash.transform_keys(&:downcase)['ratelimit-name']
+      error_message = "#{error_message}Rate Limit error caused by '#{rate_limit_name}' limit\n" unless rate_limit_name.nil?
       raise RequestError, error_message
     end
 
@@ -79,7 +81,7 @@ module GPTCommon
   def change_env_settings(env_url:, headers:, settings:)
     GPTLogger.logger.info "Updating application settings: #{settings}"
     res = GPTCommon.make_http_request(method: 'put', url: "#{env_url}/api/v4/application/settings", params: settings, headers: headers, fail_on_error: false)
-    raise "Request has failed:\n#{res.status} - #{JSON.parse(res.body.to_s)}\nPlease ensure admin ACCESS_TOKEN is used." if res.status.client_error? || res.status.server_error?
+    raise "Request has failed:\n#{res.status}\nResponse Headers: #{res.headers.to_hash}\nResponse body: #{JSON.parse(res.body.to_s)}\n\nPlease ensure admin ACCESS_TOKEN is used." if res.status.client_error? || res.status.server_error?
 
     sleep 1 # Wait for a setting change to propagate
   end
