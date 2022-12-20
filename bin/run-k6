@@ -71,7 +71,7 @@ tests = RunK6.get_tests(k6_dir: k6_dir, test_paths: opts[:tests], test_excludes:
 RunK6.prepare_tests(tests: tests, env_vars: env_vars)
 
 results_home = ENV['GPT_DOCKER_RESULTS_DIR'] || Pathname.new(File.expand_path('../results', __dir__)).relative_path_from(Dir.pwd)
-results_file_prefix = "#{env_vars['ENVIRONMENT_NAME']}_#{env_vars['ENVIRONMENT_VERSION'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_vars['ENVIRONMENT_VERSION'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
+results_file_prefix = ENV['GPT_RESULTS_PATH_PREFIX'] || "#{env_vars['ENVIRONMENT_NAME']}_#{env_vars['ENVIRONMENT_VERSION'].match?(/\d+\.\d+\.\d+.*/) ? "v#{env_vars['ENVIRONMENT_VERSION'].tr('.', '-')}_" : ''}#{start_time.strftime('%Y-%m-%d_%H%M%S')}"
 results_dir = File.join(results_home, results_file_prefix)
 results_output_file = File.join(results_dir, "#{results_file_prefix}_results_output.log")
 FileUtils.mkdir_p(results_dir)
