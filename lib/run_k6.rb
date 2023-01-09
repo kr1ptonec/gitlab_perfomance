@@ -25,14 +25,14 @@ module RunK6
 
     cpu_arch = OS.host_cpu == 'aarch64' ? 'arm64' : 'amd64'
     if OS.linux?
-      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux-#{cpu_arch}.tar.gz"
+      k6_url = ENV['K6_URL'] || "https://github.com/grafana/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-linux-#{cpu_arch}.tar.gz"
       warn Rainbow("k6 not found or different version detected. Downloading k6 v#{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
       extract_output, extract_status = Open3.capture2e('tar', '-xzvf', k6_archive.path, '-C', File.dirname(k6_archive.path), '--strip-components', '1')
       raise "k6 archive extract failed:\b#{extract_output}" unless extract_status.success?
     elsif OS.mac?
-      k6_url = ENV['K6_URL'] || "https://github.com/k6io/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-macos-#{cpu_arch}.zip"
+      k6_url = ENV['K6_URL'] || "https://github.com/grafana/k6/releases/download/v#{k6_version}/k6-v#{k6_version}-macos-#{cpu_arch}.zip"
       warn Rainbow("k6 not found or wrong version detected. Downloading k6 version #{k6_version} from #{k6_url} to system temp folder...").yellow
 
       k6_archive = GPTCommon.download_file(url: k6_url)
