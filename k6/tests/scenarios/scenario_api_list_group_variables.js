@@ -4,6 +4,7 @@
 @description: Setup stage: Create group and multiple group variables <br>Test: [List group variables](https://docs.gitlab.com/ee/api/group_level_variables.html#list-group-variables) <br>Teardown stage: Delete group
 @gpt_data_version: 1
 @flags: unsafe
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/386475
 */
 
 import http from "k6/http";
@@ -12,10 +13,13 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs } from "../../lib/gpt_k6_modules.js";
 import { searchAndCreateGroup, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
+export let thresholds = {
+  'ttfb': { 'latest': 250 }
+};
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let rpsThresholds = getRpsThresholds(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
-export let ttfbThreshold = getTtfbThreshold()
+export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
   thresholds: {
