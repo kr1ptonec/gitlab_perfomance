@@ -24,6 +24,7 @@ The user can be created in the normal way but with the following requirements:
   * GPT Data Generator requires to change some environment config to ensure test data is set up in the correct way, specifically so it can ensure data is spread across all Gitaly storages.
   * GPT needs to check the [target environment's settings via API](https://docs.gitlab.com/ee/api/settings.html) to check if some performance tests that are dependent on features being enabled can be run.
   * GPT also utilizes the [Sidekiq Metrics](https://docs.gitlab.com/ee/api/sidekiq_metrics.html) API in certain cases to manage knock on effects of certain tests. Specifically it checks Sidekiq's job queue to ensure it has emptied before continuing as some tests can cause it to inflate significantly for a short period of time.
+* The Admin user needs its [**Can create group** checkbox](https://docs.gitlab.com/ee/user/admin_area/#prevent-a-user-from-creating-groups) checked.
 * To ensure consistent test results the User should be new or have no data associated with it (i.e. no groups, projects, etc...)
 
 We recommend a new user is created for this process that can then just be deleted cleanly after. On test environments the main root user can be used.

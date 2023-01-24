@@ -81,7 +81,7 @@ module GPTCommon
   def change_env_settings(env_url:, headers:, settings:)
     GPTLogger.logger.info "Updating application settings: #{settings}"
     res = GPTCommon.make_http_request(method: 'put', url: "#{env_url}/api/v4/application/settings", params: settings, headers: headers, fail_on_error: false)
-    raise "Request has failed:\n#{res.status}\nResponse Headers: #{res.headers.to_hash}\nResponse body: #{JSON.parse(res.body.to_s)}\n\nPlease ensure admin ACCESS_TOKEN is used." if res.status.client_error? || res.status.server_error?
+    raise "Request has failed:\n#{res.status}\nResponse Headers: #{res.headers.to_hash}\nResponse body: #{JSON.parse(res.body.to_s)}\n\nPlease First check whether your ACCESS_TOKEN is from an admin account." if res.status.client_error? || res.status.server_error?
 
     sleep 1 # Wait for a setting change to propagate
   end
