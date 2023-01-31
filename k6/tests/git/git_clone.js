@@ -3,7 +3,7 @@
 @endpoint: `GET /:group/:project.git/info/refs?service=git-upload-pack` <br> `POST /:group/:project.git/git-upload-pack` </br>
 @description: Git Clone via HTTPS to clone from the specified branch. <br> Documentation: https://gitlab.com/gitlab-org/quality/performance/-/blob/master/docs/test_docs/git_pull.md
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/334437
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/341020
 */
 
 import { group } from "k6";

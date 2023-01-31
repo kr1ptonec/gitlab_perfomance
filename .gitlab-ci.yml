@@ -5,8 +5,8 @@ include:
   - local: '.gitlab/ci/gpt-k6-compare.yml'
   - local: '.gitlab/ci/gpt-docker.yml'
   - local: '.gitlab/ci/gpt-data-generator.yml'
-  - template: Security/Dependency-Scanning.gitlab-ci.yml
-  - template: Security/Container-Scanning.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.latest.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.latest.gitlab-ci.yml
 
 #################################
 ##      Security Scanning      ##
