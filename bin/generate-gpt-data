@@ -22,7 +22,7 @@ puts Rainbow("GPT Data Generator v#{gpt_data_version} - opinionated test data fo
 
 opts = Optimist.options do
   banner "\nUsage: generate-gpt-data [options]"
-  banner "\nGenerates opinionated test data for the GitLab Performance Tool. Data generated can be 'horizontal' (many groups and projects) and \ or 'vertical' (large project imports)."
+  banner "\nGenerates opinionated test data for the GitLab Performance Tool. Data generated can be 'horizontal' (many groups and projects) and or 'vertical' (large project imports)."
   banner "\nOptions:"
   opt :environment, "Name of Environment Config file in environments directory that will be used for test data generation. Alternative filepath can also be given.", type: :string
   opt :environment_url, "Full URL for the environment to import to.", short: :none, type: :string, default: ENV['ENVIRONMENT_URL'] || nil

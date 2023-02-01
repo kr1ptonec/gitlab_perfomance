@@ -70,7 +70,7 @@ spinner.success
 spinner = TTY::Spinner.new("[:spinner] Performing GitLab Docker warmup")
 spinner.auto_spin
 %W[api/v4/projects api/v4/projects/#{@opts[:project_id]}/merge_requests api/v4/projects/#{@opts[:project_id]}/issues
-   api/v4/projects/#{@opts[:project_id]}/repository/branches api/v4/projects/#{@opts[:project_id]}/repository/commits].each do |warmup_path|
+  api/v4/projects/#{@opts[:project_id]}/repository/branches api/v4/projects/#{@opts[:project_id]}/repository/commits].each do |warmup_path|
   GPTCommon.make_http_request(method: 'get', url: "http://#{@opts[:hostname]}/#{warmup_path}", fail_on_error: false)
 end
 spinner.success
