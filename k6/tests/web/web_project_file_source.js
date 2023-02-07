@@ -5,7 +5,6 @@
 @description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/372653, https://gitlab.com/gitlab-org/gitlab/-/issues/247878
-@previous_issues: https://gitlab.com/gitlab-org/quality/performance-sitespeed/-/issues/11
 */
 
 import http from "k6/http";
