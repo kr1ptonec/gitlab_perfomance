@@ -35,6 +35,7 @@ module TestInfo
       info[:endpoint] = get_test_tag_value(test_file, 'endpoint') || 'No documentaion'
       info[:example_uri] = get_test_tag_value(test_file, 'example_uri')
       info[:issues] = get_test_tag_value(test_file, 'issue')
+      info[:previous_issues] = get_test_tag_value(test_file, 'previous_issues')
       info[:gitlab_version] = get_test_tag_value(test_file, 'gitlab_version')
       info[:flags] = get_test_tag_value(test_file, 'flags')
       info[:gitlab_settings] = get_test_tag_value(test_file, 'gitlab_settings')

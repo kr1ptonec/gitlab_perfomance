@@ -4,7 +4,7 @@
 @description: Web - Project Repository Compare Branches page. <br>Controllers: `Projects::CompareController#show`</br>
 @gpt_data_version: 1
 @issue: https://gitlab.com/gitlab-org/gitlab/-/issues/327764
-@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/merge_requests/59162
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/326312
 @flags: dash_url
 */
 

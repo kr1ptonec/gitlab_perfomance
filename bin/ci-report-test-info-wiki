@@ -36,6 +36,8 @@ env_file_vars = RunK6.setup_env_file_vars(k6_dir: k6_dir, env_file: env_file)
 tests_info = TestInfo.get_tests_info(tests)
 test_types = tests_info.map { |test_info| test_info[:type] }.uniq
 tests_with_issues = tests_info.select { |test_info| !test_info[:issues].nil? }
+tests_with_previous_issues = tests_info.select { |test_info| !test_info[:previous_issues].nil? }
+
 tests_info = TestInfo.get_test_urls(tests_info, env_file_vars)
 
 wiki_report_contents = <<~DOC
@@ -47,6 +49,7 @@ wiki_report_contents = <<~DOC
   * [`quarantined`](#quarantined) - tests that are quarantined because of some ongoing issue with endpoint or test itself
 
   **Note:** Some endpoints have [known issues](#known-issues). These tests have either been run with a custom lower threshold limit applied or are quarantined until the issue is fixed.
+  Historical performance issues for specific endpoints are listed in [closed performance issues](#closed-performance-issues) section.
 DOC
 
 test_types.each do |type|
@@ -57,6 +60,9 @@ end
 
 wiki_report_contents << "\n## Known Issues\n"
 wiki_report_contents << TablePrint::Printer.table_print(tests_with_issues, [:name, :issues])
+
+wiki_report_contents << "\n## Closed Performance Issues\n"
+wiki_report_contents << TablePrint::Printer.table_print(tests_with_previous_issues, [:name, :previous_issues])
 
 exit if @opts[:dry_run]
 
