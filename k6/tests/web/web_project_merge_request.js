@@ -15,6 +15,7 @@ import { group } from "k6";
 import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom, envVersionIsHigherThan } from "../../lib/gpt_k6_modules.js";
 import { checkProjEndpointDash } from "../../lib/gpt_data_helper_functions.js";
+import exec from 'k6/execution';
 
 let paginateDiscussions = envVersionIsHigherThan('15.3.0') ? true : false
 
@@ -48,6 +49,7 @@ export let options = {
 };
 
 export let projects = getLargeProjects(['name', 'unencoded_path']);
+export let etags = Array(options.rps + 1); // rps + 1 because VU/ITER starts from 0
 
 export function setup() {
   console.log('')
@@ -79,12 +81,33 @@ export default function(data) {
     });
 
     // Load in dynamic comments sequentially as page does
-    let pagePaginationBase = 20;
-    let paginateParameter = paginateDiscussions ? `?per_page=${pagePaginationBase}` : "";
-    let discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
-    /20(0|1)/.test(discussRes.status) ? successRate.add(true) : (successRate.add(false), logError(discussRes));
-
     if (paginateDiscussions) {
+      let pagePaginationBase = 20;
+      let paginateParameter = `?per_page=${pagePaginationBase}`;
+      let discussRes = null
+
+      // TODO check version? what happens on old versions if FF is not enabled?
+      // console.log(`exec.vu.iterationInScenario = ${exec.vu.iterationInScenario}, VU ID in instance: ${exec.vu.idInInstance}, VU ID in test: ${exec.vu.idInTest}, Iteration in scenario: ${exec.vu.iterationInScenario}, Iteration id: ${exec.vu.iterationInInstance}`)
+
+      // Save and reuse etag from first time page was opened by VU
+      // https://gitlab.com/gitlab-org/quality/performance/-/issues/524#note_1108446379
+      if (exec.vu.iterationInScenario === 0) {
+        console.log(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`)
+        discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
+        etags[exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
+        // TODO what if header is nil?
+        // console.log(etags[exec.vu.idInTest])
+        // console.log("********")
+      } else {
+        const firstPageEtag = etags[exec.vu.idInTest]; // get saved etag for this virtual user
+        console.log(firstPageEtag)
+        let params = { headers: { "If-None-Match": firstPageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
+        discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, params);
+        // console.log("xxxxxxxxxxxxx")
+      }
+
+      /20(0|1)|304/.test(discussRes.status) ? successRate.add(true) : (successRate.add(false), logError(discussRes));
+
       // Get all paginated results
       // https://gitlab.com/gitlab-org/gitlab/-/issues/211377#note_1010122411
       let nextPageCursor = discussRes.headers['X-Next-Page-Cursor'];
@@ -95,6 +118,9 @@ export default function(data) {
         /20(0|1)/.test(seqDiscussionRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiscussionRes));
         nextPageCursor = seqDiscussionRes.headers['X-Next-Page-Cursor'];
       }
+    } else {
+      let discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
+      /20(0|1)/.test(discussRes.status) ? successRate.add(true) : (successRate.add(false), logError(discussRes));
     }
   });
 }
