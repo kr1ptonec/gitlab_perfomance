@@ -171,6 +171,11 @@ export function getVulnerabilitiesProjects() {
   return vulnerabilities_project_paths;
 }
 
+export function getVulnerabilitiesGroup() {
+  let vulnerabilities_group_paths =  JSON.parse(__ENV.ENVIRONMENT_VULNERABILITIES_GROUP);
+  return vulnerabilities_group_paths['unencoded_group_path']
+}
+
 export function selectRandom(entities) {
   return entities.length == 1 ? entities[0] : entities[entities.length * Math.random() << 0];
 }
