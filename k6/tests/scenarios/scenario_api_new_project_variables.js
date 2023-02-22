@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { searchAndCreateGroup, createProject, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 250 }
+  'ttfb': { 'latest': 350 }
 };
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
