@@ -50,6 +50,14 @@ export let options = {
 
 export let projects = getLargeProjects(['name', 'unencoded_path']);
 export let etags = Array(options.rps + 1); // rps + 1 because VU/ITER starts from 0
+// TODO POC
+export let etagsAll = {
+  20: Array(options.rps + 1),
+  30: Array(options.rps + 1),
+  45: Array(options.rps + 1),
+  68: Array(options.rps + 1),
+  100: Array(options.rps + 1)
+}
 
 export function setup() {
   console.log('')
@@ -92,30 +100,40 @@ export default function(data) {
       // Save and reuse etag from first time page was opened by VU
       // https://gitlab.com/gitlab-org/quality/performance/-/issues/524#note_1108446379
       if (exec.vu.iterationInScenario === 0) {
-        console.log(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`)
+        // console.log(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`)
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
-        etags[exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
+        // etags[exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
+        etagsAll[20][exec.vu.idInTest] = discussRes.headers['Etag'];
         // TODO what if header is nil?
-        // console.log(etags[exec.vu.idInTest])
+        // console.log(etagsAll[20])
         // console.log("********")
       } else {
-        const firstPageEtag = etags[exec.vu.idInTest]; // get saved etag for this virtual user
-        console.log(firstPageEtag)
+        const firstPageEtag = etagsAll[20][exec.vu.idInTest]; // get saved etag for this virtual user
+        // console.log(firstPageEtag)
         let params = { headers: { "If-None-Match": firstPageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, params);
-        // console.log("xxxxxxxxxxxxx")
       }
 
       /20(0|1)|304/.test(discussRes.status) ? successRate.add(true) : (successRate.add(false), logError(discussRes));
-
       // Get all paginated results
       // https://gitlab.com/gitlab-org/gitlab/-/issues/211377#note_1010122411
       let nextPageCursor = discussRes.headers['X-Next-Page-Cursor'];
       let seqDiscussionRes = null;
+      let pageEtag = null
+// TODO remove duplication?
       while (nextPageCursor) {
         pagePaginationBase = Math.ceil(pagePaginationBase * 1.5) // Page sizes: 20, 30, 45, 68, 100
-        seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
-        /20(0|1)/.test(seqDiscussionRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiscussionRes));
+        if (exec.vu.iterationInScenario === 0) {
+          seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
+          etagsAll[pagePaginationBase][exec.vu.idInTest] = seqDiscussionRes.headers['Etag'];
+        } else {
+          pageEtag = etagsAll[pagePaginationBase][exec.vu.idInTest]
+          console.log("pagePaginationBase=" + pagePaginationBase)
+          console.log("pageEtag=" + pageEtag)
+          let params = { headers: { "If-None-Match": pageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
+          seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, params);
+        }
+        /20(0|1)|304/.test(seqDiscussionRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiscussionRes));
         nextPageCursor = seqDiscussionRes.headers['X-Next-Page-Cursor'];
       }
     } else {
