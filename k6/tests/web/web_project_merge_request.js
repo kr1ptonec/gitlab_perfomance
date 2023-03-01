@@ -51,6 +51,8 @@ export let options = {
 export let projects = getLargeProjects(['name', 'unencoded_path']);
 export let etags = Array(options.rps + 1); // rps + 1 because VU/ITER starts from 0
 // TODO POC
+// Contains all etags for MR discussion paginated results for each Page sizes - 20, 30, 45, 68, 100
+// rps + 1 because VU/ITER starts from 0
 export let etagsAll = {
   20: Array(options.rps + 1),
   30: Array(options.rps + 1),
@@ -94,22 +96,13 @@ export default function(data) {
       let paginateParameter = `?per_page=${pagePaginationBase}`;
       let discussRes = null
 
-      // TODO check version? what happens on old versions if FF is not enabled?
-      // console.log(`exec.vu.iterationInScenario = ${exec.vu.iterationInScenario}, VU ID in instance: ${exec.vu.idInInstance}, VU ID in test: ${exec.vu.idInTest}, Iteration in scenario: ${exec.vu.iterationInScenario}, Iteration id: ${exec.vu.iterationInInstance}`)
-
       // Save and reuse etag from first time page was opened by VU
       // https://gitlab.com/gitlab-org/quality/performance/-/issues/524#note_1108446379
       if (exec.vu.iterationInScenario === 0) {
-        // console.log(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`)
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
-        // etags[exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
-        etagsAll[20][exec.vu.idInTest] = discussRes.headers['Etag'];
-        // TODO what if header is nil?
-        // console.log(etagsAll[20])
-        // console.log("********")
+        etagsAll[20][exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
       } else {
         const firstPageEtag = etagsAll[20][exec.vu.idInTest]; // get saved etag for this virtual user
-        // console.log(firstPageEtag)
         let params = { headers: { "If-None-Match": firstPageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, params);
       }
@@ -120,16 +113,16 @@ export default function(data) {
       let nextPageCursor = discussRes.headers['X-Next-Page-Cursor'];
       let seqDiscussionRes = null;
       let pageEtag = null
-// TODO remove duplication?
+// TODO POC
+
       while (nextPageCursor) {
         pagePaginationBase = Math.ceil(pagePaginationBase * 1.5) // Page sizes: 20, 30, 45, 68, 100
+        // Save and reuse etag from first time page was opened by VU
         if (exec.vu.iterationInScenario === 0) {
           seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
           etagsAll[pagePaginationBase][exec.vu.idInTest] = seqDiscussionRes.headers['Etag'];
         } else {
           pageEtag = etagsAll[pagePaginationBase][exec.vu.idInTest]
-          console.log("pagePaginationBase=" + pagePaginationBase)
-          console.log("pageEtag=" + pageEtag)
           let params = { headers: { "If-None-Match": pageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
           seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, params);
         }
