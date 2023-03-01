@@ -34,12 +34,14 @@ export let options = {
     "successful_requests": [`rate>${__ENV.SUCCESS_RATE_THRESHOLD}`],
     "http_req_waiting{controller:Projects::MergeRequestsController#show}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{controller:Projects::MergeRequestsController#discussions.json}": [`p(90)<${ttfbThreshold}`],
+    "http_req_waiting{controller:Projects::MergeRequestsController#discussions_cached_etag}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{controller:Projects::MergeRequests::ContentController#widget.json}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{controller:Projects::MergeRequests::ContentController#cached_widget.json}": [`p(90)<${ttfbThreshold}`],
     "http_req_waiting{controller:Projects::MergeRequestsController#show.json}": [`p(90)<${ttfbThreshold}`],
     "http_reqs": [`count>=${rpsThresholds['count']}`],
     "http_reqs{controller:Projects::MergeRequestsController#show}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{controller:Projects::MergeRequestsController#discussions.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
+    "http_reqs{controller:Projects::MergeRequestsController#discussions_cached_etag}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{controller:Projects::MergeRequests::ContentController#widget.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{controller:Projects::MergeRequests::ContentController#cached_widget.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
     "http_reqs{controller:Projects::MergeRequestsController#show.json}": [`count>=${rpsThresholds['count_per_endpoint']}`],
@@ -110,7 +112,7 @@ export default function(data) {
       } else {
         const firstPageEtag = etagsAll[20][exec.vu.idInTest]; // get saved etag for this virtual user
         // console.log(firstPageEtag)
-        let params = { headers: { "If-None-Match": firstPageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
+        let params = { headers: { "If-None-Match": firstPageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions_cached_etag'}, redirects: 0 };
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, params);
       }
 
@@ -130,7 +132,7 @@ export default function(data) {
           pageEtag = etagsAll[pagePaginationBase][exec.vu.idInTest]
           console.log("pagePaginationBase=" + pagePaginationBase)
           console.log("pageEtag=" + pageEtag)
-          let params = { headers: { "If-None-Match": pageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0 };
+          let params = { headers: { "If-None-Match": pageEtag }, tags: {controller: 'Projects::MergeRequestsController#discussions_cached_etag'}, redirects: 0 };
           seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, params);
         }
         /20(0|1)|304/.test(seqDiscussionRes.status) ? successRate.add(true) : (successRate.add(false), logError(seqDiscussionRes));
