@@ -9,7 +9,7 @@ require 'gpt_logger'
 class CustomGraphqlHttp < GraphQL::Client::HTTP
   GITLAB_TOKEN = ENV['ACCESS_TOKEN']
 
-  def headers(context)
+  def headers(_context)
     { 'PRIVATE-TOKEN' => GITLAB_TOKEN }
   end
 end

@@ -6,7 +6,7 @@ module GPTLogger
 
     def logger(only_to_file: false)
       @logger ||= Logger.new(ENV['GPT_LOGGER_PATH'] || $stdout)
-      @logger.formatter = proc do |severity, datetime, progname, msg|
+      @logger.formatter = proc do |severity, datetime, _progname, msg|
         date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
         puts msg unless only_to_file
 

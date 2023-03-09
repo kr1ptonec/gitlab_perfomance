@@ -3,7 +3,7 @@
 .gpt-docker-base:
   extends: .k6-base
   services:
-    - docker:20-dind
+    - docker:23-dind
   variables:
     DOCKER_DRIVER: overlay2
     DOCKER_HOST: tcp://docker:2375

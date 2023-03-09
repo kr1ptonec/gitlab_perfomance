@@ -1,7 +1,7 @@
 # 1st Stage
-FROM ruby:2.7-alpine AS build
+FROM ruby:3.0-alpine AS build
 
-ARG K6_VERSION="0.42.0"
+ARG K6_VERSION="0.43.1"
 ENV K6_VERSION="${K6_VERSION}"
 ENV GEM_HOME="/usr/local/bundle"
 ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
@@ -14,7 +14,7 @@ RUN gem install bundler && bundle config without dev && bundle install
 RUN wget -q -P /tmp/ https://github.com/grafana/k6/releases/download/v${K6_VERSION}/k6-v${K6_VERSION}-linux-amd64.tar.gz && tar -xzvf /tmp/k6-v${K6_VERSION}-linux-amd64.tar.gz -C /usr/local/bin --strip-components 1
 
 # 2nd Stage
-FROM ruby:2.7-alpine
+FROM ruby:3.0-alpine
 
 ENV GEM_HOME="/usr/local/bundle"
 ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH

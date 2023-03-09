@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-ruby '>= 2.7.6'
+ruby '>= 3.0.5'
 
 group :dev do
   gem 'gitlab-styles'

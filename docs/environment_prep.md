@@ -705,7 +705,7 @@ and then reinsert the data straight after (or as an alternative the group \ proj
 
 Groups and / or Projects can sometimes fail to be created due to response timeout from the target GitLab environment.
 
-GPT Data Generator uses [threads](https://ruby-doc.org/core-2.7.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
+GPT Data Generator uses [threads](https://ruby-doc.org/core-3.0.0/Thread.html) to speed up data generation by sending multiple requests in parallel. This process may sometimes lead to timeouts happening if the environment takes more than 60 seconds to response on a specific thread pool.
 
 If you're regularly seeing timeout or 500 errors this may likely be the environment struggling under the strain of creating so many groups or projects at once. The following settings configure the behavior of the Generator and it may be useful to change these if you frequently see errors as described:
 
