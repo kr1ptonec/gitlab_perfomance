@@ -1,15 +1,16 @@
-require:
-  # Due to a probably bug in rubocop (https://github.com/bbatsov/rubocop/issues/5251)
-  # we need to require rubocop-rspec a second time so that RSpec/FilePath does
-  # not fallback to Rails/FilePath.
-  - rubocop-rspec
-
 inherit_gem:
   gitlab-styles:
-    - rubocop-default.yml
+    - rubocop-bundler.yml
+    - rubocop-gemspec.yml
+    - rubocop-layout.yml
+    - rubocop-lint.yml
+    - rubocop-metrics.yml
+    - rubocop-performance.yml
+    - rubocop-security.yml
+    - rubocop-style.yml
 
 AllCops:
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.0
   NewCops: enable
   Exclude:
     - 'vendor/**/*'
@@ -20,9 +21,6 @@ Lint/ShadowingOuterLocalVariable:
 
 Metrics/MethodLength:
   Max: 20
-
-Rails:
-  Enabled: false
 
 Style/ModuleFunction:
   Enabled: false

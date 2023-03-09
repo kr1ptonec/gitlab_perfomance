@@ -7,7 +7,7 @@
 .generator-base:
   extends: .k6-base
   services:
-    - docker:20-dind
+    - docker:23-dind
   tags:
     - performance
   variables:
@@ -16,7 +16,7 @@
     ROOT_GROUP: generator_test
     GPT_CP_DOCKER_IMAGE: registry.gitlab.com/gitlab-org/quality/performance-images/gitlab-ce-performance
     MAJOR_VERSION: 15
-    MINOR_VERSION: 2
+    MINOR_VERSION: 6
     ENVIRONMENT_NAME: docker
     LARGE_PROJECT_TARBALL: https://gitlab.com/gitlab-org/quality/performance-data/raw/main/projects_export/small-project_13.0.0.tar.gz
   script:
