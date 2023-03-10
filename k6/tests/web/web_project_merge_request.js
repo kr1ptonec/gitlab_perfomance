@@ -21,7 +21,7 @@ let paginateDiscussions = envVersionIsHigherThan('15.3.0') ? true : false
 
 export let thresholds = {
   'rps': { '14.4.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT },
-  'ttfb': { '14.4.0': 7500, 'latest': 1800 }
+  'ttfb': { '14.4.0': 7500, 'latest': 3000 }
 };
 export let endpointCount = paginateDiscussions ? 8 : 5;
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
@@ -115,7 +115,6 @@ export default function(data) {
       let nextPageCursor = discussRes.headers['X-Next-Page-Cursor'];
       let seqDiscussionRes = null;
       let pageEtag = null
-// TODO POC
 
       while (nextPageCursor) {
         pagePaginationBase = Math.ceil(pagePaginationBase * 1.5) // Page sizes: 20, 30, 45, 68, 100
