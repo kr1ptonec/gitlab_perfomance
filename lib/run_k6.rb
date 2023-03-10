@@ -15,7 +15,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.42.0'
+    k6_version = ENV['K6_VERSION'] || '0.43.1'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return Open3.capture2e("which #{k6};")[0].strip if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
@@ -254,9 +254,9 @@ module RunK6
 
   def get_results_score(results:, env_vars:)
     scores = results.reject { |result| result['score'].nil? || result['rps_threshold'].to_f < (result['rps_target'].to_f * env_vars['RPS_THRESHOLD_MULTIPLIER'].to_f) }.map { |result| result['score'].to_f }
-    return nil if scores.length.zero?
+    return nil if scores.empty?
 
     total_score = (scores.sum / scores.length).round(2)
-    total_score > 100.0 ? 100.0 : total_score
+    [total_score, 100.0].min
   end
 end
