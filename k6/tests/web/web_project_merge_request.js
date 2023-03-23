@@ -52,7 +52,7 @@ export let options = {
 
 export let projects = getLargeProjects(['name', 'unencoded_path']);
 export let etags = Array(options.rps + 1); // rps + 1 because VU/ITER starts from 0
-// TODO POC
+
 // Contains all etags for MR discussion paginated results for each Page sizes - 20, 30, 45, 68, 100
 // rps + 1 because VU/ITER starts from 0
 export let etagsAll = {
@@ -98,9 +98,10 @@ export default function(data) {
       let paginateParameter = `?per_page=${pagePaginationBase}`;
       let discussRes = null
 
-      // First 20% of calls are uncached. Save and reuse etag from first time page was opened by VU
+      // First 75% of calls are uncached. Save and reuse etag from first time page was opened by VU
       // https://gitlab.com/gitlab-org/quality/performance/-/issues/524#note_1108446379
-      if (exec.scenario.progress < 0.2) {
+      // https://gitlab.com/gitlab-org/quality/performance/-/merge_requests/493#note_1301535301
+      if (exec.scenario.progress < 0.75) {
         discussRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json${paginateParameter}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
         etagsAll[20][exec.vu.idInTest] = discussRes.headers['Etag']; // save etag for this virtual user
       } else {
@@ -118,8 +119,8 @@ export default function(data) {
 
       while (nextPageCursor) {
         pagePaginationBase = Math.ceil(pagePaginationBase * 1.5) // Page sizes: 20, 30, 45, 68, 100
-        // First 20% of calls are uncached. Save and reuse etag from first time page was opened by VU
-        if (exec.scenario.progress < 0.2) {
+        // First 75% of calls are uncached. Save and reuse etag from first time page was opened by VU
+        if (exec.scenario.progress < 0.75) {
           seqDiscussionRes = http.get(`${__ENV.ENVIRONMENT_URL}/${project['unencoded_path']}/${data.endpointPath}/${project['mr_discussions_iid']}/discussions.json?per_page=${pagePaginationBase}&cursor=${nextPageCursor}`, {tags: {controller: 'Projects::MergeRequestsController#discussions.json'}, redirects: 0});
           etagsAll[pagePaginationBase][exec.vu.idInTest] = seqDiscussionRes.headers['Etag'];
         } else {
