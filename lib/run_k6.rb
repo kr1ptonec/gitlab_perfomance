@@ -223,21 +223,21 @@ module RunK6
       case line
       when /^\s*script: /
         results["name"] = line.match(/([a-z0-9_]*).js/)[1]
-      when /http_req_waiting/
+      when /http_req_waiting\./
         results["ttfb_avg"] = line.match(/(avg=)(\d+\.\d+)([a-z]+)/)[2]
         results["ttfb_p90"] = line.match(/(p\(90\)=)(\d+\.\d+)([a-z]+)/)[2]
         results["ttfb_p95"] = line.match(/(p\(95\)=)(\d+\.\d+)([a-z]+)/)[2]
-      when /vus_max/
+      when /^\s*vus_max/
         results["rps_target"] = line.match(/max=(\d+)/)[1]
       when /RPS Threshold:/
         results["rps_threshold"] = line.match(/(\d+\.\d+)\/s/)[1]
       when /TTFB P90 Threshold:/
         results["ttfb_p90_threshold"] = line.match(/(\d+)ms/)[1]
-      when /http_reqs/
+      when /http_reqs\./
         results["rps_result"] = line.match(/(\d+(\.\d+)?)(\/s)/)[1].to_f.round(2).to_s
       when /Success Rate Threshold/
         results["success_rate_threshold"] = line.match(/(\d+(\.\d+)?)%/)[1]
-      when /successful_requests/
+      when /successful_requests\./
         results["success_rate"] = line.match(/(\d+(\.\d+)?)%/)[1]
       end
     end
