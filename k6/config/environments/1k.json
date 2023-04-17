@@ -1,7 +1,7 @@
 {
   "environment": {
     "name": "1k",
-    "url": "http://1k.testbed.gitlab.net",
+    "url": "http://192.168.1.5:3000",
     "user": "root",
     "config": {
       "latency": "0"
@@ -16,7 +16,7 @@
     },
     "many_groups_and_projects": {
       "group": "many_groups_and_projects",
-      "subgroups": 250,
+      "subgroups": 25,
       "subgroup_prefix": "gpt-subgroup-",
       "projects": 10,
       "project_prefix": "gpt-project-"
