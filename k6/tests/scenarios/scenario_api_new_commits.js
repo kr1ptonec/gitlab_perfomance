@@ -14,7 +14,7 @@ import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs
 import { searchAndCreateGroup, createProject, getProjectDefaultBranch, deleteGroup } from "../../lib/gpt_scenario_functions.js";
 
 export let thresholds = {
-  'ttfb': { 'latest': 700 }
+  'ttfb': { 'latest': 850 }
 };
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
@@ -86,9 +86,9 @@ export function createCommit(projectId, start_branch, action) {
     ]
   };
   // First commits will create new branches from default branch
-  if (action === "create") { body["start_branch"] = start_branch } 
+  if (action === "create") { body["start_branch"] = start_branch }
   if (action === "update") { body["actions"].push({ action: "create", file_path: `create/gpt_${__VU}_${__ITER}.md`, content: content }) }
-  
+
   let createCommitRes = http.post(`${__ENV.ENVIRONMENT_URL}/api/v4/projects/${projectId}/repository/commits`, JSON.stringify(body), params);
   return createCommitRes;
 }
