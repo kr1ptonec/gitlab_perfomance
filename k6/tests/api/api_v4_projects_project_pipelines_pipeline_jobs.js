@@ -18,7 +18,7 @@ export let thresholds = {
   'ttfb': { 'latest': 2000 },
 };
 
-export let rpsThresholds = getRpsThresholds()
+export let rpsThresholds = getRpsThresholds(thresholds['rps'])
 export let ttfbThreshold = getTtfbThreshold(thresholds['ttfb'])
 export let successRate = new Rate("successful_requests")
 export let options = {
