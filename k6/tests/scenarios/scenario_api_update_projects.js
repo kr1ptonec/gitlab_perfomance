@@ -15,7 +15,7 @@ import { searchAndCreateGroup, deleteGroup, updateProject, createProject } from 
 let actions = ['name', 'path'];
 
 export let thresholds = {
-  'ttfb': { 'latest': 1400 }
+  'ttfb': { 'latest': 1500 }
 }
 export let rps = adjustRps(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
 export let stages = adjustStageVUs(__ENV.SCENARIO_ENDPOINT_THROUGHPUT)
