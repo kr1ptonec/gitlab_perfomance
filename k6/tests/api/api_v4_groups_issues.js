@@ -14,7 +14,7 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { '15.11.0': 0.1, 'latest': 0.3 },
+  'rps': { '15.11.0': 0.1, 'latest': 0.2 },
   'ttfb': { '15.11.0': 18000, 'latest': 8000 },
 };
 export let rpsThresholds = getRpsThresholds(thresholds['rps'])
