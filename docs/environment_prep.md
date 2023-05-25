@@ -275,6 +275,7 @@ The Generator requires access by default to the internet to download required fi
 
 For environments that don't have internet access you'll need to download the default large project import file then in its path via the `--large-project-tarball` option. The file to use is dependent on your GitLab environment's version. To download the correct file select the link from below as instructed:
 
+* [For GitLab environments with versions `16.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_16.0.0.tar.gz)
 * [For GitLab environments with versions `15.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz)
 * [For GitLab environments with versions between `14.0` and `14.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz)
 * [For GitLab environments with versions between `13.0` and `13.12`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz)
@@ -288,7 +289,7 @@ docker run -it \
   -v <HOST CONFIG FOLDER>:/config \
   -v <HOST RESULTS FOLDER>:/results \
   -v <HOST PROJECT FOLDER>:/projects \
-  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_15.0.0.tar.gz
+  gitlab/gpt-data-generator --environment <ENV FILE NAME>.json --large-project-tarball=/projects/gitlabhq_export_16.0.0.tar.gz
 ```
 
 ##### Environments running behind a Proxy
@@ -349,7 +350,7 @@ Checking if project gitlabhq1 already exists in gpt/large_projects/gitlabhq1...
 Disabling Max Import Size limit on environment...
 Updating application settings: {:max_import_size=>10240}
 Tarball is remote, downloading...
-Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'https://10k.testbed.gitlab.net'
+Starting import of Project 'gitlabhq1' from tarball 'https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_16.0.0.tar.gz' under namespace 'gpt/large_projects' to GitLab environment 'https://10k.testbed.gitlab.net'
 
 Checking that GitLab environment 'https://10k.testbed.gitlab.net' is available, supported and that provided Access Token works...
 Environment and Access Token check complete - URL: https://10k.testbed.gitlab.net, Version: 14.7.0-pre 717ed684ca9
@@ -683,6 +684,7 @@ For [Vertical data](#setting-up-test-data-with-the-gpt-data-generator) the Gener
 1. Set the target storage path as detailed in the [`Repository storage paths` documentation](https://docs.gitlab.com/ee/administration/repository_storage_paths.html#choose-where-new-repositories-will-be-stored) so the specific Gitaly Shard itself is targeted. In our example it would require setting `default` to 100 and `storage2` to 0 for the first import and `default` to 0 and `storage2` to 100 for the second.
 1. [Import](https://docs.gitlab.com/ee/user/project/settings/import_export.html#importing-the-project) the correct GitLab FOSS Project Tarball specifying these options:
     * Download the correct GitLab FOSS Project Tarball file:
+      * [For GitLab environments with versions `16.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_16.0.0.tar.gz)
       * [For GitLab environments with versions `15.0` or higher](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_15.0.0.tar.gz)
       * [For GitLab environments with versions between `14.0` and `14.10`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_14.0.0.tar.gz)
       * [For GitLab environments with versions between `13.0` and `13.12`](https://gitlab.com/gitlab-org/quality/performance-data/-/raw/main/projects_export/gitlabhq_export_13.0.0.tar.gz)
