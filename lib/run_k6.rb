@@ -159,7 +159,7 @@ module RunK6
     # Skipping Web User test when page is not available
     # for an unathorized user
     if tests.include? 'k6/tests/web/web_user.js'
-      check_user_page = HTTP.get("#{env_vars['ENVIRONMENT_URL']}/#{env_vars['ENVIRONMENT_USER']}")
+      check_user_page = GPTCommon.make_http_request(method: 'get', url: "#{env_vars['ENVIRONMENT_URL']}/#{env_vars['ENVIRONMENT_USER']}", fail_on_error: false)
       tests.delete('k6/tests/web/web_user.js') if check_user_page.status != 200
     end
 
