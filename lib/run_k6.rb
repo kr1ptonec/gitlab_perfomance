@@ -15,7 +15,7 @@ module RunK6
   extend self
 
   def setup_k6
-    k6_version = ENV['K6_VERSION'] || '0.43.1'
+    k6_version = ENV['K6_VERSION'] || '0.44.1'
 
     ['k6', File.join(Dir.tmpdir, 'k6')].each do |k6|
       return Open3.capture2e("which #{k6};")[0].strip if Open3.capture2e("#{k6} version" + ';')[0].strip.match?(/^k6 v#{k6_version}/)
