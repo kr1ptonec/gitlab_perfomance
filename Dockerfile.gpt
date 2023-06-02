@@ -1,7 +1,7 @@
 # 1st Stage
 FROM ruby:3.0-alpine AS build
 
-ARG K6_VERSION="0.43.1"
+ARG K6_VERSION="0.44.1"
 ENV K6_VERSION="${K6_VERSION}"
 ENV GEM_HOME="/usr/local/bundle"
 ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
