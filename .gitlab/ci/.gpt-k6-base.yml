@@ -2,6 +2,7 @@ stages:
   - check
   - build
   - test
+  - container_scanning
   - report
   - stop
 

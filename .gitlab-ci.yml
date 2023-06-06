@@ -18,15 +18,15 @@ gemnasium-dependency_scanning:
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
 
 container_scanning:
-  stage: check
+  stage: container_scanning
   variables:
-    DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
-    DOCKERFILE_PATH: Dockerfile.gpt
+    CS_IMAGE: $CI_REGISTRY_IMAGE/gitlab-performance-tool:latest
+    CS_DOCKERFILE_PATH: Dockerfile.gpt
   rules:
-    - if: '$GPT_DATA_GENERATOR || $CI_COMMIT_TAG'
+    - if: '$GPT_IMAGES_SCANNING || $GPT_DATA_GENERATOR || $CI_COMMIT_TAG'
 
 container_scanning_generator:
   extends: container_scanning
   variables:
-    DOCKER_IMAGE: $CI_REGISTRY_IMAGE/gpt-data-generator:latest
-    DOCKERFILE_PATH: Dockerfile.gpt-data-generator
+    CS_IMAGE: $CI_REGISTRY_IMAGE/gpt-data-generator:latest
+    CS_DOCKERFILE_PATH: Dockerfile.gpt-data-generator
