@@ -62,7 +62,7 @@ raise "Options config file '#{opts[:options]}' not found as given or in default 
 env_vars = RunK6.setup_env_vars(k6_dir: k6_dir, env_file: env_file, options_file: options_file)
 start_time = Time.now
 
-GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL'])
+GPTCommon.check_gitlab_env_and_token(env_url: env_vars['ENVIRONMENT_URL']) unless ENV['GPT_SKIP_ENV_CHECK']
 RunK6.check_large_projects_visibility(env_vars: env_vars) unless ENV['GPT_SKIP_VISIBILITY_CHECK'] || env_vars['GPT_LARGE_PROJECT_CHECK_SKIP']
 
 opts[:vulnerabilities] = true unless env_vars['ENVIRONMENT_VULNERABILITIES_GROUP'].nil?
