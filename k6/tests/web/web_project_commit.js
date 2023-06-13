@@ -4,7 +4,7 @@
 @example_uri: /:unencoded_path/commit/:commit_sha
 @description: Web - Commit Details Page. <br>Controllers: `Projects::CommitController#show`, `Projects::CommitController#branches`, `Projects::CommitController#merge_requests.json`, `Projects::CommitController#diff_files` </br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/333292
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/333292, https://gitlab.com/gitlab-org/gitlab/-/issues/415200
 @previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/232509, https://gitlab.com/gitlab-org/gitlab/-/issues/322559
 @flags: dash_url
 */
