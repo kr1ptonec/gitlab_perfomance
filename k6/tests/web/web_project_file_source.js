@@ -4,7 +4,8 @@
 @example_uri: /:unencoded_path/blob/master/:file_source_path
 @description: Web - Project File Source. <br>Controllers: `Projects::BlobController#show`, `Projects::BlobController#show.json`</br>
 @gpt_data_version: 1
-@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/372653, https://gitlab.com/gitlab-org/gitlab/-/issues/247878
+@issue: https://gitlab.com/gitlab-org/gitlab/-/issues/247878
+@previous_issues: https://gitlab.com/gitlab-org/gitlab/-/issues/372653
 */
 
 import http from "k6/http";
@@ -13,8 +14,8 @@ import { Rate } from "k6/metrics";
 import { logError, getRpsThresholds, getTtfbThreshold, adjustRps, adjustStageVUs, getLargeProjects, selectRandom } from "../../lib/gpt_k6_modules.js";
 
 export let thresholds = {
-  'rps': { '13.11.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4 },
-  'ttfb': { '13.11.0': 5000, 'latest': 4000 }
+  'rps': { '13.11.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.1, '16.2.0': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.4, 'latest': __ENV.WEB_ENDPOINT_THROUGHPUT * 0.6 },
+  'ttfb': { '13.11.0': 5000, '16.2.0': 4000, 'latest': 2700 }
 };
 export let endpointCount = 2
 export let webProtoRps = adjustRps(__ENV.WEB_ENDPOINT_THROUGHPUT)
