@@ -456,7 +456,7 @@ class GPTTestData
                   retry_counter += 1
                   sleep @default_retry_wait
                   redo unless retry_counter == @default_retry_count
-                  raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse headers: #{grp_res.headers.to_hash}\nResponse body: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
+                  raise HTTP::ResponseError, "Creation of project '#{project_name}' has failed with the following error:\nCode: #{proj_res.code}\nResponse headers: #{proj_res.headers.to_hash}\nResponse body: #{proj_res.body}" if !proj_res.status.success? || proj_res.content_type.mime_type != 'application/json'
                 end
 
                 new_project = proj_res.parse.slice('id', 'name', 'path_with_namespace', 'description')
